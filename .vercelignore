@@ -1,0 +1,6 @@
+# 授權不明的照片不上線（PUBLIC_MODE 為 true 時網站本來就不會用到）
+img/meme
+img/ig
+wallpaper/lib/img/meme
+# 開發用的 QA 工具
+tools
