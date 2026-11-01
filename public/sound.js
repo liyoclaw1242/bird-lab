@@ -1,8 +1,11 @@
 // 所有音效都用 Web Audio 即時合成，不必下載音檔，斷網也能響。
 (function () {
   const MUTE_KEY = "gacha-muted";
-  const read = () => { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } };
-  const write = (value) => { try { localStorage.setItem(MUTE_KEY, value ? "1" : "0"); } catch { /* 無痕模式：這次開著的期間仍然有效 */ } };
+  const BGM_KEY = "gacha-bgm";
+  // 循環點對應 tools/build-bgm.sh 做出來的檔案，音量比音效低，當背景才不吵
+  const BGM = { url: "audio/countryside.mp3", loopStart: 0.25, loop: 107.624014, volume: 0.32 };
+  const read = (key = MUTE_KEY) => { try { return localStorage.getItem(key) === "1"; } catch { return false; } };
+  const write = (value, key = MUTE_KEY) => { try { localStorage.setItem(key, value ? "1" : "0"); } catch { /* 無痕模式：這次開著的期間仍然有效 */ } };
 
   // 一個音：頻率可滑動，快速起音後指數衰減
   function tone(out, at, { f, to = f, d = 0.12, type = "sine", g = 0.3 }) {
@@ -135,18 +138,69 @@
   let bus = null;
   let muted = read();
 
+  let bgmOn = new URLSearchParams(location.search).get("bgm") === "1" || read(BGM_KEY);
+  let bgmGain = null;
+  let bgmSource = null;
+  let bgmBuffer = null;
+
+  function openContext() {
+    if (ctx) return true;
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (!Context) return false;
+    ctx = new Context();
+    bus = ctx.createDynamicsCompressor();
+    bus.connect(ctx.destination);
+    return true;
+  }
+
+  const bgmLevel = () => (bgmOn && !muted ? BGM.volume : 0);
+  function fadeBgm() {
+    if (bgmGain) bgmGain.gain.setTargetAtTime(bgmLevel(), ctx.currentTime, 0.6);
+  }
+
+  // 音檔只在打開背景音時才下載，大多數玩家不會多花流量
+  async function startBgm() {
+    if (bgmSource || !bgmOn || !openContext()) return;
+    try {
+      bgmBuffer ||= await ctx.decodeAudioData(await (await fetch(BGM.url)).arrayBuffer());
+    } catch (error) {
+      console.error("bgm", error);
+      return;
+    }
+    if (bgmSource || !bgmOn) return;
+    bgmGain ||= ctx.createGain();
+    bgmGain.gain.value = 0;
+    bgmGain.connect(ctx.destination);
+    bgmSource = ctx.createBufferSource();
+    bgmSource.buffer = bgmBuffer;
+    bgmSource.loop = true;
+    bgmSource.loopStart = BGM.loopStart;
+    bgmSource.loopEnd = BGM.loopStart + BGM.loop;
+    bgmSource.connect(bgmGain);
+    bgmSource.start(0, BGM.loopStart);
+    fadeBgm();
+  }
+
+  function stopBgm() {
+    fadeBgm();
+    const source = bgmSource;
+    bgmSource = null;
+    if (source) setTimeout(() => source.stop(), 2500);
+  }
+
   // 瀏覽器要求使用者先操作過才能出聲，iOS 還必須在手勢當下喚醒
   function unlock() {
-    if (!ctx) {
-      const Context = window.AudioContext || window.webkitAudioContext;
-      if (!Context) return;
-      ctx = new Context();
-      bus = ctx.createDynamicsCompressor();
-      bus.connect(ctx.destination);
-    }
+    if (!openContext()) return;
     if (ctx.state !== "running") ctx.resume().catch(() => {});
+    startBgm();
   }
   ["pointerdown", "touchend", "keydown"].forEach((name) => document.addEventListener(name, unlock, { capture: true, passive: true }));
+
+  // 桌布環境可能永遠等不到點擊，所以有開背景音就先試著直接播；瀏覽器不允許時會等第一次操作
+  if (bgmOn && openContext()) {
+    ctx.resume().catch(() => {});
+    startBgm();
+  }
 
   function play(name) {
     if (muted || !ctx || !SOUNDS[name]) return;
@@ -167,10 +221,30 @@
     muted = !muted;
     write(muted);
     paint();
+    fadeBgm();
     play("chirp");
   });
   paint();
   document.body.append(button);
 
-  window.Sound = { play, names: Object.keys(SOUNDS), synth: (name, out, at) => SOUNDS[name](out, at) };
+  const bgmButton = document.createElement("button");
+  bgmButton.type = "button";
+  bgmButton.className = "gc-mute gc-bgm";
+  bgmButton.textContent = "🎵";
+  function paintBgm() {
+    bgmButton.classList.toggle("on", bgmOn);
+    bgmButton.setAttribute("aria-label", bgmOn ? "關閉背景音" : "開啟背景音");
+    bgmButton.setAttribute("aria-pressed", String(bgmOn));
+  }
+  bgmButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    bgmOn = !bgmOn;
+    write(bgmOn, BGM_KEY);
+    paintBgm();
+    if (bgmOn) startBgm(); else stopBgm();
+  });
+  paintBgm();
+  document.body.append(bgmButton);
+
+  window.Sound = { play, names: Object.keys(SOUNDS), synth: (name, out, at) => SOUNDS[name](out, at), bgmPlaying: () => Boolean(bgmSource) && ctx.state === "running" };
 })();

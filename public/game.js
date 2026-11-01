@@ -5,7 +5,8 @@
   const TOKEN_KEY = "gacha-token";
   const OFFSET_KEY = "gacha-dev-offset";
   const FIGHT_KEY = "gacha-fight";
-  const { SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY } = window.GachaData;
+  const D = window.GachaData;
+  const { SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY } = D;
   const HOLD = { player: 1600, super: 2000, hit: 650, boss: 1250, bossHit: 550 };
   const SLOT_POS = [[17, 48], [44, 24], [78, 37]];
   const MOVES = {
@@ -148,6 +149,7 @@
       ${errorBox()}
       <div style="height:12px"></div>
       ${todayDraws()}
+      ${S.owned < S.total ? oddsBox() : ""}
       ${historyStrip()}
       ${installBox()}
       ${accountBox()}
@@ -276,14 +278,43 @@
     return `<div class="gc-shaking"><svg class="gc-big-tree" viewBox="0 0 60 64" aria-hidden="true"><path d="M26 62 L28 34 L32 34 L35 62 Z" fill="#3f3019"/><path d="M30 3 C47 3 57 14 54 26 C58 38 44 44 32 40 C20 45 4 39 7 27 C3 14 14 3 30 3 Z" fill="#3c5e25" stroke="#1b2b10" stroke-width="1.5"/></svg>${burst()}</div>`;
   }
 
+  // 機率寫在遊戲裡而不是藏在別頁：有保底和補運時，玩家要看得到自己這一抽的實際機率
+  function oddsBox() {
+    const o = S.odds;
+    const pct = (p) => { const v = p * 100; return `${v >= 10 || Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1)}%`; };
+    const rows = D.TIERS.map((t) => `<li>${rarityTag(t)} <span>基礎 ${pct(D.RATES[t])}</span><b>這一抽 ${pct(o.next[t])}</b></li>`).join("");
+    return `<details class="gc-scrap gc-odds"><summary>再 <b>${o.ssrIn}</b> 抽內必得 SSR 以上，<b>${o.urIn}</b> 抽內必得 UR</summary>
+      <ul>${rows}</ul>
+      <p>保底：連續 ${D.PITY.SSR.soft} 抽沒有 SSR 以上、或 ${D.PITY.UR.soft} 抽沒有 UR，機率開始上升。朋友分的鳥不算進保底。</p>
+      <p>補運：林子裡的鳥比平均普通時，SR 以上機率最多提高到 ${D.CATCH_UP.max} 倍，要抽滿 ${D.CATCH_UP.minDraws} 次才開始，也不會低於基礎機率。目前 ${o.boost.toFixed(2)} 倍。</p>
+      <p>含保底的長期平均約為 UR 2.2%、SSR 6.9%（模擬值）。抽到的鳥不會重複。</p></details>`;
+  }
+
+  const STORY_FACTS = ["第一印象", "你可能不知道"];
+  // 部分照片來源只記錄「CC BY」沒有版本，連到照片頁才看得到實際條款，這裡不猜版本
+  function licenseUrl(name) {
+    if (name.startsWith("PolyForm")) return "https://polyformproject.org/licenses/shield/1.0.0";
+    if (name.startsWith("CC0")) return "https://creativecommons.org/publicdomain/zero/1.0/";
+    const m = /^CC (BY(?:-SA)?) ([\d.]+)(?: (\w+))?$/.exec(name);
+    return m ? `https://creativecommons.org/licenses/${m[1].toLowerCase()}/${m[2]}/${m[3] ? `${m[3]}/` : ""}` : null;
+  }
+  function licenseLink(name) {
+    const url = licenseUrl(name);
+    return url ? `<a href="${url}" target="_blank" rel="noopener">${esc(name)}</a>` : esc(name);
+  }
+
   function cardStage() {
     if (!view.card) return "";
     const c = view.card;
     const facts = c.facts.map((n) => `<li><b>${esc(n.t)}</b>${esc(n.d)}</li>`).join("");
     const art = c.credit
-      ? `${c.credit.page ? `<a href="${esc(c.credit.page)}" target="_blank" rel="noopener">${esc(c.credit.artist)}</a>` : esc(c.credit.artist)} · ${esc(c.credit.license)}`
-      : "[removed] · PolyForm Shield 1.0.0";
-    const text = c.source ? ` ／ 趣聞：<a href="${esc(c.source)}" target="_blank" rel="noopener">來源</a> · CC BY-SA 4.0` : "";
+      ? `${c.credit.page ? `<a href="${esc(c.credit.page)}" target="_blank" rel="noopener">${esc(c.credit.artist)}</a>` : esc(c.credit.artist)} · ${licenseLink(c.credit.license)}，已去背`
+      : `[removed] · ${licenseLink("PolyForm Shield 1.0.0")}`;
+    // 趣聞的授權跟著文字走，少數牌沒有記錄參考條目，一樣要標示
+    const hasStory = c.facts.some((n) => STORY_FACTS.includes(n.t));
+    const text = hasStory
+      ? ` ／ 趣聞：<a href="[removed]" target="_blank" rel="noopener">[removed]</a>${c.source ? `、<a href="${esc(c.source)}" target="_blank" rel="noopener">維基來源</a>` : ""} · ${licenseLink("CC BY-SA 4.0")}，已轉繁體`
+      : "";
     const inHand = hand.some((b) => b.id === c.id);
     const swap = view.swapping
       ? `<div class="gc-swap"><p>手上滿了，要放走哪一隻？</p><div class="gc-swap-grid">${hand.map((b) => `<button data-replace="${esc(b.id)}"><img src="${sticker(b)}" alt="">${esc(b.zh)} ${rarityTag(b.rarity)}</button>`).join("")}</div></div>`

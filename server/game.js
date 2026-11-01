@@ -2,7 +2,7 @@
 const crypto = require("crypto");
 const E = require("../public/engine.js");
 const { verifyGoogle: defaultVerifyGoogle } = require("./google.js");
-const { BOSSES, RATES, SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY } = require("../public/data.js");
+const { BOSSES, SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY, PITY, TIERS, catchUp, oddsFor, redistribute } = require("../public/data.js");
 
 const PAGE_SIZE = 12;
 const CANDIDATES_PER_TYPE = 6;
@@ -137,7 +137,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   async function state(playerId, offset = 0) {
     const day = dayOf(offset);
-    const [{ rows: [player] }, { rows: [counts] }, { rows: draws }, { rows: fights }, candidates] = await Promise.all([
+    const [{ rows: [player] }, { rows: [counts] }, { rows: draws }, { rows: fights }, candidates, odds] = await Promise.all([
       db.query("SELECT team, google_sub FROM players WHERE id = $1", [playerId]),
       db.query("SELECT (SELECT count(*) FROM owned WHERE player_id = $1)::int AS owned, (SELECT count(*) FROM cards)::int AS total", [playerId]),
       db.query(
@@ -148,6 +148,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       ),
       db.query("SELECT day::text AS day, stars, score, best FROM fights WHERE player_id = $1 AND day > $2::date - 370 AND day <= $2::date ORDER BY day DESC", [playerId, day]),
       roster(db, playerId),
+      oddsView(playerId),
     ]);
     const fight = fightFor(day, candidates);
     const today = fights.find((f) => f.day === day) || null;
@@ -158,6 +159,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     return {
       day,
       google: !!player.google_sub,
+      odds,
       fight,
       best: today ? today.best : E.bestScore(fight, candidates),
       result: today && { stars: today.stars, score: today.score, best: today.best },
@@ -205,20 +207,51 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     return { team: await cardsById(db, ids) };
   }
 
-  // 只從還沒有的牌抽；某個稀有度抽完了，它的機率平均分給剩下的稀有度
+  // 保底只看自己抽的紀錄，朋友分享和初始的鳥不算；從紀錄推算就不必多存一份會對不上的計數。
+  // 補運看整片林子，所以領到朋友分的稀有鳥，補運會跟著下降
+  async function luckOf(q, playerId) {
+    const [{ rows: drawn }, { rows: owned }] = await Promise.all([
+      q.query(
+        `SELECT c.rarity FROM draws d JOIN cards c ON c.id = d.card_id
+         WHERE d.player_id = $1 ORDER BY d.day DESC, d.kind DESC`,
+        [playerId],
+      ),
+      q.query(
+        "SELECT c.rarity, count(*)::int AS n FROM owned o JOIN cards c ON c.id = o.card_id WHERE o.player_id = $1 GROUP BY c.rarity",
+        [playerId],
+      ),
+    ]);
+    const since = (tiers) => { const i = drawn.findIndex((d) => tiers.includes(d.rarity)); return i < 0 ? drawn.length : i; };
+    const counts = Object.fromEntries(owned.map((r) => [r.rarity, r.n]));
+    counts.N = Math.max(0, (counts.N || 0) - Object.keys(E.TYPES).length);
+    return { sinceSSR: since(["SSR", "UR"]), sinceUR: since(["UR"]), boost: catchUp(counts, drawn.length) };
+  }
+
+  async function oddsView(playerId) {
+    const luck = await luckOf(db, playerId);
+    return {
+      boost: luck.boost,
+      ssrIn: PITY.SSR.hard - luck.sinceSSR,
+      urIn: PITY.UR.hard - luck.sinceUR,
+      next: oddsFor(luck),
+    };
+  }
+
+  // 只從還沒有的牌抽
   async function pickUnowned(q, playerId) {
     const { rows: tiers } = await q.query(
       `SELECT DISTINCT c.rarity FROM cards c
        WHERE NOT EXISTS (SELECT 1 FROM owned o WHERE o.player_id = $1 AND o.card_id = c.id)`,
       [playerId],
     );
-    const left = Object.entries(RATES).filter(([tier]) => tiers.some((t) => t.rarity === tier));
-    if (!left.length) throw new GameError(409, "complete", "整座林子的鳥都收集完了");
-    let at = random() * left.reduce((sum, [, rate]) => sum + rate, 0);
-    let tier = left[left.length - 1][0];
-    for (const [name, rate] of left) {
-      if (at < rate) { tier = name; break; }
-      at -= rate;
+    const available = tiers.map((t) => t.rarity);
+    if (!available.length) throw new GameError(409, "complete", "整座林子的鳥都收集完了");
+    const odds = redistribute(oddsFor(await luckOf(q, playerId)), available);
+    let at = random();
+    let tier = TIERS.filter((t) => odds[t] > 0).at(-1);
+    for (const name of TIERS) {
+      if (odds[name] > 0 && at < odds[name]) { tier = name; break; }
+      at -= odds[name];
     }
     const { rows } = await q.query(
       `SELECT c.id, c.data FROM cards c

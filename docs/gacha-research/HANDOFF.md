@@ -40,10 +40,18 @@
 
 ## 部署現況（2026-11-01）
 
-- Supabase 已建表並匯入 10,572 張牌；貼紙已在 `https://yi-niao-stickers.yi-niao.workers.dev/`，`STICKER_BASE` 已換；Vercel 只有 Preview 環境設了變數、開了預覽部署。**正式站還是舊站，Production 環境變數也還沒設，程式也沒 commit。**
-- 預覽和之後的正式站共用同一個資料庫，上線前要清掉測試玩家。
+- Supabase 已建表並匯入 10,572 張牌；貼紙已在 `https://yi-niao-stickers.yi-niao.workers.dev/`，`STICKER_BASE` 已換；Vercel 的 Preview 和 Production 都設好變數，`e378195` 已上正式站 `bird-lab-three.vercel.app`。**備份的 GitHub Secrets 還沒設，排程會失敗；真實 Google 登入還沒測。**
+- 預覽和正式站共用同一個資料庫。
 - Vercel CLI 50.33 不讀 `VERCEL_TOKEN`，要傳 `--token`，並設 `VERCEL_PROJECT_ID`、`VERCEL_ORG_ID` 跳過 `vercel link`（否則卡在等登入）。預覽受 Vercel 登入保護，指令列要用 `vercel curl`。
 - 音效在 `public/sound.js`，全部即時合成，右下角有靜音鍵。自動化只驗證有觸發、不爆音不無聲，音色好不好聽要人聽。
+
+## 抽卡與授權（2026-11-01）
+
+- 保底和補運在 `public/data.js`，設計依據在 `docs/gacha-research/ODDS.md`，模擬用 `node tools/gacha-odds-sim.js`。改參數要同步更新面板上的長期平均。
+- 授權總表在 `public/credits.html`。改貼紙授權標示要重跑 `node tools/build-stickers.js` 和 `stickers/` 的 wrangler deploy。
+- 背景音：`public/audio/countryside.mp3`（CC0，`tools/build-bgm.sh` 產生），🎵 開關，`?bgm=1` 給 Windows Lively 桌布用；Lively 上的自動播放還沒實測。
+- 刪除資料目前靠信箱人工處理，沒有自助功能。
+- 商業化前要處理：IUCN 資料、參考照片（約 6,300 張的參考照是 NC／ND 或保留所有權利）。原作者接受撤圖，但我們鎖定固定版本，撤圖不會自動同步。
 
 ## 上線步驟（第 1 步已做完，下面都還沒做）
 

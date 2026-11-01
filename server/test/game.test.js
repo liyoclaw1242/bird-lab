@@ -364,3 +364,51 @@ test("舊資料庫升級：憑證搬到 sessions，玩家還能登入", async ()
   await migrate(old);
   assert.ok((await createGame(old).authenticate(token)) > 0);
 });
+
+const D = require("../../public/data.js");
+
+test("每一抽的機率加總都是 1，也不會是負的", () => {
+  for (const boost of [1, 1.25, 1.5]) for (let sinceSSR = 0; sinceSSR < D.PITY.SSR.hard; sinceSSR += 1) for (let sinceUR = 0; sinceUR < D.PITY.UR.hard; sinceUR += 1) {
+    const odds = D.oddsFor({ sinceSSR, sinceUR, boost });
+    assert.ok(Math.abs(D.TIERS.reduce((sum, t) => sum + odds[t], 0) - 1) < 1e-9);
+    assert.ok(D.TIERS.every((t) => odds[t] >= -1e-12));
+  }
+});
+
+test("補運不低於基礎機率、有上限，新帳號沒有補運", () => {
+  assert.strictEqual(D.catchUp({ N: 6 }, 6), 1);
+  assert.ok(D.catchUp({ N: 7 }, 7) > 1);
+  assert.strictEqual(D.catchUp({ N: 3000 }, 3000), D.CATCH_UP.max);
+  assert.strictEqual(D.catchUp({ UR: 50 }, 50), 1);
+  assert.ok(D.catchUp({ N: 20, SSR: 4 }, 24) < D.catchUp({ N: 20 }, 20), "領到稀有鳥後補運要下降");
+});
+
+test("收完的稀有度，保底會往下一級落，機率總和不變", () => {
+  const odds = D.redistribute(D.oddsFor({ sinceUR: D.PITY.UR.hard - 1 }), ["SSR", "N"]);
+  assert.strictEqual(odds.UR, 0);
+  assert.strictEqual(odds.SSR, 1);
+  assert.strictEqual(D.redistribute({ UR: 0, SSR: 0, SR: 0, R: 0, N: 1 }, ["UR"]).UR, 1);
+});
+
+test("運氣再差也會在保底抽到", async () => {
+  const small = await open({ url: null });
+  await migrate(small);
+  const pick = (r, n) => all.filter((c) => c.rarity === r).slice(0, n);
+  await seed(small, [...pick("N", 120), ...pick("SSR", 6), ...pick("UR", 3)]);
+  const g = createGame(small, { now: () => clock, random: () => 0.999999 });
+  const { token } = await g.createPlayer();
+  const id = await g.authenticate(token);
+  let day = "2029-01-01";
+  const got = [];
+  for (let i = 0; i < D.PITY.UR.hard; i += 1) {
+    at(day);
+    got.push((await g.draw(id, "free")).card.rarity);
+    day = E.addDays(day, 1);
+  }
+  const hard = D.PITY.SSR.hard;
+  assert.deepStrictEqual(got.slice(0, hard - 1).filter((r) => r !== "N"), []);
+  assert.ok(["SSR", "UR"].includes(got[hard - 1]));
+  assert.strictEqual(got[D.PITY.UR.hard - 1], "UR");
+  const { odds } = await g.state(id);
+  assert.strictEqual(odds.urIn, D.PITY.UR.hard);
+});

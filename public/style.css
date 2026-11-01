@@ -347,3 +347,6 @@ img { display: block; }
 /* 音效開關放在畫面右下角，不擋頂部品牌列，戰鬥和卡片開著時也按得到 */
 .gc-mute { position: fixed; right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; width: 44px; height: 44px; padding: 0; font-size: 20px; line-height: 1; background: rgba(251, 238, 203, .92); border: 1.5px solid #1b2b10; border-radius: 50%; cursor: pointer; }
 .gc-credits { padding-bottom: 72px; }
+.gc-odds { margin-top: 12px; padding: 10px 14px; font-size: 15px; font-weight: 400; } .gc-odds summary { cursor: pointer; font-weight: 700; } .gc-odds ul { list-style: none; margin: 8px 0; padding: 0; } .gc-odds li { display: flex; align-items: center; gap: 8px; padding: 2px 0; } .gc-odds li b { margin-left: auto; } .gc-odds li span { color: var(--muted); } .gc-odds p { margin: 6px 0 0; font-size: 14px; line-height: 1.5; }
+.gc-bgm { right: calc(64px + env(safe-area-inset-right)); opacity: .55; }
+.gc-bgm.on { opacity: 1; background: #e6b84a; }
