@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="一鳥在手">
+  <path d="M100 8 C150 6 192 42 192 96 C194 150 152 194 98 192 C46 194 6 150 8 98 C6 46 48 10 100 8 Z" fill="#4c6a2a" stroke="#22190c" stroke-width="7"/>
+  <path d="M34 62 C22 46 26 34 38 28 C44 42 44 52 34 62 Z M164 46 C176 40 186 46 188 60 C174 64 166 58 164 46 Z" fill="#b8732a" stroke="#22190c" stroke-width="4" stroke-linejoin="round"/>
+  <g stroke="#22190c" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 174 C44 150 52 138 64 130 C78 128 94 130 110 132 C126 124 146 112 162 106 C172 104 176 114 168 122 C158 130 150 136 142 144 C150 144 154 152 146 158 C150 162 148 170 140 172 C138 180 128 184 118 182 C96 190 62 192 44 188 C34 186 26 182 28 174 Z" fill="#e6c7a1" stroke-width="6"/>
+    <path d="M118 158 C126 156 134 156 146 158 M116 172 C124 172 132 172 140 172" fill="none" stroke-width="4.5"/>
+    <path d="M66 128 C50 124 44 100 54 78 C62 58 84 44 106 50 C128 54 140 74 136 96 C134 112 126 124 112 130 C96 134 80 133 66 128 Z" fill="#f4ecd6" stroke-width="6"/>
+    <path d="M72 124 C56 112 52 94 60 76 M128 112 C118 124 104 128 88 128" fill="none" stroke-width="2.5" opacity=".6"/>
+    <path d="M76 104 L90 94 L84 110 L100 96 L94 114 L108 100" fill="none" stroke-width="4"/>
+    <path d="M135 72 L164 66 L137 88 Z" fill="#d99a1c" stroke-width="5.5"/>
+    <path d="M60 80 C48 72 42 60 42 48 C52 52 62 58 68 68" fill="#f4ecd6" stroke-width="5"/>
+    <circle cx="96" cy="70" r="17" fill="#fff" stroke-width="5"/>
+    <circle cx="125" cy="64" r="9" fill="#fff" stroke-width="4.5"/>
+    <path d="M86 138 L84 130 M100 138 L100 131" fill="none" stroke-width="5"/>
+  </g>
+  <circle cx="101" cy="76" r="6.5" fill="#22190c"/><circle cx="123" cy="63" r="3.4" fill="#22190c"/>
+</svg>

@@ -1,0 +1,7 @@
+{
+  "framework": null,
+  "buildCommand": "",
+  "outputDirectory": "public",
+  "regions": ["hnd1"],
+  "rewrites": [{ "source": "/s/:code", "destination": "/api/gacha?op=share-page&code=:code" }]
+}

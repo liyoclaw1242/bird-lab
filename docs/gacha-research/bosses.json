@@ -1,0 +1,502 @@
+[
+ {
+  "sci": "Passer montanus",
+  "zh": "麻雀〔樹麻雀〕",
+  "en": "Eurasian Tree Sparrow",
+  "massG": 21,
+  "iucn": "LC",
+  "niche": "Granivore",
+  "atkShape": 0.19,
+  "defShape": 0.2
+ },
+ {
+  "sci": "Pica pica",
+  "zh": "喜鵲",
+  "en": "Eurasian Magpie",
+  "massG": 218,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.48,
+  "defShape": 0.43
+ },
+ {
+  "sci": "Corvus macrorhynchos",
+  "zh": "巨嘴鴉〔大嘴烏鴉〕",
+  "en": "Large-billed Crow",
+  "massG": 513,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.56,
+  "defShape": 0.5
+ },
+ {
+  "sci": "Columba livia",
+  "zh": "原鴿",
+  "en": "Rock Dove",
+  "massG": 354,
+  "iucn": "LC",
+  "niche": "Granivore",
+  "atkShape": 0.39,
+  "defShape": 0.43
+ },
+ {
+  "sci": "Hirundo rustica",
+  "zh": "家燕",
+  "en": "Barn Swallow",
+  "massG": 18,
+  "iucn": "LC",
+  "niche": "Invertivore",
+  "atkShape": 0.2,
+  "defShape": 0.17
+ },
+ {
+  "sci": "Gallus gallus",
+  "zh": "紅原雞",
+  "en": "Red Junglefowl",
+  "massG": 752,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.53,
+  "defShape": 0.54
+ },
+ {
+  "sci": "Anas platyrhynchos",
+  "zh": "綠頭鴨",
+  "en": "Mallard",
+  "massG": 843,
+  "iucn": "LC",
+  "niche": "Herbivore aquatic",
+  "atkShape": 0.52,
+  "defShape": 0.52
+ },
+ {
+  "sci": "Sturnus vulgaris",
+  "zh": "歐洲椋鳥〔紫翅椋鳥〕",
+  "en": "Common Starling",
+  "massG": 77,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.38,
+  "defShape": 0.33
+ },
+ {
+  "sci": "Pycnonotus sinensis",
+  "zh": "白頭翁〔白頭鵯〕",
+  "en": "Light-vented Bulbul",
+  "massG": 34,
+  "iucn": "LC",
+  "niche": "Frugivore",
+  "atkShape": 0.25,
+  "defShape": 0.25
+ },
+ {
+  "sci": "Egretta garzetta",
+  "zh": "小白鷺",
+  "en": "Little Egret",
+  "massG": 312,
+  "iucn": "LC",
+  "niche": "Aquatic predator",
+  "atkShape": 0.65,
+  "defShape": 0.49
+ },
+ {
+  "sci": "Turdus merula",
+  "zh": "烏鶇",
+  "en": "Common Blackbird",
+  "massG": 103,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.4,
+  "defShape": 0.36
+ },
+ {
+  "sci": "Erithacus rubecula",
+  "zh": "歐亞歌鴝",
+  "en": "European Robin",
+  "massG": 18,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.24,
+  "defShape": 0.21
+ },
+ {
+  "sci": "Turdus migratorius",
+  "zh": "旅鶇",
+  "en": "American Robin",
+  "massG": 79,
+  "iucn": "LC",
+  "niche": "Invertivore",
+  "atkShape": 0.37,
+  "defShape": 0.33
+ },
+ {
+  "sci": "Cardinalis cardinalis",
+  "zh": "主紅雀",
+  "en": "Northern Cardinal",
+  "massG": 43,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.3,
+  "defShape": 0.28
+ },
+ {
+  "sci": "Cyanocitta cristata",
+  "zh": "冠藍鴉",
+  "en": "Blue Jay",
+  "massG": 88,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.39,
+  "defShape": 0.35
+ },
+ {
+  "sci": "Urocissa caerulea",
+  "zh": "臺灣藍鵲",
+  "en": "Taiwan Blue Magpie",
+  "massG": 257,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.5,
+  "defShape": 0.44
+ },
+ {
+  "sci": "Platalea minor",
+  "zh": "黑面琵鷺",
+  "en": "Black-faced Spoonbill",
+  "massG": 1228,
+  "iucn": "VU",
+  "niche": "Aquatic predator",
+  "atkShape": 0.78,
+  "defShape": 0.6
+ },
+ {
+  "sci": "Syrmaticus mikado",
+  "zh": "帝雉〔黑長尾雉〕",
+  "en": "Mikado Pheasant",
+  "massG": 1149,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.55,
+  "defShape": 0.56
+ },
+ {
+  "sci": "Aix galericulata",
+  "zh": "鴛鴦",
+  "en": "Mandarin Duck",
+  "massG": 567,
+  "iucn": "LC",
+  "niche": "Herbivore aquatic",
+  "atkShape": 0.45,
+  "defShape": 0.48
+ },
+ {
+  "sci": "Grus japonensis",
+  "zh": "丹頂鶴",
+  "en": "Red-crowned Crane",
+  "massG": 8786,
+  "iucn": "VU",
+  "niche": "Omnivore",
+  "atkShape": 0.84,
+  "defShape": 0.79
+ },
+ {
+  "sci": "Nipponia nippon",
+  "zh": "朱鹮",
+  "en": "Crested Ibis",
+  "massG": 1900,
+  "iucn": "EN",
+  "niche": "Aquatic predator",
+  "atkShape": 0.78,
+  "defShape": 0.61
+ },
+ {
+  "sci": "Aquila chrysaetos",
+  "zh": "金鵰",
+  "en": "Golden Eagle",
+  "massG": 4248,
+  "iucn": "LC",
+  "niche": "Vertivore",
+  "atkShape": 0.78,
+  "defShape": 0.68
+ },
+ {
+  "sci": "Haliaeetus leucocephalus",
+  "zh": "白頭海鵰",
+  "en": "Bald Eagle",
+  "massG": 4701,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.7,
+  "defShape": 0.68
+ },
+ {
+  "sci": "Falco peregrinus",
+  "zh": "遊隼",
+  "en": "Peregrine Falcon",
+  "massG": 760,
+  "iucn": "LC",
+  "niche": "Vertivore",
+  "atkShape": 0.61,
+  "defShape": 0.51
+ },
+ {
+  "sci": "Harpia harpyja",
+  "zh": "角鵰",
+  "en": "Harpy Eagle",
+  "massG": 4800,
+  "iucn": "VU",
+  "niche": "Vertivore",
+  "atkShape": 0.8,
+  "defShape": 0.69
+ },
+ {
+  "sci": "Vultur gryphus",
+  "zh": "康多兀鷲",
+  "en": "Andean Condor",
+  "massG": 11236,
+  "iucn": "VU",
+  "niche": "Scavenger",
+  "atkShape": 0.82,
+  "defShape": 0.76
+ },
+ {
+  "sci": "Bubo scandiacus",
+  "zh": "雪鴞",
+  "en": "Snowy Owl",
+  "massG": 2029,
+  "iucn": "VU",
+  "niche": "Vertivore",
+  "atkShape": 0.7,
+  "defShape": 0.6
+ },
+ {
+  "sci": "Tyto alba",
+  "zh": "倉鴞",
+  "en": "Western Barn Owl",
+  "massG": 403,
+  "iucn": "LC",
+  "niche": "Vertivore",
+  "atkShape": 0.6,
+  "defShape": 0.48
+ },
+ {
+  "sci": "Sagittarius serpentarius",
+  "zh": "蛇鷲",
+  "en": "Secretarybird",
+  "massG": 4017,
+  "iucn": "EN",
+  "niche": "Vertivore",
+  "atkShape": 0.82,
+  "defShape": 0.73
+ },
+ {
+  "sci": "Cygnus olor",
+  "zh": "疣鼻天鵝〔赤嘴天鵝〕",
+  "en": "Mute Swan",
+  "massG": 10682,
+  "iucn": "LC",
+  "niche": "Herbivore aquatic",
+  "atkShape": 0.72,
+  "defShape": 0.74
+ },
+ {
+  "sci": "Cygnus atratus",
+  "zh": "黑天鵝",
+  "en": "Black Swan",
+  "massG": 5623,
+  "iucn": "LC",
+  "niche": "Herbivore aquatic",
+  "atkShape": 0.66,
+  "defShape": 0.69
+ },
+ {
+  "sci": "Aptenodytes forsteri",
+  "zh": "皇帝企鵝",
+  "en": "Emperor Penguin",
+  "massG": 33569,
+  "iucn": "NT",
+  "niche": "Aquatic predator",
+  "atkShape": 0.84,
+  "defShape": 0.79
+ },
+ {
+  "sci": "Aptenodytes patagonicus",
+  "zh": "國王企鵝",
+  "en": "King Penguin",
+  "massG": 11731,
+  "iucn": "LC",
+  "niche": "Aquatic predator",
+  "atkShape": 0.81,
+  "defShape": 0.72
+ },
+ {
+  "sci": "Spheniscus demersus",
+  "zh": "斑嘴環企鵝",
+  "en": "African Penguin",
+  "massG": 3130,
+  "iucn": "CR",
+  "niche": "Aquatic predator",
+  "atkShape": 0.68,
+  "defShape": 0.6
+ },
+ {
+  "sci": "Phoenicopterus roseus",
+  "zh": "大紅鸛",
+  "en": "Greater Flamingo",
+  "massG": 3032,
+  "iucn": "LC",
+  "niche": "Aquatic predator",
+  "atkShape": 0.83,
+  "defShape": 0.71
+ },
+ {
+  "sci": "Ciconia ciconia",
+  "zh": "白鸛",
+  "en": "White Stork",
+  "massG": 3446,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.8,
+  "defShape": 0.71
+ },
+ {
+  "sci": "Ardea cinerea",
+  "zh": "蒼鷺",
+  "en": "Grey Heron",
+  "massG": 1443,
+  "iucn": "LC",
+  "niche": "Aquatic predator",
+  "atkShape": 0.77,
+  "defShape": 0.62
+ },
+ {
+  "sci": "Pelecanus onocrotalus",
+  "zh": "白鵜鶘",
+  "en": "Great White Pelican",
+  "massG": 9322,
+  "iucn": "LC",
+  "niche": "Aquatic predator",
+  "atkShape": 0.92,
+  "defShape": 0.75
+ },
+ {
+  "sci": "Fratercula arctica",
+  "zh": "北極海鸚",
+  "en": "Atlantic Puffin",
+  "massG": 593,
+  "iucn": "VU",
+  "niche": "Aquatic predator",
+  "atkShape": 0.58,
+  "defShape": 0.47
+ },
+ {
+  "sci": "Balaeniceps rex",
+  "zh": "鯨頭鸛",
+  "en": "Shoebill",
+  "massG": 5941,
+  "iucn": "VU",
+  "niche": "Aquatic predator",
+  "atkShape": 0.9,
+  "defShape": 0.75
+ },
+ {
+  "sci": "Ramphastos toco",
+  "zh": "鞭笞鵎鵼",
+  "en": "Toco Toucan",
+  "massG": 618,
+  "iucn": "LC",
+  "niche": "Frugivore",
+  "atkShape": 0.61,
+  "defShape": 0.51
+ },
+ {
+  "sci": "Ara macao",
+  "zh": "緋紅麥鷍",
+  "en": "Scarlet Macaw",
+  "massG": 1015,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.57,
+  "defShape": 0.52
+ },
+ {
+  "sci": "Cacatua galerita",
+  "zh": "小葵花鳳頭鸚鵡",
+  "en": "Sulphur-crested Cockatoo",
+  "massG": 720,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.53,
+  "defShape": 0.49
+ },
+ {
+  "sci": "Psittacus erithacus",
+  "zh": "灰鸚鵡",
+  "en": "Grey Parrot",
+  "massG": 333,
+  "iucn": "EN",
+  "niche": "Omnivore",
+  "atkShape": 0.47,
+  "defShape": 0.42
+ },
+ {
+  "sci": "Alcedo atthis",
+  "zh": "普通翠鳥",
+  "en": "Common Kingfisher",
+  "massG": 31,
+  "iucn": "LC",
+  "niche": "Aquatic predator",
+  "atkShape": 0.38,
+  "defShape": 0.2
+ },
+ {
+  "sci": "Upupa epops",
+  "zh": "戴勝",
+  "en": "Common Hoopoe",
+  "massG": 67,
+  "iucn": "LC",
+  "niche": "Invertivore",
+  "atkShape": 0.41,
+  "defShape": 0.3
+ },
+ {
+  "sci": "Buceros bicornis",
+  "zh": "雙角犀鳥",
+  "en": "Great Hornbill",
+  "massG": 2791,
+  "iucn": "VU",
+  "niche": "Frugivore",
+  "atkShape": 0.74,
+  "defShape": 0.63
+ },
+ {
+  "sci": "Corvus corax",
+  "zh": "渡鴉",
+  "en": "Northern Raven",
+  "massG": 928,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.61,
+  "defShape": 0.55
+ },
+ {
+  "sci": "Dacelo novaeguineae",
+  "zh": "笑翠鳥",
+  "en": "Laughing Kookaburra",
+  "massG": 334,
+  "iucn": "LC",
+  "niche": "Omnivore",
+  "atkShape": 0.51,
+  "defShape": 0.43
+ },
+ {
+  "sci": "Apteryx mantelli",
+  "zh": "北島褐鷸鴕",
+  "en": "North Island Brown Kiwi",
+  "massG": 2321,
+  "iucn": "VU",
+  "niche": "Invertivore",
+  "atkShape": 0.7,
+  "defShape": 0.61
+ }
+]

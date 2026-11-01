@@ -1,2 +1,8 @@
 .DS_Store
 .vercel
+node_modules
+.data
+stickers/dist
+stickers/.cache
+.env*
+!.env.example

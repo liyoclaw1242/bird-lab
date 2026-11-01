@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:1200px;height:630px;overflow:hidden}
+body{position:relative;font-family:"LXGW WenKai TC",serif;font-weight:700;color:#2b2316;background:#b7a877}
+#woods{position:absolute;inset:0}#woods svg{width:100%;height:100%;display:block}
+.logo{position:absolute;right:58px;top:84px;width:462px;height:462px;filter:drop-shadow(8px 12px 0 rgba(30,20,8,.4));transform:rotate(3deg)}
+.note{position:absolute;left:62px;top:118px;width:610px;padding:42px 44px 38px;background:#f4ecd6;border:5px solid #2b2316;border-radius:255px 18px 225px 20px/18px 225px 20px 255px;box-shadow:7px 10px 0 rgba(30,20,8,.45);transform:rotate(-1.4deg);background-image:radial-gradient(rgba(120,90,40,.1) 1px,transparent 1.6px);background-size:9px 9px}
+h1{margin:0;font-size:116px;line-height:1.05;letter-spacing:.02em}
+.sub{margin:18px 0 0;font-size:40px;line-height:1.25;color:#a9451d}
+.small{margin:18px 0 0;font-size:28px;font-weight:400;line-height:1.35;color:#5a4c32}
+</style></head><body>
+<div id="woods"></div>
+<img class="logo" src="../../public/logo.svg" alt="">
+<div class="note"><h1>一鳥在手</h1><p class="sub">百鳥在林，不如一鳥在手</p><p class="small">每天搖一棵樹，遇見一隻真實的鳥。<br>帶三隻潦草的牠們，去打正經的 BOSS。</p></div>
+<script src="../../public/scenery.js"></script>
+<script>document.getElementById("woods").innerHTML=Scenery.backdrop();</script>
+</body></html>
