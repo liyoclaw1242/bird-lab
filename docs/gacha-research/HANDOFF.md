@@ -27,6 +27,7 @@
 ### Google 登入、PWA、稀有度特效
 
 - 「RWA」當成 PWA 處理（使用者原話是 RWA，還沒確認）。`public/sw.js` 網路優先，只快取同網域的網頁檔；API 和跨網域貼紙不經手。
+- Google 登入用整頁跳轉（`ux_mode: "redirect"`，因為有瀏覽器開不了彈出視窗）：Google POST 到 `/auth/google`，比對 `g_csrf_token` 後把憑證暫放 sessionStorage，回首頁由 `boot` 走原本的 `POST login`。Google Console 要登記 redirect URI。
 - Google 用 Google Identity Services 的 ID token，伺服器驗證（`server/google.js`），只存 `sub`。沒設 `GOOGLE_CLIENT_ID` 時按鈕不會出現。本機可用 `GACHA_FAKE_GOOGLE=1 GOOGLE_CLIENT_ID=x` 測流程，但瀏覽器要自己替換 Google 的腳本，**真實 Google 登入還沒測過，iOS 桌面版尤其要實測**。
 - 憑證移到 `sessions`，一個帳號可多裝置登入。兩片林子不合併，避免用匿名分身養大 Google 帳號；裝置上有進度時，切換前會問。
 - 特效數值在 `public/scenery.js` 的 `RARITY_FX`。對戰顯示稀有度標籤和邊框，SR 以上有光環、專屬提示帶和飛葉。

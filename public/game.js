@@ -199,7 +199,8 @@
       const script = document.createElement("script");
       script.src = "https://accounts.google.com/gsi/client";
       script.onload = () => {
-        window.google.accounts.id.initialize({ client_id: S.googleClientId, callback: ({ credential }) => googleLogin(credential) });
+        // 整頁跳轉：不靠彈出視窗，瀏覽器封鎖彈窗時也能登入。回來的憑證由 boot 接手
+        window.google.accounts.id.initialize({ client_id: S.googleClientId, ux_mode: "redirect", login_uri: `${location.origin}/auth/google` });
         resolve();
       };
       script.onerror = () => { googleLoading = null; reject(new Error("Google 登入載入失敗")); };
@@ -735,6 +736,14 @@
     return guarded(() => refresh({ screen: "home", backup: false, restoreError: null }));
   }
 
+  function takeGoogleCredential() {
+    try {
+      const credential = sessionStorage.getItem("gacha-google-credential");
+      sessionStorage.removeItem("gacha-google-credential");
+      return credential;
+    } catch { return null; }
+  }
+
   async function boot() {
     await guarded(async () => {
       await ensurePlayer();
@@ -748,6 +757,9 @@
         if (pendingGift) await loadGift();
       }
     }, boot);
+    // 要等上面跑完才登入：guarded 忙碌時會直接跳過。啟動失敗就留著憑證，等重試
+    const credential = view.error ? null : takeGoogleCredential();
+    if (credential) await googleLogin(credential);
   }
   boot();
 })();

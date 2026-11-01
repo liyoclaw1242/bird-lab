@@ -15,6 +15,7 @@ module.exports = async function handler(req, res) {
       query: req.query,
       body: req.body,
       token: (req.headers.authorization || "").replace(/^Bearer /, ""),
+      cookie: req.headers.cookie || "",
       ip: req.headers["x-real-ip"] || "",
       origin: `https://${req.headers["x-forwarded-host"] || req.headers.host}`,
     });

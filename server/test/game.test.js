@@ -412,3 +412,21 @@ test("運氣再差也會在保底抽到", async () => {
   const { odds } = await g.state(id);
   assert.strictEqual(odds.urIn, D.PITY.UR.hard);
 });
+
+test("Google 跳轉回來要 CSRF 相符才把憑證交給前端", async () => {
+  const post = (body, cookie) => api({ method: "POST", op: "google-callback", body, cookie });
+  const ok = await post({ credential: "aa.bb-c_d", g_csrf_token: "t1" }, "x=1; g_csrf_token=t1");
+  assert.strictEqual(ok.status, 200);
+  assert.match(ok.html, /"aa\.bb-c_d"/);
+  for (const [body, cookie] of [
+    [{ credential: "aa.bb", g_csrf_token: "t1" }, "g_csrf_token=other"],
+    [{ credential: "aa.bb", g_csrf_token: "t1" }, ""],
+    [{ credential: "aa.bb" }, ""],
+    [{ credential: "</script><script>alert(1)</script>", g_csrf_token: "t1" }, "g_csrf_token=t1"],
+    [{ g_csrf_token: "t1" }, "g_csrf_token=t1"],
+  ]) {
+    const bad = await post(body, cookie);
+    assert.strictEqual(bad.status, 400);
+    assert.doesNotMatch(bad.html, /alert\(1\)/);
+  }
+});

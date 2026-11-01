@@ -2,6 +2,16 @@
 const { GameError } = require("./game.js");
 const { sharePage } = require("./share-page.js");
 
+// Google 整頁跳轉回來時把 ID token POST 到這裡。Google 要求比對表單和 cookie 的 g_csrf_token，防止別人替你登入。
+// 真正驗證憑證仍由 POST login 負責：要等前端帶著這台裝置的存檔憑證一起送，才知道要綁哪片林子。
+function googleCallback(body, cookie = "") {
+  const fail = () => ({ status: 400, html: `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>一鳥在手</title></head><body><p>Google 登入沒有成功，再試一次。</p><a href="/">回到林子</a></body></html>` });
+  const csrf = cookie.split(";").map((part) => part.trim().split("=")).find(([name]) => name === "g_csrf_token")?.[1];
+  const { credential, g_csrf_token: sent } = body;
+  if (!csrf || csrf !== sent || typeof credential !== "string" || !/^[\w.-]+$/.test(credential)) return fail();
+  return { status: 200, html: `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>一鳥在手</title><script>try{sessionStorage.setItem("gacha-google-credential",${JSON.stringify(credential)})}catch(e){}location.replace("/")</script></head><body><a href="/">回到林子</a></body></html>` };
+}
+
 function createApi(game, { dev = false, googleClientId = process.env.GOOGLE_CLIENT_ID || "" } = {}) {
   const routes = {
     "GET health": () => game.health(),
@@ -20,7 +30,7 @@ function createApi(game, { dev = false, googleClientId = process.env.GOOGLE_CLIE
   const PUBLIC = new Set(["GET health", "POST player", "POST login"]);
   const OPTIONAL = new Set(["GET share"]);
 
-  return async function handle({ method, op, query = {}, body = {}, token, devOffset, ip = "", origin = "" }) {
+  return async function handle({ method, op, query = {}, body = {}, token, devOffset, ip = "", origin = "", cookie = "" }) {
     const key = `${method} ${op}`;
     try {
       // 給連結預覽爬蟲看的頁面，CDN 快取一小時，所以剩餘份數可能稍微落後
@@ -28,6 +38,7 @@ function createApi(game, { dev = false, googleClientId = process.env.GOOGLE_CLIE
         const preview = await game.sharePreview(query.code, null, 0).catch(() => null);
         return { status: 200, html: sharePage(String(query.code || ""), preview, origin), cache: "public, s-maxage=3600" };
       }
+      if (key === "POST google-callback") return googleCallback(body || {}, cookie);
       const route = routes[key];
       if (!route) return { status: 404, body: { error: "not_found" } };
       let playerId = null;

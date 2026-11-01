@@ -31,20 +31,27 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
       res.writeHead(result.status, { "content-type": "text/html; charset=utf-8" });
       return res.end(result.html);
     }
-    if (url.pathname === "/api/gacha") {
+    const googleBack = url.pathname === "/auth/google";
+    if (url.pathname === "/api/gacha" || googleBack) {
       let raw = "";
       for await (const chunk of req) raw += chunk;
       let body = {};
-      try { body = raw ? JSON.parse(raw) : {}; } catch { body = {}; }
+      if (googleBack) body = Object.fromEntries(new URLSearchParams(raw));
+      else try { body = raw ? JSON.parse(raw) : {}; } catch { body = {}; }
       const result = await handle({
         method: req.method,
-        op: url.searchParams.get("op"),
+        op: googleBack ? "google-callback" : url.searchParams.get("op"),
+        cookie: req.headers.cookie || "",
         query: Object.fromEntries(url.searchParams),
         body,
         token: (req.headers.authorization || "").replace(/^Bearer /, ""),
         devOffset: req.headers["x-dev-offset"],
         ip: process.env.GACHA_DEV_IP || "",
       });
+      if (result.html !== undefined) {
+        res.writeHead(result.status, { "content-type": "text/html; charset=utf-8" });
+        return res.end(result.html);
+      }
       res.writeHead(result.status, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify(result.body));
     }
