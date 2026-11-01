@@ -203,9 +203,9 @@
   const RARITY_FX = {
     N: { count: 10, ms: 1800, colors: ["#8a6a3a", "#a58a55", "#6f5a35"] },
     R: { count: 18, ms: 2200, colors: ["#5c9a35", "#7fb545", "#3f7f35"] },
-    SR: { count: 30, ms: 2800, colors: ["#bfe3f2", "#7fbfe0", "#e8f2f5", "#4f9fd0"], banner: "銀葉飄下" },
-    SSR: { count: 46, ms: 3600, colors: ["#ffd84a", "#f2b01e", "#fff0a0", "#d99a1c"], banner: "金葉落下！" },
-    UR: { count: 70, ms: 4600, colors: ["#ff4d4d", "#ff9a2e", "#ffe14a", "#4fd65c", "#3fb8f2", "#6a6af0", "#d65cf0"], banner: "七彩落葉！" },
+    SR: { count: 30, ms: 2800, colors: ["#bfe3f2", "#7fbfe0", "#e8f2f5", "#4f9fd0"], banner: true },
+    SSR: { count: 46, ms: 3600, colors: ["#ffd84a", "#f2b01e", "#fff0a0", "#d99a1c"], banner: true },
+    UR: { count: 70, ms: 4600, colors: ["#ff4d4d", "#ff9a2e", "#ffe14a", "#4fd65c", "#3fb8f2", "#6a6af0", "#d65cf0"], banner: true },
   };
 
   function rarityFx(rarity) {
@@ -217,7 +217,7 @@
       const style = `left:${(Math.random() * 100).toFixed(1)}%;width:${size.toFixed(0)}px;height:${(size * 1.35).toFixed(0)}px;animation-delay:${(Math.random() * (fx.ms * 0.4)).toFixed(0)}ms;animation-duration:${(fx.ms * (0.5 + Math.random() * 0.2)).toFixed(0)}ms;--drift:${(Math.random() * 160 - 80).toFixed(0)}px;--spin:${(Math.random() * 900 - 450).toFixed(0)}deg`;
       leaves += `<svg class="gc-fx-leaf" style="${style}" viewBox="-14 -18 28 38"><path d="${LEAF}" fill="${color}" stroke="rgba(40,28,10,.55)" stroke-width="1"/></svg>`;
     }
-    const banner = fx.banner ? `<div class="gc-fx-banner">${fx.banner}</div>` : "";
+    const banner = fx.banner ? `<div class="gc-fx-banner">${I18n.t(`banner.${rarity}`)}</div>` : "";
     return { html: `<div class="gc-fx ${rarity}" aria-hidden="true"><div class="gc-fx-glow"></div>${leaves}${banner}</div>`, ms: fx.ms };
   }
 

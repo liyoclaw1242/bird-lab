@@ -351,3 +351,4 @@ img { display: block; }
 .gc-odds { margin-top: 12px; padding: 10px 14px; font-size: 15px; font-weight: 400; } .gc-odds summary { cursor: pointer; font-weight: 700; } .gc-odds ul { list-style: none; margin: 8px 0; padding: 0; } .gc-odds li { display: flex; align-items: center; gap: 8px; padding: 2px 0; } .gc-odds li b { margin-left: auto; } .gc-odds li span { color: var(--muted); } .gc-odds p { margin: 6px 0 0; font-size: 14px; line-height: 1.5; }
 .gc-bgm { right: calc(64px + env(safe-area-inset-right)); opacity: .55; }
 .gc-bgm.on { opacity: 1; background: #e6b84a; }
+.gc-lang { padding: 0; font: inherit; color: inherit; text-decoration: underline; background: none; border: 0; cursor: pointer; }

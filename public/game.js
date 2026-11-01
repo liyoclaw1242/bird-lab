@@ -9,13 +9,10 @@
   const { SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY } = D;
   const HOLD = { player: 1600, super: 2000, hit: 650, boss: 1250, bossHit: 550 };
   const SLOT_POS = [[17, 48], [44, 24], [78, 37]];
-  const MOVES = {
-    meat: ["一口生吞", "俯衝亂啄", "用眼神殺死你"],
-    mixed: ["亂翻亂啄", "順手牽羊", "邊跑邊吵"],
-    plant: ["種子連發", "果核砸臉", "用力嗑瓜子"],
-  };
-  const SUPERS = ["畫風崩壞！", "線稿暴走！", "不管了！"];
-  const BOSS_LINES = { peck: "隨便啄一下", smash: "牠認真了", rest: "喘……喘一下", armor: "縮起來裝死" };
+  const { t } = I18n;
+  const birdName = I18n.name;
+  const bossName = (boss) => t(`boss.${boss.id}`);
+  const bossSelf = (boss) => t("boss.self", { name: bossName(boss) });
 
   const app = document.getElementById("gc-app");
   document.getElementById("gc-woods").innerHTML = window.Scenery.backdrop();
@@ -24,8 +21,7 @@
   const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const sticker = (c) => STICKER_BASE + c.file;
   const rarityTag = (r) => `<span class="gc-rar ${r}">${r}</span>`;
-  const typeTag = (t) => `<span class="gc-type ${t}">${E.TYPES[t].label}</span>`;
-  const weight = (g) => (g >= 1000 ? `${(g / 1000).toFixed(1)} 公斤` : `${Math.round(g)} 公克`);
+  const typeTag = (type) => `<span class="gc-type ${type}">${t(`type.${type}`)}</span>`;
 
   const memory = {};
   const store = {
@@ -40,15 +36,14 @@
     if (token) headers.authorization = `Bearer ${token}`;
     const offset = store.get(OFFSET_KEY);
     if (offset) headers["x-dev-offset"] = offset;
-    const resting = "森林今天休息中，晚點再來";
     const res = await fetch(`/api/gacha?op=${op}${query}`, { method, headers, body: body ? JSON.stringify(body) : undefined })
-      .catch(() => { throw Object.assign(new Error("連不上林子，檢查一下網路再試一次"), { code: "offline" }); });
+      .catch(() => { throw Object.assign(new Error(t("err.offline")), { code: "offline" }); });
     const data = await res.json().catch(() => ({}));
     if (res.status === 401 && !retried) {
       await ensurePlayer(true);
       return call(method, op, { body, query }, true);
     }
-    if (!res.ok) throw Object.assign(new Error(data.message || resting), { code: data.error || "resting", detail: data });
+    if (!res.ok) throw Object.assign(new Error(data.error ? I18n.serverError(data.error, data.message) : t("err.resting")), { code: data.error || "resting", detail: data });
     return data;
   }
 
@@ -91,7 +86,7 @@
     } catch (error) {
       console.error(error);
       Sound.play("error");
-      view = { ...view, busy: false, error: { message: error.message || "連線出了問題", retry } };
+      view = { ...view, busy: false, error: { message: error.message || t("err.generic"), retry } };
     }
     render();
   }
@@ -99,17 +94,17 @@
   function moveLeaves(fight, round) {
     return `<div class="gc-leaves">${fight.script.map((k, i) => {
       const state = round === undefined ? "" : i < round ? "past" : i === round ? "now" : "";
-      return `<div class="gc-move ${state}"><b>${E.INTENTS[k].label}</b>${typeTag(fight.forms[i])}</div>`;
+      return `<div class="gc-move ${state}"><b>${t(`intent.${k}`)}</b>${typeTag(fight.forms[i])}</div>`;
     }).join("")}</div>`;
   }
 
-  const chain = `<p class="gc-chain">${typeTag("meat")} 剋 ${typeTag("mixed")} 剋 ${typeTag("plant")} 剋 ${typeTag("meat")}。剋對方時傷害 ×1.5，被剋 ×0.67，挨打也一樣。</p>`;
+  const chain = `<p class="gc-chain">${t("chain", { meat: typeTag("meat"), mixed: typeTag("mixed"), plant: typeTag("plant") })}</p>`;
 
-  const brand = `<a class="gc-brand" href="/" aria-label="一鳥在手"><img src="logo.svg" alt="" width="46" height="46"><span>一鳥在手</span></a>`;
-  const nav = () => `${brand}<nav class="gc-nav" aria-label="分頁">${[["home", "今日林間"], ["forest", "百鳥在林"], ["hand", "一鳥在手"]].map(([id, label]) =>
-    `<button class="gc-tab" data-go="${id}" ${view.screen === id ? 'aria-current="page"' : ""}>${label}</button>`).join("")}</nav>`;
+  const brand = `<a class="gc-brand" href="/" aria-label="${t("app.name")}"><img src="logo.svg" alt="" width="46" height="46"><span>${t("app.name")}</span></a>`;
+  const nav = () => `${brand}<nav class="gc-nav" aria-label="${t("nav.label")}">${["home", "forest", "hand"].map((id) =>
+    `<button class="gc-tab" data-go="${id}" ${view.screen === id ? 'aria-current="page"' : ""}>${t(`nav.${id}`)}</button>`).join("")}</nav>`;
 
-  const errorBox = () => (view.error ? `<div class="gc-scrap" role="alert"><p class="gc-h">${esc(view.error.message)}</p><button class="gc-plank" data-do="retry">${esc(view.error.label || "再試一次")}</button></div>` : "");
+  const errorBox = () => (view.error ? `<div class="gc-scrap" role="alert"><p class="gc-h">${esc(view.error.message)}</p><button class="gc-plank" data-do="retry">${esc(view.error.label || t("retry"))}</button></div>` : "");
 
   const miniTree = `<svg viewBox="0 0 60 64" aria-hidden="true"><path d="M26 62 L28 34 L32 34 L35 62 Z" fill="#3f3019"/><path d="M30 3 C47 3 57 14 54 26 C58 38 44 44 32 40 C20 45 4 39 7 27 C3 14 14 3 30 3 Z" fill="#2f4d1d" stroke="#1b2b10" stroke-width="2"/></svg>`;
   const LEAF_ICON = (color) => `<svg viewBox="-14 -18 28 38" aria-hidden="true"><path d="${window.Scenery.LEAF}" fill="${color}" stroke="#3d2b14" stroke-width="1.4"/></svg>`;
@@ -121,7 +116,7 @@
       const s = stars[d];
       return `<span title="${d}">${LEAF_ICON(s === undefined ? "#d9ceae" : color[s])}<i>${s === undefined ? "" : s || "✕"}</i></span>`;
     }).join("");
-    return `<div class="gc-scrap tilt-r"><p class="gc-h">落葉記錄兩週的星數，連勝 ${S.streak} 天</p><div class="gc-strip">${cells}</div></div>`;
+    return `<div class="gc-scrap tilt-r"><p class="gc-h">${t("history", { n: S.streak })}</p><div class="gc-strip">${cells}</div></div>`;
   }
 
   function homeScreen() {
@@ -129,21 +124,21 @@
     const complete = S.owned >= S.total;
     const shake = (kind, title, note, disabled) => `<button class="gc-shake" data-draw="${kind}" ${disabled ? "disabled" : ""}>${miniTree}<span>${title}<small>${note}</small></span></button>`;
     const fightBtn = result
-      ? `<button class="gc-plank" disabled>今天打過了，得到 ${result.stars} 星，明天再來</button>`
+      ? `<button class="gc-plank" disabled>${t("home.foughtStars", { n: result.stars })}</button>`
       : hand.length === E.TEAM_SIZE
-        ? `<button class="gc-plank hot" data-do="start">帶手上的 3 隻去挑戰</button>`
-        : `<button class="gc-plank" data-go="hand">手上要有 3 隻才能打</button>`;
+        ? `<button class="gc-plank hot" data-do="start">${t("home.challenge")}</button>`
+        : `<button class="gc-plank" data-go="hand">${t("home.needThree")}</button>`;
     return `${nav()}
       <section class="gc-clearing">
         <div class="gc-today-boss">
-          <div class="gc-scrap gc-boss-note tilt"><span>今天林子裡來了</span><b>${esc(fight.boss.name)}本鳥</b><span>${S.day}</span></div>
-          <img class="gc-perched" src="${fight.boss.img}" alt="${esc(fight.boss.name)}的貼紙">
+          <div class="gc-scrap gc-boss-note tilt"><span>${t("home.bossToday")}</span><b>${esc(bossSelf(fight.boss))}</b><span>${S.day}</span></div>
+          <img class="gc-perched" src="${fight.boss.img}" alt="${esc(t("home.stickerAlt", { name: bossName(fight.boss) }))}">
         </div>
-        <div class="gc-scrap tilt-r"><p class="gc-h">牠今天的五招</p>${moveLeaves(fight)}${chain}</div>
+        <div class="gc-scrap tilt-r"><p class="gc-h">${t("home.fiveMoves")}</p>${moveLeaves(fight)}${chain}</div>
       </section>
       <div class="gc-trees" style="margin-top:12px">
-        ${shake("free", complete ? "整座林子都收集完了" : draws.free ? "今天的樹搖過了" : "搖一棵樹", "每天一次，會掉下一隻你還沒遇過的鳥", draws.free || complete)}
-        ${result?.stars > 0 && !complete ? shake("bonus", draws.bonus ? "獎勵的樹也搖過了" : "打贏了，再搖一棵", "打贏 BOSS 的獎勵", draws.bonus) : ""}
+        ${shake("free", complete ? t("draw.complete") : draws.free ? t("draw.done") : t("draw.free"), t("draw.freeNote"), draws.free || complete)}
+        ${result?.stars > 0 && !complete ? shake("bonus", draws.bonus ? t("draw.bonusDone") : t("draw.bonus"), t("draw.bonusNote"), draws.bonus) : ""}
       </div>
       <div style="margin-top:12px">${fightBtn}</div>
       ${errorBox()}
@@ -153,20 +148,20 @@
       ${historyStrip()}
       ${installBox()}
       ${accountBox()}
-      ${S.dev ? `<div class="gc-scrap gc-dev"><p>測試用，只有本機開發才有</p><button class="gc-plank" data-do="next-day">跳到下一天</button><button class="gc-plank" data-do="new-player">換一位新玩家</button></div>` : ""}
+      ${S.dev ? `<div class="gc-scrap gc-dev"><p>${t("dev.note")}</p><button class="gc-plank" data-do="next-day">${t("dev.nextDay")}</button><button class="gc-plank" data-do="new-player">${t("dev.newPlayer")}</button></div>` : ""}
       ${shakeStage()}${cardStage()}`;
   }
 
   function todayDraws() {
     if (!S.drawn.length) return "";
-    const rows = S.drawn.map((d) => `<div class="gc-gift-row"><img src="${sticker(d.card)}" alt=""><span>${esc(d.card.zh)} ${rarityTag(d.card.rarity)}<small>${d.share ? `被領走 ${d.share.claimed} / ${d.share.cap} 份` : `最多 ${SHARE_CAPS[d.card.rarity]} 位朋友能領`}</small></span><button class="gc-plank" data-share="${d.kind}">分享</button></div>`).join("");
-    return `<div class="gc-scrap"><p class="gc-h">今天搖到的鳥可以分給朋友</p>${rows}${view.card ? "" : shareBox()}</div>`;
+    const rows = S.drawn.map((d) => `<div class="gc-gift-row"><img src="${sticker(d.card)}" alt=""><span>${esc(birdName(d.card))} ${rarityTag(d.card.rarity)}<small>${d.share ? t("share.claimed", d.share) : t("share.max", { n: SHARE_CAPS[d.card.rarity] })}</small></span><button class="gc-plank" data-share="${d.kind}">${t("share.button")}</button></div>`).join("");
+    return `<div class="gc-scrap"><p class="gc-h">${t("share.today")}</p>${rows}${view.card ? "" : shareBox()}</div>`;
   }
 
   function shareBox() {
     const link = view.shareLink;
     if (!link) return "";
-    return `<div class="gc-share-box"><input readonly value="${esc(link.url)}" aria-label="分享連結"><button class="gc-plank hot" data-do="copy-link">${link.copied ? "複製好了" : "複製"}</button><small>${SHARE_DAYS} 天內有效，${link.cap} 份領完就沒了，你手上這隻不會少。</small></div>`;
+    return `<div class="gc-share-box"><input readonly value="${esc(link.url)}" aria-label="${t("share.linkLabel")}"><button class="gc-plank hot" data-do="copy-link">${link.copied ? t("copied") : t("copy")}</button><small>${t("share.note", { days: SHARE_DAYS, cap: link.cap })}</small></div>`;
   }
 
   function installBox() {
@@ -174,19 +169,19 @@
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     if (!installPrompt && !ios) return "";
     const action = installPrompt
-      ? `<button class="gc-plank hot" data-do="install">放到桌面</button>`
-      : `<p class="gc-sub">在 Safari 按「分享」，再選「加入主畫面」。</p>`;
-    return `<div class="gc-scrap gc-install"><p class="gc-h">把林子放到手機桌面，每天點開就能搖</p>${action}<button class="gc-text-btn" data-do="hide-install">不用了</button></div>`;
+      ? `<button class="gc-plank hot" data-do="install">${t("install.button")}</button>`
+      : `<p class="gc-sub">${t("install.ios")}</p>`;
+    return `<div class="gc-scrap gc-install"><p class="gc-h">${t("install.title")}</p>${action}<button class="gc-text-btn" data-do="hide-install">${t("install.hide")}</button></div>`;
   }
 
   function accountBox() {
     if (S.google) {
-      return `<div class="gc-scrap gc-backup"><p class="gc-h">這片林子綁好 Google 了</p><p class="gc-sub">換裝置時登入同一個帳號，你的鳥都會在。</p><div class="gc-row"><button class="gc-plank" data-do="logout">登出這台裝置</button></div></div>`;
+      return `<div class="gc-scrap gc-backup"><p class="gc-h">${t("account.bound")}</p><p class="gc-sub">${t("account.boundNote")}</p><div class="gc-row"><button class="gc-plank" data-do="logout">${t("account.logout")}</button></div></div>`;
     }
     const ask = view.switchAsk;
     const google = !S.googleClientId ? "" : ask
-      ? `<div class="gc-scrap gc-backup" role="alert"><p class="gc-h">這個 Google 帳號已經有一片林子了</p><p class="gc-sub">那邊有 ${ask.there} 隻，這台裝置目前有 ${ask.here} 隻。兩片林子不能合併，切換後這台裝置的 ${ask.here} 隻會留在原處，之後要靠存檔碼才找得回來。</p><div class="gc-row"><button class="gc-plank hot" data-do="confirm-switch">切換過去</button><button class="gc-plank" data-do="cancel-switch">留在這裡</button></div></div>`
-      : `<div class="gc-scrap gc-backup"><p class="gc-h">用 Google 綁定你的鳥</p><p class="gc-sub">綁定後換手機也不會弄丟。我們只存帳號編號，不存姓名和 Email。</p><div id="gc-google" class="gc-google"></div></div>`;
+      ? `<div class="gc-scrap gc-backup" role="alert"><p class="gc-h">${t("account.switchTitle")}</p><p class="gc-sub">${t("account.switchNote", ask)}</p><div class="gc-row"><button class="gc-plank hot" data-do="confirm-switch">${t("account.switch")}</button><button class="gc-plank" data-do="cancel-switch">${t("account.stay")}</button></div></div>`
+      : `<div class="gc-scrap gc-backup"><p class="gc-h">${t("account.bind")}</p><p class="gc-sub">${t("account.bindNote")}</p><div id="gc-google" class="gc-google"></div></div>`;
     return google + backupBox();
   }
 
@@ -197,18 +192,18 @@
     if (!box || !S?.googleClientId) return;
     googleLoading ||= new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
+      script.src = `https://accounts.google.com/gsi/client?hl=${I18n.google}`;
       script.onload = () => {
         // 整頁跳轉：不靠彈出視窗，瀏覽器封鎖彈窗時也能登入。回來的憑證由 boot 接手
         window.google.accounts.id.initialize({ client_id: S.googleClientId, ux_mode: "redirect", login_uri: `${location.origin}/auth/google` });
         resolve();
       };
-      script.onerror = () => { googleLoading = null; reject(new Error("Google 登入載入失敗")); };
+      script.onerror = () => { googleLoading = null; reject(new Error(t("err.googleLoad"))); };
       document.head.append(script);
     });
     googleLoading.then(() => {
       const current = document.getElementById("gc-google");
-      if (current) window.google.accounts.id.renderButton(current, { theme: "outline", size: "large", text: "continue_with", locale: "zh-TW", width: Math.min(current.clientWidth || 280, 400) });
+      if (current) window.google.accounts.id.renderButton(current, { theme: "outline", size: "large", text: "continue_with", locale: I18n.google, width: Math.min(current.clientWidth || 280, 400) });
     }).catch((error) => { box.textContent = error.message; });
   }
 
@@ -238,11 +233,11 @@
 
   function backupBox() {
     const open = view.backup;
-    return `<details class="gc-scrap gc-backup" ${open ? "open" : ""}><summary data-do="toggle-backup">換手機也要帶著這片林子</summary>
-      <p class="gc-sub">存檔只放在這個瀏覽器。把存檔碼收好，換裝置時貼上就能找回。<b>不要給別人</b>，拿到的人就能用你的林子。</p>
-      <div class="gc-row"><button class="gc-plank" data-do="copy-code">${view.codeCopied ? "複製好了" : "複製我的存檔碼"}</button></div>
-      <label class="gc-restore">已經有存檔碼？<input id="gc-restore-code" autocomplete="off" spellcheck="false" placeholder="貼在這裡"></label>
-      <div class="gc-row"><button class="gc-plank" data-do="restore">換成這片林子</button></div>
+    return `<details class="gc-scrap gc-backup" ${open ? "open" : ""}><summary data-do="toggle-backup">${t("backup.title")}</summary>
+      <p class="gc-sub">${t("backup.note")}</p>
+      <div class="gc-row"><button class="gc-plank" data-do="copy-code">${view.codeCopied ? t("copied") : t("backup.copy")}</button></div>
+      <label class="gc-restore">${t("backup.have")}<input id="gc-restore-code" autocomplete="off" spellcheck="false" placeholder="${t("backup.paste")}"></label>
+      <div class="gc-row"><button class="gc-plank" data-do="restore">${t("backup.restore")}</button></div>
       ${view.restoreError ? `<p class="gc-bad" role="alert">${esc(view.restoreError)}</p>` : ""}
     </details>`;
   }
@@ -251,17 +246,17 @@
     const g = view.gift;
     if (!g) return "";
     const lines = {
-      open: `朋友從林子裡分你這隻，還剩 ${g.left} / ${g.cap} 份，${esc(g.lastDay)} 前有效。`,
-      mine: `這是你分享出去的，還剩 ${g.left} / ${g.cap} 份。`,
-      owned: "這隻已經在你的林子裡了。",
+      open: t("gift.open", { left: g.left, cap: g.cap, day: esc(g.lastDay) }),
+      mine: t("gift.mine", g),
+      owned: t("gift.owned"),
     };
     return `<p class="gc-gift-note">${lines[g.status]}</p>`;
   }
 
   function giftAction(c) {
     const g = view.gift;
-    if (g.status === "open") return `<div class="gc-row"><button class="gc-plank hot" data-do="claim">收進林子</button><button class="gc-plank" data-do="close-card">先不要</button></div><small class="gc-note-small">每人每天最多領 ${CLAIMS_PER_DAY} 隻</small>`;
-    return `<div class="gc-row"><button class="gc-plank hot" data-do="close-card">知道了</button></div>`;
+    if (g.status === "open") return `<div class="gc-row"><button class="gc-plank hot" data-do="claim">${t("gift.claim")}</button><button class="gc-plank" data-do="close-card">${t("gift.skip")}</button></div><small class="gc-note-small">${t("gift.limit", { n: CLAIMS_PER_DAY })}</small>`;
+    return `<div class="gc-row"><button class="gc-plank hot" data-do="close-card">${t("gotIt")}</button></div>`;
   }
 
   function playRarityFx(rarity) {
@@ -283,12 +278,12 @@
   function oddsBox() {
     const o = S.odds;
     const pct = (p) => { const v = p * 100; return `${v >= 10 || Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1)}%`; };
-    const rows = D.TIERS.map((t) => `<li>${rarityTag(t)} <span>基礎 ${pct(D.RATES[t])}</span><b>這一抽 ${pct(o.next[t])}</b></li>`).join("");
-    return `<details class="gc-scrap gc-odds"><summary>再 <b>${o.ssrIn}</b> 抽內必得 SSR 以上，<b>${o.urIn}</b> 抽內必得 UR</summary>
+    const rows = D.TIERS.map((tier) => `<li>${rarityTag(tier)} <span>${t("odds.base", { p: pct(D.RATES[tier]) })}</span><b>${t("odds.next", { p: pct(o.next[tier]) })}</b></li>`).join("");
+    return `<details class="gc-scrap gc-odds"><summary>${t("odds.summary", { ssr: o.ssrIn, ur: o.urIn })}</summary>
       <ul>${rows}</ul>
-      <p>保底：連續 ${D.PITY.SSR.soft} 抽沒有 SSR 以上、或 ${D.PITY.UR.soft} 抽沒有 UR，機率開始上升。朋友分的鳥不算進保底。</p>
-      <p>補運：林子裡的鳥比平均普通時，SR 以上機率最多提高到 ${D.CATCH_UP.max} 倍，要抽滿 ${D.CATCH_UP.minDraws} 次才開始，也不會低於基礎機率。目前 ${o.boost.toFixed(2)} 倍。</p>
-      <p>含保底的長期平均約為 UR 2.2%、SSR 6.9%（模擬值）。抽到的鳥不會重複。</p></details>`;
+      <p>${t("odds.pity", { ssr: D.PITY.SSR.soft, ur: D.PITY.UR.soft })}</p>
+      <p>${t("odds.catchUp", { max: D.CATCH_UP.max, min: D.CATCH_UP.minDraws, boost: o.boost.toFixed(2) })}</p>
+      <p>${t("odds.average")}</p></details>`;
   }
 
   const STORY_FACTS = ["第一印象", "你可能不知道"];
@@ -307,18 +302,18 @@
   function cardStage() {
     if (!view.card) return "";
     const c = view.card;
-    const facts = c.facts.map((n) => `<li><b>${esc(n.t)}</b>${esc(n.d)}</li>`).join("");
+    const facts = I18n.facts(c).map((n) => `<li><b>${esc(n.t)}</b>${esc(n.d)}</li>`).join("");
     const art = c.credit
-      ? `${c.credit.page ? `<a href="${esc(c.credit.page)}" target="_blank" rel="noopener">${esc(c.credit.artist)}</a>` : esc(c.credit.artist)} · ${licenseLink(c.credit.license)}，已去背`
+      ? `${c.credit.page ? `<a href="${esc(c.credit.page)}" target="_blank" rel="noopener">${esc(c.credit.artist)}</a>` : esc(c.credit.artist)} · ${licenseLink(c.credit.license)}${t("card.bgRemoved")}`
       : `[removed] · ${licenseLink("PolyForm Shield 1.0.0")}`;
     // 趣聞的授權跟著文字走，少數牌沒有記錄參考條目，一樣要標示
-    const hasStory = c.facts.some((n) => STORY_FACTS.includes(n.t));
+    const hasStory = I18n.facts(c).some((n) => STORY_FACTS.includes(n.t));
     const text = hasStory
-      ? ` ／ 趣聞：<a href="[removed]" target="_blank" rel="noopener">[removed]</a>${c.source ? `、<a href="${esc(c.source)}" target="_blank" rel="noopener">維基來源</a>` : ""} · ${licenseLink("CC BY-SA 4.0")}，已轉繁體`
+      ? `${t("card.storyLabel")}<a href="[removed]" target="_blank" rel="noopener">[removed]</a>${c.source ? `、<a href="${esc(c.source)}" target="_blank" rel="noopener">${t("card.wikiSource")}</a>` : ""} · ${licenseLink("CC BY-SA 4.0")}${t("card.storyConverted")}`
       : "";
     const inHand = hand.some((b) => b.id === c.id);
     const swap = view.swapping
-      ? `<div class="gc-swap"><p>手上滿了，要放走哪一隻？</p><div class="gc-swap-grid">${hand.map((b) => `<button data-replace="${esc(b.id)}"><img src="${sticker(b)}" alt="">${esc(b.zh)} ${rarityTag(b.rarity)}</button>`).join("")}</div></div>`
+      ? `<div class="gc-swap"><p>${t("card.swap")}</p><div class="gc-swap-grid">${hand.map((b) => `<button data-replace="${esc(b.id)}"><img src="${sticker(b)}" alt="">${esc(birdName(b))} ${rarityTag(b.rarity)}</button>`).join("")}</div></div>`
       : "";
     const canShare = view.drew && view.drawKind;
     // 掉落動畫只播一次，之後按分享或複製重畫時不再重播
@@ -326,17 +321,17 @@
     view.landed = view.drew;
     const action = view.gift ? giftAction(c)
       : view.drew
-      ? `<div class="gc-row">${canShare ? `<button class="gc-plank" data-share="${view.drawKind}">分給 ${SHARE_CAPS[c.rarity]} 位朋友</button>` : ""}<button class="gc-plank hot" data-do="close-card">讓牠飛進林子</button></div>${shareBox()}`
+      ? `<div class="gc-row">${canShare ? `<button class="gc-plank" data-share="${view.drawKind}">${t("card.shareTo", { n: SHARE_CAPS[c.rarity] })}</button>` : ""}<button class="gc-plank hot" data-do="close-card">${t("card.fly")}</button></div>${shareBox()}`
       : inHand
-        ? `<div class="gc-row"><button class="gc-plank" data-release="${esc(c.id)}">放回林子</button><button class="gc-plank hot" data-do="close-card">關閉</button></div>`
-        : `<div class="gc-row"><button class="gc-plank hot" data-take="${esc(c.id)}">放到手上</button><button class="gc-plank" data-do="close-card">關閉</button></div>`;
-    return `<div class="gc-stage" role="dialog" aria-modal="true" aria-label="${esc(c.zh)}"><article class="gc-note-card aura-${c.rarity} ${dropping ? "dropping" : ""}">
+        ? `<div class="gc-row"><button class="gc-plank" data-release="${esc(c.id)}">${t("card.release")}</button><button class="gc-plank hot" data-do="close-card">${t("close")}</button></div>`
+        : `<div class="gc-row"><button class="gc-plank hot" data-take="${esc(c.id)}">${t("card.take")}</button><button class="gc-plank" data-do="close-card">${t("close")}</button></div>`;
+    return `<div class="gc-stage" role="dialog" aria-modal="true" aria-label="${esc(birdName(c))}"><article class="gc-note-card aura-${c.rarity} ${dropping ? "dropping" : ""}">
       <span class="gc-stamp ${c.rarity}">${c.rarity}</span>
       ${giftNotice()}
-      <img class="gc-card-bird" src="${sticker(c)}" alt="${esc(c.zh)}的貼紙">
-      <p class="gc-credit">貼紙：${art}${text}</p>
-      <b class="gc-name">${esc(c.zh)}</b><span class="gc-sci">${esc(c.sci)}</span>
-      <div class="gc-statline"><span>攻 ${c.atk} ／ 防 ${c.def}</span>${typeTag(c.type)}</div>
+      <img class="gc-card-bird" src="${sticker(c)}" alt="${esc(t("home.stickerAlt", { name: birdName(c) }))}">
+      <p class="gc-credit">${t("card.sticker")}${art}${text}</p>
+      <b class="gc-name">${esc(birdName(c))}</b><span class="gc-sci">${esc(c.sci)}</span>
+      <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
       <ol class="gc-facts">${facts}</ol>
       ${swap}${view.swapping ? "" : action}
     </article></div>`;
@@ -344,21 +339,21 @@
 
   function forestScreen() {
     const f = view.collection;
-    if (!f) return `${nav()}${errorBox()}<div class="gc-center"><p class="gc-scrap">走進林子裡…</p></div>`;
+    if (!f) return `${nav()}${errorBox()}<div class="gc-center"><p class="gc-scrap">${t("loading")}</p></div>`;
     const scene = forestPage(f.page, f.cards.length);
     const inHand = new Set(hand.map((b) => b.id));
     const birds = f.cards.map((c, i) => {
       const p = scene.perches[i];
-      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="left:${p.left.toFixed(1)}%;top:${p.top.toFixed(1)}%;width:${p.size.toFixed(1)}%" data-open="${esc(c.id)}" aria-label="看${esc(c.zh)}"><img src="${sticker(c)}" alt="" loading="lazy"></button>`;
+      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="left:${p.left.toFixed(1)}%;top:${p.top.toFixed(1)}%;width:${p.size.toFixed(1)}%" data-open="${esc(c.id)}" aria-label="${esc(t("card.view", { name: birdName(c) }))}"><img src="${sticker(c)}" alt="" loading="lazy"></button>`;
     }).join("");
     return `${nav()}
-      <div class="gc-scrap tilt"><h1 class="gc-title">百鳥在林</h1><p class="gc-sub">這片林子有 ${f.cards.length} 隻。你總共遇過 ${f.owned} 隻，世界上還有 ${(S.total - f.owned).toLocaleString("en-US")} 隻沒遇到。點一隻看看牠。</p></div>
+      <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.forest")}</h1><p class="gc-sub">${t("forest.note", { here: f.cards.length, owned: f.owned, left: I18n.number(S.total - f.owned) })}</p></div>
       ${errorBox()}
       <div class="gc-forest">${scene.svg}${birds}</div>
       <div class="gc-pages">
-        <button class="gc-plank" data-page="${f.page - 1}" ${f.page <= 0 ? "disabled" : ""}>走回去</button>
-        <span class="gc-scrap" style="white-space:nowrap;padding:4px 10px">第 ${f.page + 1} / ${f.pages} 片</span>
-        <button class="gc-plank" data-page="${f.page + 1}" ${f.page + 1 >= f.pages ? "disabled" : ""}>再往裡走</button>
+        <button class="gc-plank" data-page="${f.page - 1}" ${f.page <= 0 ? "disabled" : ""}>${t("forest.back")}</button>
+        <span class="gc-scrap" style="white-space:nowrap;padding:4px 10px">${t("forest.page", { page: f.page + 1, pages: f.pages })}</span>
+        <button class="gc-plank" data-page="${f.page + 1}" ${f.page + 1 >= f.pages ? "disabled" : ""}>${t("forest.next")}</button>
       </div>${cardStage()}`;
   }
 
@@ -367,8 +362,8 @@
     return forms.map((form) => {
       const mul = E.typeMul(c.type, form);
       const cls = mul > 1 ? "gc-good" : mul < 1 ? "gc-bad" : "";
-      return `對${E.TYPES[form].label} <span class="${cls}">${mul > 1 ? "有利" : mul < 1 ? "吃虧" : "普通"}</span>`;
-    }).join("，");
+      return t("match.vs", { type: t(`type.${form}`), verdict: `<span class="${cls}">${t(mul > 1 ? "match.good" : mul < 1 ? "match.bad" : "match.even")}</span>` });
+    }).join(t("match.sep"));
   }
 
   function handScreen() {
@@ -376,18 +371,18 @@
       const c = hand[i];
       const style = `left:${left}%;top:${top}%`;
       return c
-        ? `<button class="gc-slot" style="${style}" data-open-hand="${i}" aria-label="看${esc(c.zh)}"><img src="${sticker(c)}" alt=""></button>`
-        : `<button class="gc-slot empty" style="${style}" data-go="forest">去林子找</button>`;
+        ? `<button class="gc-slot" style="${style}" data-open-hand="${i}" aria-label="${esc(t("card.view", { name: birdName(c) }))}"><img src="${sticker(c)}" alt=""></button>`
+        : `<button class="gc-slot empty" style="${style}" data-go="forest">${t("hand.find")}</button>`;
     }).join("");
-    const rows = hand.map((c) => `<div class="gc-team-row"><span>${esc(c.zh)} ${rarityTag(c.rarity)} ${typeTag(c.type)}</span><span>攻${c.atk} 防${c.def}</span><small style="grid-column:1/3">今天${matchup(c, S.fight)}</small></div>`).join("");
-    const fightBtn = S.result ? `<button class="gc-plank" disabled>今天打過了，明天再來</button>`
-      : hand.length === E.TEAM_SIZE ? `<button class="gc-plank hot" data-do="start">帶牠們去打${esc(S.fight.boss.name)}</button>`
-      : `<button class="gc-plank" data-go="forest">還少 ${E.TEAM_SIZE - hand.length} 隻，去林子找</button>`;
+    const rows = hand.map((c) => `<div class="gc-team-row"><span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}</span><span>${t("hand.stats", c)}</span><small style="grid-column:1/3">${t("hand.today", { text: matchup(c, S.fight) })}</small></div>`).join("");
+    const fightBtn = S.result ? `<button class="gc-plank" disabled>${t("hand.fought")}</button>`
+      : hand.length === E.TEAM_SIZE ? `<button class="gc-plank hot" data-do="start">${t("hand.go", { name: esc(bossName(S.fight.boss)) })}</button>`
+      : `<button class="gc-plank" data-go="forest">${t("hand.short", { n: E.TEAM_SIZE - hand.length })}</button>`;
     return `${nav()}
-      <div class="gc-scrap tilt"><h1 class="gc-title">一鳥在手</h1><p class="gc-sub">百鳥在林，不如一鳥在手。手上最多站 ${E.TEAM_SIZE} 隻，牠們就是你今天的隊伍。</p></div>
+      <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.hand")}</h1><p class="gc-sub">${t("hand.note", { n: E.TEAM_SIZE })}</p></div>
       <div class="gc-hand">${HAND}${slots}</div>
       ${errorBox()}
-      <div class="gc-scrap tilt-r">${rows ? `<div class="gc-team-list">${rows}</div>` : "<p class='gc-h'>手上空空的</p>"}</div>
+      <div class="gc-scrap tilt-r">${rows ? `<div class="gc-team-list">${rows}</div>` : `<p class='gc-h'>${t("hand.empty")}</p>`}</div>
       <div style="margin-top:12px">${fightBtn}</div>
       ${cardStage()}`;
   }
@@ -403,11 +398,11 @@
       const d = view.doodles[a.card.id];
       const art = d ? `<div class="gc-cutin-art ${d.faceRight ? "" : "flip"}">${doodleSvg(d)}</div>` : `<div class="gc-cutin-art"><img src="${sticker(a.card)}" alt=""></div>`;
       const hold = a.signature ? HOLD.super : HOLD.player;
-      return `<div class="gc-cutin left rar-${a.card.rarity} ${a.signature ? "super" : ""}" style="--hold:${hold}ms">${window.Scenery.cutinLeaves(a.card.rarity)}${art}<div class="gc-cutin-text"><small>${rarityTag(a.card.rarity)} ${esc(a.card.zh)}${a.signature ? " 的招牌動作" : ""}</small><b>${esc(a.word)}</b><em>${Math.round(a.dealt)} 傷害</em></div></div>`;
+      return `<div class="gc-cutin left rar-${a.card.rarity} ${a.signature ? "super" : ""}" style="--hold:${hold}ms">${window.Scenery.cutinLeaves(a.card.rarity)}${art}<div class="gc-cutin-text"><small>${rarityTag(a.card.rarity)} ${esc(birdName(a.card))}${a.signature ? t("fight.signatureOf") : ""}</small><b>${esc(a.word)}</b><em>${t("fight.damage", { n: Math.round(a.dealt) })}</em></div></div>`;
     }
     if (a.phase === "boss") {
       const flip = view.bossFaceRight ? "" : "flip";
-      return `<div class="gc-cutin right" style="--hold:${HOLD.boss}ms"><div class="gc-cutin-art ${flip}"><img src="${view.fight.boss.img}" alt=""></div><div class="gc-cutin-text"><small>${esc(view.fight.boss.name)}本鳥</small><b>${esc(BOSS_LINES[a.intent])}</b><em>反打 ${Math.round(a.taken)}</em></div></div>`;
+      return `<div class="gc-cutin right" style="--hold:${HOLD.boss}ms"><div class="gc-cutin-art ${flip}"><img src="${view.fight.boss.img}" alt=""></div><div class="gc-cutin-text"><small>${esc(bossSelf(view.fight.boss))}</small><b>${esc(t(`line.${a.intent}`))}</b><em>${t("fight.counter", { n: Math.round(a.taken) })}</em></div></div>`;
     }
     return "";
   }
@@ -432,25 +427,25 @@
       const pct = Math.round((state.hp[i] / (c.def * E.HP_PER_DEF)) * 100);
       const p = legal && E.preview(fight, team, state, i, signature);
       const fatal = legal && p.taken >= state.hp[i];
-      const info = down ? `<span class="gc-tired">倒地了</span>`
+      const info = down ? `<span class="gc-tired">${t("fight.down")}</span>`
         : locked ? ""
-        : !legal ? `<span class="gc-tired">喘口氣，下回合才能上</span>`
-        : `<span class="gc-preview"><span class="dealt">打 ${Math.round(p.dealt)}</span>／<span class="taken">挨 ${Math.round(p.taken)}</span>${fatal ? `<span class="fatal">會倒地</span>` : ""}</span>`;
-      return `<button class="gc-act rim-${c.rarity} ${down ? "down" : ""}" data-play="${i}" ${legal ? "" : "disabled"}><span class="gc-act-name">${esc(c.zh)}</span><img src="${sticker(c)}" alt=""><span class="gc-hp" style="display:block" aria-label="血量 ${pct}%"><i class="${pct < 35 ? "low" : ""}" style="width:${pct}%"></i></span>${rarityTag(c.rarity)} ${typeTag(c.type)}${info}</button>`;
+        : !legal ? `<span class="gc-tired">${t("fight.tired")}</span>`
+        : `<span class="gc-preview"><span class="dealt">${t("fight.deal", { n: Math.round(p.dealt) })}</span>${t("fight.sep")}<span class="taken">${t("fight.take", { n: Math.round(p.taken) })}</span>${fatal ? `<span class="fatal">${t("fight.fatal")}</span>` : ""}</span>`;
+      return `<button class="gc-act rim-${c.rarity} ${down ? "down" : ""}" data-play="${i}" ${legal ? "" : "disabled"}><span class="gc-act-name">${esc(birdName(c))}</span><img src="${sticker(c)}" alt=""><span class="gc-hp" style="display:block" aria-label="${t("fight.hp", { n: pct })}"><i class="${pct < 35 ? "low" : ""}" style="width:${pct}%"></i></span>${rarityTag(c.rarity)} ${typeTag(c.type)}${info}</button>`;
     }).join("");
     const round = Math.min(state.round, E.ROUNDS - 1);
     return `<div class="gc-versus">
-        <div class="gc-bar-side"><span class="gc-bar-name">你的三隻</span><div class="gc-bar ${hpPct < 35 ? "low" : ""}" aria-label="隊伍血量 ${hpPct}%"><i style="width:${hpPct}%"></i></div></div>
+        <div class="gc-bar-side"><span class="gc-bar-name">${t("fight.team")}</span><div class="gc-bar ${hpPct < 35 ? "low" : ""}" aria-label="${t("fight.teamHp", { n: hpPct })}"><i style="width:${hpPct}%"></i></div></div>
         <div class="gc-round">${round + 1}/${E.ROUNDS}</div>
-        <div class="gc-bar-side right"><span class="gc-bar-name">${esc(fight.boss.name)}本鳥</span><div class="gc-bar boss" aria-label="BOSS 體力 ${bossPct}%"><i style="width:${bossPct}%"></i>${ticks}</div></div>
+        <div class="gc-bar-side right"><span class="gc-bar-name">${esc(bossSelf(fight.boss))}</span><div class="gc-bar boss" aria-label="${t("fight.bossHp", { n: bossPct })}"><i style="width:${bossPct}%"></i>${ticks}</div></div>
       </div>
       <div class="gc-arena">${float}
-        <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(shown.zh)}</span><img src="${sticker(shown)}" alt="${esc(shown.zh)}"></div>
-        <div class="gc-fighter right ${bossFlip} ${theirs}"><img src="${fight.boss.img}" alt="${esc(fight.boss.name)}"></div>
+        <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(birdName(shown))}</span><img src="${sticker(shown)}" alt="${esc(birdName(shown))}"></div>
+        <div class="gc-fighter right ${bossFlip} ${theirs}"><img src="${fight.boss.img}" alt="${esc(bossName(fight.boss))}"></div>
       </div>
       <div class="gc-scrap" style="padding:6px 8px">${moveLeaves(fight, round)}</div>
       <p class="gc-scrap gc-log" aria-live="polite">${esc(log)}</p>
-      <button class="gc-sig" data-do="toggle-sig" aria-pressed="${signature}" ${state.signatureUsed || locked ? "disabled" : ""}>${state.signatureUsed ? "招牌動作用掉了" : signature ? "準備好了，下一隻傷害 ×2（再按取消）" : "用招牌動作（整場一次，傷害 ×2）"}</button>
+      <button class="gc-sig" data-do="toggle-sig" aria-pressed="${signature}" ${state.signatureUsed || locked ? "disabled" : ""}>${state.signatureUsed ? t("sig.used") : signature ? t("sig.ready") : t("sig.use")}</button>
       <div class="gc-actions">${cards}</div>
       ${errorBox()}
       ${cutIn()}`;
@@ -459,22 +454,22 @@
   function resultScreen() {
     const r = view.result;
     const stars = "★".repeat(r.stars) + `<span>${"★".repeat(3 - r.stars)}</span>`;
-    const words = ["這場輸了，牠根本沒在看你", "打贏了，但牠還能走", "打得不錯，牠開始懷疑鳥生", "完美！牠當機了"][r.stars];
+    const words = I18n.list("result.words")[r.stars];
     const pct = Math.round((r.score / r.best) * 100);
     return `<div class="gc-scrap gc-result" style="margin-top:18px">
-        <img src="${view.fight.boss.img}" alt="${esc(view.fight.boss.name)}">
-        <div class="gc-stars" aria-label="${r.stars} 星">${stars}</div>
+        <img src="${view.fight.boss.img}" alt="${esc(bossName(view.fight.boss))}">
+        <div class="gc-stars" aria-label="${t("result.stars", { n: r.stars })}">${stars}</div>
         <p class="gc-h">${words}</p>
-        <p class="gc-tip">傷害 ${Math.round(r.score)}，你現有的鳥今天最多能打 ${Math.round(r.best)}（${pct}%）。1 星要 ${E.STAR_CUTS[0] * 100}%，2 星 ${E.STAR_CUTS[1] * 100}%，3 星 ${E.STAR_CUTS[2] * 100}%。</p>
+        <p class="gc-tip">${t("result.tip", { score: Math.round(r.score), best: Math.round(r.best), pct, a: E.STAR_CUTS[0] * 100, b: E.STAR_CUTS[1] * 100, c: E.STAR_CUTS[2] * 100 })}</p>
       </div>
-      <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">回林間${r.stars > 0 ? "，再搖一棵樹" : ""}</button></div>`;
+      <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">${t(r.stars > 0 ? "result.homeMore" : "result.home")}</button></div>`;
   }
 
   function render() {
     const scroll = window.scrollY;
     const screens = { home: homeScreen, forest: forestScreen, hand: handScreen, fight: fightScreen, result: resultScreen };
     if (view.screen === "loading") {
-      app.innerHTML = `<div class="gc-center">${view.error ? errorBox() : `<p class="gc-scrap">走進林子裡…</p>`}</div>`;
+      app.innerHTML = `<div class="gc-center">${view.error ? errorBox() : `<p class="gc-scrap">${t("loading")}</p>`}</div>`;
       return;
     }
     app.innerHTML = screens[view.screen]();
@@ -529,7 +524,7 @@
     view = {
       screen: "fight", fight: S.fight, best: S.best, team, state, moves, signature: false,
       active: moves.length ? moves[moves.length - 1].slot : 0,
-      log: moves.length ? "剛才打到這裡，接著打。" : "看好牠下一招，再決定誰上。",
+      log: moves.length ? t("fight.resume") : t("fight.start"),
       anim: null, doodles: Object.fromEntries(team.map((c, i) => [c.id, traced[i]])),
       bossFaceRight: bossTrace ? bossTrace.faceRight : false,
     };
@@ -571,7 +566,7 @@
     const { dealt, taken } = E.preview(fight, team, before, slot, signature);
     const next = E.step(fight, team, before, slot, signature);
     const intent = fight.script[before.round];
-    const pool = signature ? SUPERS : MOVES[card.type];
+    const pool = I18n.list(signature ? "move.super" : `move.${card.type}`);
     const word = pool[Math.floor(Math.random() * pool.length)];
     const moves = [...view.moves, { slot, signature }];
     const fainted = next.hp[slot] <= 0;
@@ -581,9 +576,9 @@
     const midway = { ...next, hp: before.hp };
     runSteps([
       { ms: signature ? HOLD.super : HOLD.player, run: () => { Sound.play(signature ? "super" : "attack"); set({ active: slot, moves, signature: false, anim: { phase: "player", card, signature, word, dealt } }); } },
-      { ms: HOLD.hit, run: () => { Sound.play(HIT_SOUND[card.rarity] || "hit"); set({ state: midway, anim: { phase: "hit", dealt }, log: `${card.zh}用「${word}」打了 ${Math.round(dealt)}。` }); } },
+      { ms: HOLD.hit, run: () => { Sound.play(HIT_SOUND[card.rarity] || "hit"); set({ state: midway, anim: { phase: "hit", dealt }, log: t("fight.logHit", { name: birdName(card), word, n: Math.round(dealt) }) }); } },
       { ms: HOLD.boss, run: () => { Sound.play("boss"); set({ anim: { phase: "boss", intent, taken } }); } },
-      { ms: HOLD.bossHit, run: () => { Sound.play(fainted ? "faint" : "bossHit"); set({ state: next, anim: { phase: "bossHit", taken }, log: `${fight.boss.name}${E.INTENTS[intent].label}，反打 ${Math.round(taken)}${fainted ? `，${card.zh}倒地了` : ""}。` }); } },
+      { ms: HOLD.bossHit, run: () => { Sound.play(fainted ? "faint" : "bossHit"); set({ state: next, anim: { phase: "bossHit", taken }, log: t(fainted ? "fight.logBossDown" : "fight.logBoss", { boss: bossName(fight.boss), intent: t(`intent.${intent}`), n: Math.round(taken), name: birdName(card) }) }); } },
       { run: () => { set({ anim: null }); if (E.isOver(next)) submit(); } },
     ]);
   }
@@ -681,7 +676,7 @@
   });
 
   async function copyText(text) {
-    try { await navigator.clipboard.writeText(text); } catch { window.prompt("手動複製這段：", text); }
+    try { await navigator.clipboard.writeText(text); } catch { window.prompt(t("backup.manual"), text); }
   }
 
   function shareDraw(kind) {
@@ -690,16 +685,12 @@
       const url = `${location.origin}/s/${link.code}`;
       await refresh({ shareLink: { ...link, url, copied: false } });
       if (navigator.share) {
-        await navigator.share({ title: "一鳥在手", text: "我在林子裡搖到一隻鳥，分你一隻，領完就沒了。", url }).catch(() => {});
+        await navigator.share({ title: t("app.name"), text: t("share.text"), url }).catch(() => {});
       }
     }, () => shareDraw(kind));
   }
 
-  const GIFT_ENDINGS = {
-    missing: "找不到這條連結，可能貼錯了。",
-    expired: "這條連結過期了，那隻鳥已經飛走。",
-    gone: "來晚了，這隻已經被領完了。",
-  };
+  const GIFT_ENDINGS = ["missing", "expired", "gone"];
 
   let pendingGift = new URLSearchParams(location.search).get("s");
   if (pendingGift) history.replaceState(null, "", location.pathname);
@@ -708,8 +699,8 @@
     const code = pendingGift;
     const g = await call("GET", "share", { query: `&code=${encodeURIComponent(code)}` });
     pendingGift = null;
-    if (GIFT_ENDINGS[g.status]) {
-      view = { ...view, error: { message: GIFT_ENDINGS[g.status], label: "知道了", retry: () => set({}) } };
+    if (GIFT_ENDINGS.includes(g.status)) {
+      view = { ...view, error: { message: t(`gift.${g.status}`), label: t("gotIt"), retry: () => set({}) } };
       return;
     }
     view = { ...view, card: g.card, gift: { ...g, code }, drew: false, swapping: false };
@@ -730,7 +721,7 @@
     const res = /^[a-f0-9]{64}$/.test(code)
       ? await fetch("/api/gacha?op=state", { headers: { authorization: `Bearer ${code}` } }).catch(() => null)
       : null;
-    if (!res || !res.ok) return set({ backup: true, restoreError: "這段存檔碼不對，或暫時連不上林子。你目前的林子沒有變動。" });
+    if (!res || !res.ok) return set({ backup: true, restoreError: t("err.restore") });
     store.set(TOKEN_KEY, code);
     store.remove(FIGHT_KEY);
     return guarded(() => refresh({ screen: "home", backup: false, restoreError: null }));

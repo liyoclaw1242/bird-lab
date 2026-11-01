@@ -212,7 +212,7 @@
   button.className = "gc-mute";
   function paint() {
     button.textContent = muted ? "🔇" : "🔊";
-    button.setAttribute("aria-label", muted ? "開啟音效" : "關閉音效");
+    button.setAttribute("aria-label", I18n.t(muted ? "sound.unmute" : "sound.mute"));
     button.setAttribute("aria-pressed", String(muted));
   }
   // 戰鬥動畫中點畫面會快轉，切換靜音不該影響戰鬥，所以不讓點擊傳到遊戲
@@ -233,7 +233,7 @@
   bgmButton.textContent = "🎵";
   function paintBgm() {
     bgmButton.classList.toggle("on", bgmOn);
-    bgmButton.setAttribute("aria-label", bgmOn ? "關閉背景音" : "開啟背景音");
+    bgmButton.setAttribute("aria-label", I18n.t(bgmOn ? "bgm.off" : "bgm.on"));
     bgmButton.setAttribute("aria-pressed", String(bgmOn));
   }
   bgmButton.addEventListener("click", (event) => {
