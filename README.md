@@ -69,6 +69,10 @@ tools/restore-backup.sh backup.dump 'postgresql://...'
 - 隱私說明、資料來源與授權頁。
 - 分享連結的預覽文字、網站 metadata 和 PWA 名稱。
 
+## 桌布
+
+`/wallpaper.html` 是獨立的動畫桌布「雨夜樹屋」，每 120 秒無縫循環，陽台上的鳥跟著當天的 BOSS。雨聲和爐火聲由程式合成，音樂的位置留在 `public/wallpaper-sound.js` 的 `TRACKS`，目前是空的。網址參數：`?sound=1` 預設開聲音，`?boss=` 指定 BOSS，`?t=` 凍結畫面。
+
 ## 安全
 
 - 資料表全部開啟 RLS 且不設政策，遊戲只透過伺服器連線存取，不使用 Supabase Data API。
