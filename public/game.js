@@ -1,6 +1,6 @@
 (function () {
   const E = window.GachaEngine;
-  const { HAND, burst, forestPage } = window.Scenery;
+  const { HAND, burst, forestPage, forestWide } = window.Scenery;
   const STICKER_BASE = "https://yi-niao-stickers.yi-niao.workers.dev/";
   const TOKEN_KEY = "gacha-token";
   const OFFSET_KEY = "gacha-dev-offset";
@@ -101,8 +101,8 @@
   const chain = `<p class="gc-chain">${t("chain", { meat: typeTag("meat"), mixed: typeTag("mixed"), plant: typeTag("plant") })}</p>`;
 
   const brand = `<a class="gc-brand" href="/" aria-label="${t("app.name")}"><img src="logo.svg" alt="" width="46" height="46"><span>${t("app.name")}</span></a>`;
-  const nav = () => `${brand}<nav class="gc-nav" aria-label="${t("nav.label")}">${["home", "forest", "hand"].map((id) =>
-    `<button class="gc-tab" data-go="${id}" ${view.screen === id ? 'aria-current="page"' : ""}>${t(`nav.${id}`)}</button>`).join("")}</nav>`;
+  const nav = () => `<header class="gc-header">${brand}<nav class="gc-nav" aria-label="${t("nav.label")}">${["home", "forest", "hand"].map((id) =>
+    `<button class="gc-tab" data-go="${id}" ${view.screen === id ? 'aria-current="page"' : ""}>${t(`nav.${id}`)}</button>`).join("")}</nav><button type="button" class="gc-lang"><span aria-hidden="true">🌐</span> ${t("lang.switch")}</button></header>`;
 
   const errorBox = () => (view.error ? `<div class="gc-scrap" role="alert"><p class="gc-h">${esc(view.error.message)}</p><button class="gc-plank" data-do="retry">${esc(view.error.label || t("retry"))}</button></div>` : "");
 
@@ -129,6 +129,7 @@
         ? `<button class="gc-plank hot" data-do="start">${t("home.challenge")}</button>`
         : `<button class="gc-plank" data-go="hand">${t("home.needThree")}</button>`;
     return `${nav()}
+      <div class="gc-columns"><div class="gc-col-main">
       <section class="gc-clearing">
         <div class="gc-today-boss">
           <div class="gc-scrap gc-boss-note tilt"><span>${t("home.bossToday")}</span><b>${esc(bossSelf(fight.boss))}</b><span>${S.day}</span></div>
@@ -136,7 +137,8 @@
         </div>
         <div class="gc-scrap tilt-r"><p class="gc-h">${t("home.fiveMoves")}</p>${moveLeaves(fight)}${chain}</div>
       </section>
-      <div class="gc-trees" style="margin-top:12px">
+      </div><div class="gc-col-side">
+      <div class="gc-trees">
         ${shake("free", complete ? t("draw.complete") : draws.free ? t("draw.done") : t("draw.free"), t("draw.freeNote"), draws.free || complete)}
         ${result?.stars > 0 && !complete ? shake("bonus", draws.bonus ? t("draw.bonusDone") : t("draw.bonus"), t("draw.bonusNote"), draws.bonus) : ""}
       </div>
@@ -149,6 +151,7 @@
       ${installBox()}
       ${accountBox()}
       ${S.dev ? `<div class="gc-scrap gc-dev"><p>${t("dev.note")}</p><button class="gc-plank" data-do="next-day">${t("dev.nextDay")}</button><button class="gc-plank" data-do="new-player">${t("dev.newPlayer")}</button></div>` : ""}
+      </div></div>
       ${shakeStage()}${cardStage()}`;
   }
 
@@ -340,21 +343,32 @@
   function forestScreen() {
     const f = view.collection;
     if (!f) return `${nav()}${errorBox()}<div class="gc-center"><p class="gc-scrap">${t("loading")}</p></div>`;
+    // 直版和橫版的林子都畫好，CSS 依寬度只顯示一張；鳥的按鈕只有一組，兩種位置都寫在變數裡
     const scene = forestPage(f.page, f.cards.length);
+    const wide = forestWide(f.page, f.cards.length);
     const inHand = new Set(hand.map((b) => b.id));
+    const pct = (n) => `${n.toFixed(1)}%`;
     const birds = f.cards.map((c, i) => {
-      const p = scene.perches[i];
-      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="left:${p.left.toFixed(1)}%;top:${p.top.toFixed(1)}%;width:${p.size.toFixed(1)}%" data-open="${esc(c.id)}" aria-label="${esc(t("card.view", { name: birdName(c) }))}"><img src="${sticker(c)}" alt="" loading="lazy"></button>`;
+      const p = scene.perches[i], q = wide.perches[i];
+      const pos = `--l:${pct(p.left)};--t:${pct(p.top)};--w:${pct(p.size)};--lw:${pct(q.left)};--tw:${pct(q.top)};--ww:${pct(q.size)}`;
+      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}"><img src="${sticker(c)}" alt="" loading="lazy"></button>`;
     }).join("");
+    // 桌機的側欄多一份名單：鳥多了以後，用名字找比在樹上找快
+    const roster = f.cards.length ? `<div class="gc-scrap gc-desk-only"><p class="gc-h">${t("forest.list")}</p><div class="gc-roster">${f.cards.map((c) =>
+      `<button data-open="${esc(c.id)}"><img src="${sticker(c)}" alt="" loading="lazy"><span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}${inHand.has(c.id) ? ` <span class="gc-stamp-mini">${t("forest.inHand")}</span>` : ""}</span><small>${t("hand.stats", c)}</small></button>`).join("")}</div></div>` : "";
     return `${nav()}
+      <div class="gc-columns"><div class="gc-col-main">
+      <div class="gc-forest">${scene.svg}${wide.svg}${birds}</div>
+      </div><div class="gc-col-side">
       <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.forest")}</h1><p class="gc-sub">${t("forest.note", { here: f.cards.length, owned: f.owned, left: I18n.number(S.total - f.owned) })}</p></div>
       ${errorBox()}
-      <div class="gc-forest">${scene.svg}${birds}</div>
       <div class="gc-pages">
         <button class="gc-plank" data-page="${f.page - 1}" ${f.page <= 0 ? "disabled" : ""}>${t("forest.back")}</button>
         <span class="gc-scrap" style="white-space:nowrap;padding:4px 10px">${t("forest.page", { page: f.page + 1, pages: f.pages })}</span>
         <button class="gc-plank" data-page="${f.page + 1}" ${f.page + 1 >= f.pages ? "disabled" : ""}>${t("forest.next")}</button>
-      </div>${cardStage()}`;
+      </div>
+      ${roster}
+      </div></div>${cardStage()}`;
   }
 
   function matchup(c, fight) {
@@ -379,11 +393,15 @@
       : hand.length === E.TEAM_SIZE ? `<button class="gc-plank hot" data-do="start">${t("hand.go", { name: esc(bossName(S.fight.boss)) })}</button>`
       : `<button class="gc-plank" data-go="forest">${t("hand.short", { n: E.TEAM_SIZE - hand.length })}</button>`;
     return `${nav()}
-      <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.hand")}</h1><p class="gc-sub">${t("hand.note", { n: E.TEAM_SIZE })}</p></div>
+      <div class="gc-columns"><div class="gc-col-main">
       <div class="gc-hand">${HAND}${slots}</div>
+      </div><div class="gc-col-side">
+      <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.hand")}</h1><p class="gc-sub">${t("hand.note", { n: E.TEAM_SIZE })}</p></div>
       ${errorBox()}
       <div class="gc-scrap tilt-r">${rows ? `<div class="gc-team-list">${rows}</div>` : `<p class='gc-h'>${t("hand.empty")}</p>`}</div>
+      <div class="gc-scrap gc-desk-only"><p class="gc-h">${esc(bossSelf(S.fight.boss))}</p><p class="gc-sub">${t("home.fiveMoves")}</p>${moveLeaves(S.fight)}${chain}</div>
       <div style="margin-top:12px">${fightBtn}</div>
+      </div></div>
       ${cardStage()}`;
   }
 
@@ -434,7 +452,9 @@
       return `<button class="gc-act rim-${c.rarity} ${down ? "down" : ""}" data-play="${i}" ${legal ? "" : "disabled"}><span class="gc-act-name">${esc(birdName(c))}</span><img src="${sticker(c)}" alt=""><span class="gc-hp" style="display:block" aria-label="${t("fight.hp", { n: pct })}"><i class="${pct < 35 ? "low" : ""}" style="width:${pct}%"></i></span>${rarityTag(c.rarity)} ${typeTag(c.type)}${info}</button>`;
     }).join("");
     const round = Math.min(state.round, E.ROUNDS - 1);
-    return `<div class="gc-versus">
+    // 手機上下一欄；桌機左邊擂台、右邊出招
+    return `<div class="gc-columns"><div class="gc-col-main">
+      <div class="gc-versus">
         <div class="gc-bar-side"><span class="gc-bar-name">${t("fight.team")}</span><div class="gc-bar ${hpPct < 35 ? "low" : ""}" aria-label="${t("fight.teamHp", { n: hpPct })}"><i style="width:${hpPct}%"></i></div></div>
         <div class="gc-round">${round + 1}/${E.ROUNDS}</div>
         <div class="gc-bar-side right"><span class="gc-bar-name">${esc(bossSelf(fight.boss))}</span><div class="gc-bar boss" aria-label="${t("fight.bossHp", { n: bossPct })}"><i style="width:${bossPct}%"></i>${ticks}</div></div>
@@ -443,11 +463,13 @@
         <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(birdName(shown))}</span><img src="${sticker(shown)}" alt="${esc(birdName(shown))}"></div>
         <div class="gc-fighter right ${bossFlip} ${theirs}"><img src="${fight.boss.img}" alt="${esc(bossName(fight.boss))}"></div>
       </div>
+      </div><div class="gc-col-side">
       <div class="gc-scrap" style="padding:6px 8px">${moveLeaves(fight, round)}</div>
       <p class="gc-scrap gc-log" aria-live="polite">${esc(log)}</p>
       <button class="gc-sig" data-do="toggle-sig" aria-pressed="${signature}" ${state.signatureUsed || locked ? "disabled" : ""}>${state.signatureUsed ? t("sig.used") : signature ? t("sig.ready") : t("sig.use")}</button>
       <div class="gc-actions">${cards}</div>
       ${errorBox()}
+      </div></div>
       ${cutIn()}`;
   }
 
@@ -472,6 +494,7 @@
       app.innerHTML = `<div class="gc-center">${view.error ? errorBox() : `<p class="gc-scrap">${t("loading")}</p>`}</div>`;
       return;
     }
+    app.dataset.screen = view.screen;
     app.innerHTML = screens[view.screen]();
     mountGoogle();
     window.scrollTo(0, scroll);

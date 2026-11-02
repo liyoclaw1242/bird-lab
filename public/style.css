@@ -129,12 +129,13 @@ img { display: block; }
 /* 百鳥在林 */
 .gc-forest { position: relative; margin: 10px -12px 0; aspect-ratio: 400 / 780; overflow: hidden; }
 .gc-forest-art { position: absolute; inset: 0; width: 100%; height: 100%; }
-.gc-perched-bird { position: absolute; transform: translate(-50%, -100%); min-width: 44px; min-height: 44px; transform-origin: 50% 100%; animation: gc-sway 4s ease-in-out infinite; }
+.gc-perched-bird { position: absolute; left: var(--l); top: var(--t); width: var(--w); transform: translate(-50%, -100%); min-width: 44px; min-height: 44px; transform-origin: 50% 100%; animation: gc-sway 4s ease-in-out infinite; }
+.gc-forest-wide { display: none; }
 .gc-perched-bird img { width: 100%; filter: drop-shadow(0 3px 1px rgba(20, 14, 5, .5)); }
 .gc-perched-bird.flip img { transform: scaleX(-1); }
 .gc-perched-bird:nth-child(2n) { animation-duration: 5.2s; animation-delay: -1.3s; }
 .gc-perched-bird:nth-child(3n) { animation-duration: 3.4s; animation-delay: -2.1s; }
-.gc-perched-bird.in-hand::after { content: "在手上"; position: absolute; left: 50%; top: 100%; transform: translate(-50%, -12px) rotate(-3deg); padding: 0 5px; font-size: 12px; white-space: nowrap; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 6px; }
+.gc-perched-bird.in-hand::after { content: attr(data-tag); position: absolute; left: 50%; top: 100%; transform: translate(-50%, -12px) rotate(-3deg); padding: 0 5px; font-size: 12px; white-space: nowrap; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 6px; }
 .gc-perched-bird.UR::before, .gc-perched-bird.SSR::before { content: "✦"; position: absolute; top: -2px; right: 2px; color: #ffe07d; font-size: 20px; text-shadow: 0 0 4px #2b2316; }
 @keyframes gc-sway { 0%, 100% { transform: translate(-50%, -100%) rotate(-1.6deg); } 50% { transform: translate(-50%, -100%) rotate(1.6deg); } }
 
@@ -256,7 +257,7 @@ img { display: block; }
 .gc-gift-row img { width: 54px; height: 54px; object-fit: contain; }
 .gc-gift-row small { display: block; color: var(--muted); font-weight: 400; }
 .gc-gift-row .gc-plank { width: auto; min-height: 44px; padding: 6px 14px; font-size: 16px; margin: 0; }
-.gc-stamp-mini { padding: 0 5px; border: 1.5px solid currentColor; border-radius: 5px; font-size: 12px; color: var(--leaf-red); }
+.gc-stamp-mini { white-space: nowrap; padding: 0 5px; border: 1.5px solid currentColor; border-radius: 5px; font-size: 12px; color: var(--leaf-red); }
 .gc-share-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 10px; }
 .gc-share-box input, .gc-restore input { min-width: 0; width: 100%; min-height: 44px; padding: 6px 8px; font: inherit; font-weight: 400; font-size: 16px; color: var(--ink); background: #fff8e6; border: 2px solid var(--ink); border-radius: 8px 5px 9px 4px; }
 .gc-share-box .gc-plank { width: auto; min-height: 44px; margin: 0; padding: 6px 14px; font-size: 16px; }
@@ -351,4 +352,141 @@ img { display: block; }
 .gc-odds { margin-top: 12px; padding: 10px 14px; font-size: 15px; font-weight: 400; } .gc-odds summary { cursor: pointer; font-weight: 700; } .gc-odds ul { list-style: none; margin: 8px 0; padding: 0; } .gc-odds li { display: flex; align-items: center; gap: 8px; padding: 2px 0; } .gc-odds li b { margin-left: auto; } .gc-odds li span { color: var(--muted); } .gc-odds p { margin: 6px 0 0; font-size: 14px; line-height: 1.5; }
 .gc-bgm { right: calc(64px + env(safe-area-inset-right)); opacity: .55; }
 .gc-bgm.on { opacity: 1; background: #e6b84a; }
-.gc-lang { padding: 0; font: inherit; color: inherit; text-decoration: underline; background: none; border: 0; cursor: pointer; }
+
+/* 內容不滿一頁時，頁尾貼在畫面底部 */
+body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+#gc-app { flex: 1 0 auto; width: 100%; }
+.gc-credits { width: 100%; }
+
+/* 頁首：手機是品牌和語言一排、分頁一排；桌機併成一排 */
+.gc-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 8px; }
+.gc-header .gc-nav { grid-column: 1 / -1; grid-row: 2; }
+.gc-lang { min-height: 40px; margin-top: 10px; padding: 4px 12px; font-size: 15px; white-space: nowrap; color: var(--ink); background: var(--paper); border: 2.5px solid var(--ink); border-radius: var(--wiggle); box-shadow: 2px 3px 0 rgba(30, 20, 8, .45); }
+.gc-lang:hover { background: #f3cf6a; }
+@media (max-width: 420px) { .gc-brand { font-size: 20px; } .gc-brand img { width: 38px; height: 38px; } .gc-lang { padding: 4px 8px; font-size: 14px; } }
+
+.gc-col-side > :first-child { margin-top: 12px; }
+/* 戰鬥的側欄第一塊緊貼擂台，手機上和沒分欄時一樣 */
+[data-screen="fight"] .gc-col-side > :first-child { margin-top: 0; }
+/* 只有桌機才多出來的區塊（林子名單、手上頁的對手招式） */
+.gc-desk-only { display: none; }
+
+/* 桌機：兩欄、所有東西放大一號，讓畫面不要像放大的手機頁 */
+@media (min-width: 1024px) {
+  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"]) { max-width: 1120px; padding-inline: 24px; }
+  .gc-header { grid-template-columns: 1fr minmax(0, 440px) 1fr; gap: 16px; margin-bottom: 16px; }
+  .gc-header .gc-nav { grid-column: 2; grid-row: 1; margin-bottom: 0; }
+  .gc-header .gc-brand { margin: 8px 0 0; font-size: 22px; white-space: nowrap; }
+  .gc-lang { justify-self: end; margin-top: 8px; }
+  .gc-columns { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; gap: 32px; }
+  .gc-col-side { position: sticky; top: 16px; }
+  .gc-col-side > :first-child { margin-top: 0; }
+  .gc-desk-only { display: block; }
+
+  /* 字和按鈕都比手機大一點 */
+  .gc-scrap { padding: 14px 18px; }
+  .gc-title { font-size: 34px; }
+  .gc-sub { font-size: 16px; }
+  .gc-h { font-size: 18px; }
+  .gc-plank { min-height: 56px; font-size: 20px; }
+  .gc-row .gc-plank, .gc-gift-row .gc-plank, .gc-share-box .gc-plank, .gc-backup .gc-plank { font-size: 17px; }
+  .gc-shake { min-height: 84px; font-size: 22px; }
+  .gc-shake small { font-size: 15px; }
+  .gc-shake svg { width: 66px; height: 70px; }
+  .gc-strip { gap: 4px; }
+  .gc-strip span { width: 30px; height: 38px; font-size: 14px; }
+  .gc-odds { font-size: 16px; }
+  .gc-gift-row { grid-template-columns: 60px 1fr auto; }
+  .gc-gift-row img { width: 60px; height: 60px; }
+  .gc-backup summary { font-size: 17px; }
+  .gc-restore { font-size: 16px; }
+  .gc-chain { margin-top: 10px; font-size: 15px; }
+  .gc-leaves { gap: 6px; }
+  .gc-move { padding: 10px 2px; font-size: 15px; }
+  .gc-move b { font-size: 16px; }
+
+  /* 今日：名牌橫放在最上面，BOSS 貼紙佔整欄當主角，招式在下面 */
+  [data-screen="home"] .gc-today-boss { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  [data-screen="home"] .gc-boss-note { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 12px 20px; }
+  [data-screen="home"] .gc-boss-note b { display: inline; font-size: 32px; }
+  [data-screen="home"] .gc-boss-note span { font-size: 16px; }
+  [data-screen="home"] .gc-boss-note span:last-child { margin-left: auto; }
+  /* 貼紙高度跟著視窗剩下的空間走：名牌、招式和頁尾放得下，不用捲動 */
+  [data-screen="home"] .gc-perched { height: clamp(300px, 100vh - 500px, 640px); max-height: none; margin: 4px 0 2px; justify-self: center; }
+
+  /* 百鳥在林：橫版的林子，側欄放名單 */
+  [data-screen="forest"] .gc-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); }
+  .gc-forest { margin: 0; aspect-ratio: 800 / 600; }
+  .gc-forest-art:not(.gc-forest-wide) { display: none; }
+  .gc-forest-wide { display: block; }
+  .gc-perched-bird { left: var(--lw); top: var(--tw); width: var(--ww); }
+  .gc-perched-bird.in-hand::after { font-size: 13px; }
+  /* 這張圖原本貼滿手機寬度，桌機四周要淡出，才不會看到方形的邊 */
+  .gc-forest-art { -webkit-mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(transparent, #000 8%, #000 92%, transparent); -webkit-mask-composite: source-in; mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(transparent, #000 8%, #000 92%, transparent); mask-composite: intersect; }
+  .gc-roster { display: grid; }
+  .gc-roster button { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 0 8px; width: 100%; padding: 3px 4px; text-align: left; font-size: 15px; line-height: 1.3; border-top: 2px dotted #bda877; border-radius: 6px; }
+  .gc-roster button:first-child { border-top: 0; }
+  .gc-roster button:hover { background: rgba(243, 207, 106, .5); }
+  .gc-roster img { width: 42px; height: 40px; object-fit: contain; }
+  .gc-roster small { font-size: 14px; font-weight: 400; color: var(--muted); white-space: nowrap; }
+
+  /* 一鳥在手 */
+  .gc-hand { width: min(600px, 100%, 70vh); margin-top: 0; }
+  .gc-slot.empty { font-size: 16px; }
+  .gc-team-row { padding: 6px 0; font-size: 17px; }
+  .gc-team-row small { font-size: 15px; }
+
+  /* 戰鬥：左邊擂台放大，右邊是招式表、戰報和出招 */
+  [data-screen="fight"] .gc-columns { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+  [data-screen="fight"] .gc-col-side { position: static; padding-top: 14px; }
+  .gc-versus { grid-template-columns: 1fr 60px 1fr; gap: 8px; padding-top: 14px; }
+  .gc-bar { height: 22px; }
+  .gc-bar-name { font-size: 16px; }
+  .gc-round { height: 54px; font-size: 19px; }
+  .gc-arena { height: clamp(360px, 58vh, 680px); margin-top: 6px; }
+  .gc-fighter { width: 48%; }
+  .gc-fighter-tag { font-size: 15px; }
+  .gc-float { font-size: 56px; }
+  .gc-log { min-height: 48px; padding: 8px 12px; font-size: 16px; }
+  .gc-sig { min-height: 52px; font-size: 17px; }
+  .gc-actions { gap: 10px; margin-top: 12px; }
+  .gc-act { padding: 6px 8px 8px; }
+  .gc-act img { height: 110px; }
+  .gc-act-name { font-size: 16px; }
+  .gc-hp { height: 11px; margin: 5px 0; }
+  .gc-preview, .gc-tired { font-size: 15px; }
+
+  /* 結算：卡片寬一點、置中在畫面中間 */
+  #gc-app[data-screen="result"] { max-width: 760px; display: grid; align-content: center; padding-bottom: 72px; }
+  .gc-result img { max-height: 320px; }
+  .gc-stars { font-size: 72px; }
+  .gc-result .gc-h { font-size: 24px; }
+  .gc-tip { max-width: 560px; margin: 8px auto; font-size: 16px; }
+
+  /* 抽到或點開的卡片 */
+  .gc-note-card { width: min(540px, 100%); padding: 16px; }
+  .gc-card-bird { max-height: min(320px, 34vh); }
+  .gc-stamp { top: 22px; right: 22px; font-size: 18px; }
+  .gc-name { font-size: 28px; }
+  .gc-sci { font-size: 15px; }
+  .gc-statline { font-size: 17px; }
+  .gc-facts, .gc-facts b { font-size: 16px; }
+  .gc-swap-grid button { min-height: 110px; font-size: 14px; }
+  .gc-swap-grid img { height: 70px; }
+
+  /* 左右留白避開右下角的聲音按鈕 */
+  .gc-credits { max-width: 1120px; padding: 8px 120px 16px; text-align: center; }
+}
+@media (min-width: 1440px) {
+  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"]) { max-width: 1280px; }
+  .gc-header { grid-template-columns: 1fr minmax(0, 480px) 1fr; }
+  .gc-columns { gap: 40px; }
+  .gc-credits { max-width: 1280px; }
+}
+@media (min-width: 2000px) {
+  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"]) { max-width: 1400px; }
+  #gc-app[data-screen="result"] { max-width: 840px; }
+  [data-screen="home"] .gc-perched { height: clamp(300px, 100vh - 500px, 720px); }
+  [data-screen="forest"] .gc-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); }
+  .gc-credits { max-width: 1400px; }
+}

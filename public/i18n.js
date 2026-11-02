@@ -51,7 +51,7 @@
       "card.bgRemoved": "，已去背", "card.wikiSource": "維基來源", "card.storyLabel": " ／ 趣聞：", "card.storyConverted": "，已轉繁體", "card.sticker": "貼紙：",
       "card.swap": "手上滿了，要放走哪一隻？", "card.shareTo": "分給 {n} 位朋友", "card.fly": "讓牠飛進林子", "card.release": "放回林子", "card.take": "放到手上", "card.stats": "攻 {atk} ／ 防 {def}", "card.view": "看{name}",
       "forest.note": "這片林子有 {here} 隻。你總共遇過 {owned} 隻，世界上還有 {left} 隻沒遇到。點一隻看看牠。",
-      "forest.back": "走回去", "forest.next": "再往裡走", "forest.page": "第 {page} / {pages} 片",
+      "forest.inHand": "在手上", "forest.back": "走回去", "forest.next": "再往裡走", "forest.page": "第 {page} / {pages} 片", "forest.list": "這一片有誰",
       "match.vs": "對{type} {verdict}", "match.good": "有利", "match.bad": "吃虧", "match.even": "普通", "match.sep": "，",
       "hand.find": "去林子找", "hand.stats": "攻{atk} 防{def}", "hand.today": "今天{text}", "hand.fought": "今天打過了，明天再來", "hand.go": "帶牠們去打{name}", "hand.short": "還少 {n} 隻，去林子找",
       "hand.note": "百鳥在林，不如一鳥在手。手上最多站 {n} 隻，牠們就是你今天的隊伍。", "hand.empty": "手上空空的",
@@ -118,7 +118,7 @@
       "card.bgRemoved": ", background removed", "card.wikiSource": "Wikipedia source", "card.storyLabel": " / Notes: ", "card.storyConverted": "", "card.sticker": "Sticker: ",
       "card.swap": "Your hand is full. Which bird goes?", "card.shareTo": "Share with {n} friends", "card.fly": "Let it fly into the woods", "card.release": "Back to the woods", "card.take": "Take in hand", "card.stats": "ATK {atk} / DEF {def}", "card.view": "View {name}",
       "forest.note": "{here} birds in this patch. You've met {owned} in all, with {left} still out there. Tap one to take a look.",
-      "forest.back": "Go back", "forest.next": "Go deeper", "forest.page": "Patch {page} / {pages}",
+      "forest.inHand": "In hand", "forest.back": "Go back", "forest.next": "Go deeper", "forest.page": "Patch {page} / {pages}", "forest.list": "Who's in this patch",
       "match.vs": "vs {type}: {verdict}", "match.good": "strong", "match.bad": "weak", "match.even": "even", "match.sep": ", ",
       "hand.find": "Find in woods", "hand.stats": "ATK {atk} DEF {def}", "hand.today": "Today: {text}", "hand.fought": "Already fought today. Come back tomorrow", "hand.go": "Take them to fight {name}", "hand.short": "{n} more needed. Go find them",
       "hand.note": "A bird in the hand is worth two in the bush. You can hold up to {n}, and they're your team for today.", "hand.empty": "Your hand is empty",
@@ -203,15 +203,13 @@
   document.documentElement.lang = lang;
   document.title = api.t("app.title");
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = api.t(el.dataset.i18n); });
-  const button = document.querySelector(".gc-lang");
-  if (button) {
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const next = lang === "en" ? FALLBACK : "en";
-      try { root.localStorage.setItem(KEY, next); } catch { /* 無痕模式 */ }
-      const url = new URL(root.location.href);
-      url.searchParams.set("lang", next);
-      root.location.replace(url);
-    });
-  }
+  // 切換鈕在每次重畫的頁首裡，所以掛在 document 上
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".gc-lang")) return;
+    const next = lang === "en" ? FALLBACK : "en";
+    try { root.localStorage.setItem(KEY, next); } catch { /* 無痕模式 */ }
+    const url = new URL(root.location.href);
+    url.searchParams.set("lang", next);
+    root.location.replace(url);
+  });
 })(typeof window !== "undefined" ? window : globalThis);

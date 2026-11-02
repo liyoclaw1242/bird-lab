@@ -193,6 +193,49 @@
     };
   }
 
+  // 桌機用的橫版林子：同一頁的鳥換成三棵樹、兩排樹枝加一排地面。版面由 CSS 依寬度切換，鳥的按鈕共用
+  const WIDE_W = 800, WIDE_H = 600;
+  function forestWide(page, count) {
+    const rand = seeded(`forest-wide-${page}`);
+    const trunks = [190 + rand() * 24, 392 + rand() * 24, 596 + rand() * 24];
+    const cols = [95, 300, 500, 705];
+    let perches = [];
+    for (const y of [175, 345]) cols.forEach((x) => perches.push({ x: x + (rand() - 0.5) * 34, y: y + (rand() - 0.5) * 34, size: 118 + rand() * 22 }));
+    [120, 330, 540, 720].forEach((x) => perches.push({ x: x + (rand() - 0.5) * 40, y: 586 + (rand() - 0.5) * 10, size: 140 }));
+    perches = perches.map((p) => [rand(), p]).sort((a, b) => a[0] - b[0]).map(([, p]) => p).slice(0, count);
+
+    let art = `<path d="M0 ${WIDE_H - 72} C130 ${WIDE_H - 96} 260 ${WIDE_H - 58} 400 ${WIDE_H - 84} C540 ${WIDE_H - 104} 660 ${WIDE_H - 60} 800 ${WIDE_H - 80} L800 ${WIDE_H} L0 ${WIDE_H} Z" fill="#6b5a32"/>`;
+    for (const x of trunks) {
+      art += trunk(x, WIDE_H - 50, -10, 22 + rand() * 8, rand, "#4e3f28");
+      for (let i = 0; i < 12; i++) {
+        const y = 40 + rand() * (WIDE_H - 110), off = (rand() - 0.5) * 18;
+        art += `<path d="M${x + off} ${y} q${(rand() - 0.5) * 8} 12 ${(rand() - 0.5) * 6} ${16 + rand() * 24}" stroke="#2b2316" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+      }
+    }
+    for (const p of perches) {
+      if (p.y > 520) continue;
+      const near = trunks.reduce((a, b) => (Math.abs(b - p.x) < Math.abs(a - p.x) ? b : a));
+      const dir = p.x >= near ? 1 : -1, tip = p.x + dir * 34;
+      art += `<path d="M${near} ${p.y + 42} Q${(near + tip) / 2} ${p.y + 16} ${tip} ${p.y - 4}" stroke="#4e3f28" stroke-width="9" fill="none" stroke-linecap="round"/>`;
+      art += `<path d="M${(near + tip) / 2} ${p.y + 20} q${dir * 8} ${-22} ${dir * 24} ${-30}" stroke="#4e3f28" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      art += `<path d="${LEAF}" transform="translate(${tip + dir * 6} ${p.y - 10}) rotate(${dir * 60}) scale(.8)" fill="#6f8a3a" stroke="#34451c" stroke-width="1.2"/>`;
+    }
+    for (let i = 0; i < 20; i++) art += blob(30 + rand() * 740, 56 + rand() * 44, 26 + rand() * 22, rand, i % 2 ? "#5e7c3c" : "#44602f");
+    for (let i = 0; i < 90; i++) {
+      art += `<path d="${LEAF}" transform="translate(${(14 + rand() * 772).toFixed(0)} ${(30 + rand() * 100).toFixed(0)}) rotate(${(rand() * 360).toFixed(0)}) scale(${(0.5 + rand() * 0.5).toFixed(2)})" fill="${["#2f4d1d", "#5c7f34", "#7f9a45", "#a39a35"][Math.floor(rand() * 4)]}" stroke="#1f3013" stroke-width="1"/>`;
+    }
+    for (let i = 0; i < 6; i++) art += mushroom(30 + rand() * 740, WIDE_H - 24 - rand() * 40, rand);
+    for (let i = 0; i < 14; i++) art += fern(rand() * 800, WIDE_H - 16 - rand() * 50, rand, "#3f5a26");
+    for (let i = 0; i < 50; i++) {
+      art += `<path d="${LEAF}" transform="translate(${(rand() * 800).toFixed(0)} ${(WIDE_H - 62 + rand() * 58).toFixed(0)}) rotate(${(rand() * 360).toFixed(0)}) scale(.6 .34)" fill="${LEAF_COLORS[Math.floor(rand() * LEAF_COLORS.length)]}" stroke="#3d2b14" stroke-width="1"/>`;
+    }
+    const svg = `<svg class="gc-forest-art gc-forest-wide" viewBox="0 0 ${WIDE_W} ${WIDE_H}" aria-hidden="true">${art}</svg>`;
+    return {
+      svg,
+      perches: perches.map((p) => ({ left: (p.x / WIDE_W) * 100, top: (p.y / WIDE_H) * 100, size: (p.size / WIDE_W) * 100 })),
+    };
+  }
+
   // 手掌朝上，三隻鳥站在手指和掌心
   const HAND = `<svg class="gc-hand-art" viewBox="0 0 400 430" aria-hidden="true"><g filter="url(#wobble)" fill="#e6c7a1" stroke="#2b2316" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
     <path d="M144 430 C142 380 126 346 92 306 C66 276 36 250 46 230 C56 212 86 228 108 252 L126 272 C112 210 86 150 90 118 C92 94 122 94 132 118 L156 208 C154 150 152 88 168 66 C184 52 202 66 202 88 L206 204 C214 150 230 92 250 84 C270 80 278 98 272 120 L250 216 C266 176 292 128 312 130 C332 132 332 152 324 172 L288 286 C274 336 266 376 264 430 Z"/>
@@ -235,5 +278,5 @@
     return `<div class="gc-cutin-fx" aria-hidden="true">${leaves}</div>`;
   }
 
-  window.Scenery = { cutinLeaves, backdrop, fallingLeaves, burst, forestPage, HAND, LEAF, rarityFx };
+  window.Scenery = { cutinLeaves, backdrop, fallingLeaves, burst, forestPage, forestWide, HAND, LEAF, rarityFx };
 })();
