@@ -306,6 +306,13 @@
     if (!view.card) return "";
     const c = view.card;
     const facts = I18n.facts(c).map((n) => `<li><b>${esc(n.t)}</b>${esc(n.d)}</li>`).join("");
+    // 分類、手感和數值來源都由牌上的資料推算，讓玩家順便知道這隻鳥是誰、數字怎麼來
+    const taxon = BirdNotes.taxon(c);
+    const weigh = BirdNotes.hand(c);
+    const diet = BirdNotes.diet(c);
+    const why = `<details class="gc-why"><summary>${t("notes.why")}</summary>
+      ${diet ? `<p>${t("notes.whyType", { diet: esc(diet), type: typeTag(c.type) })}</p>` : ""}
+      <p>${t("notes.whyAtk")}</p><p>${t("notes.whyDef")}</p><p>${t("notes.whyLog")}</p><p>${t("notes.whyRarity")}</p><p class="gc-why-src">${t("notes.whySource")}</p></details>`;
     const art = c.credit
       ? `${c.credit.page ? `<a href="${esc(c.credit.page)}" target="_blank" rel="noopener">${esc(c.credit.artist)}</a>` : esc(c.credit.artist)} · ${licenseLink(c.credit.license)}${t("card.bgRemoved")}`
       : `[removed] · ${licenseLink("PolyForm Shield 1.0.0")}`;
@@ -334,8 +341,10 @@
       <img class="gc-card-bird" src="${sticker(c)}" alt="${esc(t("home.stickerAlt", { name: birdName(c) }))}">
       <p class="gc-credit">${t("card.sticker")}${art}${text}</p>
       <b class="gc-name">${esc(birdName(c))}</b><span class="gc-sci">${esc(c.sci)}</span>
+      ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
-      <ol class="gc-facts">${facts}</ol>
+      <ol class="gc-facts">${facts}${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}</li>` : ""}</ol>
+      ${why}
       ${swap}${view.swapping ? "" : action}
     </article></div>`;
   }

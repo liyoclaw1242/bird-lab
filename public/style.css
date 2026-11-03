@@ -490,3 +490,15 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   [data-screen="forest"] .gc-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); }
   .gc-credits { max-width: 1400px; }
 }
+
+/* 牌上的小知識：分類一行、「數字從哪來」收合說明，預設收起來，不搶牌面 */
+.gc-taxon { margin: 2px 0 6px; font-size: 14px; font-weight: 400; color: var(--muted); line-height: 1.4; }
+.gc-why { margin: 0 0 10px; padding: 6px 10px; border: 2px dashed #bda877; border-radius: 10px; font-size: 14px; font-weight: 400; line-height: 1.5; }
+.gc-why summary { cursor: pointer; min-height: 28px; font-weight: 700; font-size: 15px; }
+.gc-why p { margin: 6px 0 0; }
+.gc-why .gc-why-src { color: var(--muted); font-size: 13px; }
+@media (min-width: 1024px) {
+  .gc-taxon { font-size: 15px; }
+  .gc-why { font-size: 15px; }
+  .gc-why summary { font-size: 16px; }
+}
