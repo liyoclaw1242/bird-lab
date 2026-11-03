@@ -622,16 +622,20 @@
       ${cutIn()}`;
   }
 
+  // 結語先看戰況：全倒、無傷三星、剩一隻撐到贏，才輪到依星數的預設句。畫面和螢幕閱讀器念的要是同一句
+  function resultWords(r) {
+    const alive = view.state ? view.state.hp.filter((v) => v > 0).length : E.TEAM_SIZE;
+    return alive === 0 && r.stars === 0 ? t("result.wipeout")
+      : r.stars === 3 && alive === E.TEAM_SIZE ? t("result.flawless")
+      : alive === 1 && r.stars > 0 ? t("result.comeback")
+      : I18n.list("result.words")[r.stars];
+  }
+
   function resultScreen() {
     const r = view.result;
     // 亮的星一顆顆蹦出來，和音效的節奏一致
     const stars = Array.from({ length: r.stars }, (_, i) => `<i style="--i:${i}">★</i>`).join("") + `<span>${"★".repeat(3 - r.stars)}</span>`;
-    // 結語先看戰況：全倒、無傷三星、剩一隻撐到贏，才輪到依星數的預設句
-    const alive = view.state ? view.state.hp.filter((v) => v > 0).length : E.TEAM_SIZE;
-    const words = alive === 0 && r.stars === 0 ? t("result.wipeout")
-      : r.stars === 3 && alive === E.TEAM_SIZE ? t("result.flawless")
-      : alive === 1 && r.stars > 0 ? t("result.comeback")
-      : I18n.list("result.words")[r.stars];
+    const words = resultWords(r);
     const pct = Math.round((r.score / r.best) * 100);
     const report = view.moves ? reportText(r) : "";
     return `<div class="gc-scrap gc-result" style="margin-top:18px">
@@ -655,7 +659,7 @@
     app.innerHTML = screens[view.screen]();
     restoreFocus();
     const r = view.result;
-    const say = view.screen === "fight" ? view.log : view.screen === "result" && r ? `${t("result.stars", { n: r.stars })}${t("match.sep")}${I18n.list("result.words")[r.stars]}` : "";
+    const say = view.screen === "fight" ? view.log : view.screen === "result" && r ? `${t("result.stars", { n: r.stars })}${t("match.sep")}${resultWords(r)}` : "";
     if (say && say !== spoken) live.textContent = say;
     spoken = say || "";
     // 瀏覽器快取裡已經有的圖，重畫時就直接算到位，不會先閃出佔位鳥。
