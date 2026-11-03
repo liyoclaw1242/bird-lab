@@ -477,6 +477,36 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   /* 左右留白避開右下角的聲音按鈕 */
   .gc-credits { max-width: 1120px; padding: 8px 120px 16px; text-align: center; }
 }
+/* 回來的理由：明天的剪影、戳 BOSS、連勝註腳、收藏整數、戰報 */
+.gc-poke { position: relative; display: block; width: 100%; }
+.gc-poke.poked .gc-perched { animation: gc-poked .5s; }
+@keyframes gc-poked { 20% { transform: translateX(-6px) rotate(-4deg); } 50% { transform: translateX(5px) rotate(3deg); } 80% { transform: translateX(-2px); } }
+/* 手機上貼紙只佔右半欄，泡泡靠右對齊、可以往左伸到名牌下方的空位；桌機才置中 */
+.gc-bubble { position: absolute; right: 0; bottom: 4px; z-index: 1; width: max-content; max-width: min(250px, 88vw); padding: 4px 10px; font-size: 14px; line-height: 1.3; text-align: center; color: var(--ink); background: var(--paper); border: 2px solid var(--ink); border-radius: var(--wiggle-2); box-shadow: 2px 3px 0 rgba(30, 20, 8, .4); animation: gc-bubble 3.2s ease-out both; }
+/* 每戳一下畫面會重畫，泡泡就重新冒出來，幾秒後自己淡掉，不用計時器重畫整頁 */
+@keyframes gc-bubble { 0% { opacity: 0; translate: 0 8px; } 8%, 78% { opacity: 1; translate: 0 0; } 100% { opacity: 0; translate: 0 -4px; } }
+.gc-tomorrow { margin-top: 12px; }
+.gc-tomorrow-row { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; align-items: center; }
+.gc-silhouette { width: 88px; height: 88px; object-fit: contain; filter: brightness(0) opacity(.82); }
+.gc-tomorrow-row .gc-sub { margin: 0; }
+.gc-streak { margin-top: 8px; }
+.gc-milestone { margin: 0 44px 8px 0; padding: 6px 10px; font-size: 15px; line-height: 1.35; background: #f3cf6a; border: 2px solid var(--ink); border-radius: var(--wiggle-2); transform: rotate(-1.5deg); }
+.gc-milestone b { display: block; font-size: 18px; }
+.gc-milestone span { font-weight: 400; }
+.gc-report { margin-top: 12px; text-align: left; }
+.gc-report pre { margin: 0; padding: 8px 10px; font: inherit; font-weight: 400; font-size: 15px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; background: #fff8e6; border: 2px solid var(--ink); border-radius: 8px 5px 9px 4px; }
+.gc-legend { margin: 6px 0 10px; font-size: 12px; line-height: 1.6; color: var(--muted); font-weight: 400; }
+.gc-legend span { white-space: nowrap; margin-right: 6px; }
+.gc-report .gc-plank { min-height: 46px; font-size: 17px; }
+@media (prefers-reduced-motion: reduce) { .gc-poke.poked .gc-perched, .gc-bubble { animation: none !important; } }
+@media (min-width: 1024px) {
+  .gc-tomorrow-row { grid-template-columns: 110px minmax(0, 1fr); }
+  .gc-silhouette { width: 110px; height: 110px; }
+  .gc-bubble { left: 50%; right: auto; bottom: 10px; max-width: 70%; padding: 6px 14px; font-size: 16px; transform: translateX(-50%); }
+  .gc-report pre { font-size: 16px; }
+  .gc-legend { font-size: 13px; }
+}
+
 @media (min-width: 1440px) {
   #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"], :not([data-screen])) { max-width: 1280px; }
   .gc-header { grid-template-columns: 1fr minmax(0, 480px) 1fr; }
