@@ -288,7 +288,7 @@ test("分享頁：英文連結的預覽用英文鳥名，轉進遊戲時不帶�
   const en = await api({ method: "GET", op: "share-page", query: { code, lang: "en" } });
   assert.match(en.html, /<html lang="en">/);
   assert.match(en.html, /og:locale" content="en_US"/);
-  assert.ok(en.html.includes(card.en || card.sci));
+  assert.ok(en.html.includes(String(card.en || card.sci).replace(/'/g, "&#39;")));
   assert.ok(!en.html.includes(card.zh));
   assert.ok(en.html.includes(`location.replace("/?s=${code}")`));
   const zh = await api({ method: "GET", op: "share-page", query: { code, lang: "xx" } });
