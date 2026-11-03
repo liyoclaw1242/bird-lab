@@ -16,11 +16,12 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  if (request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith("/api/") || url.pathname.startsWith("/s/")) return;
+  // 音檔的分段請求（Range，回 206）不能放進快取，cache.put 會丟錯，直接交給瀏覽器
+  if (request.method !== "GET" || request.headers.has("range") || url.origin !== location.origin || url.pathname.startsWith("/api/") || url.pathname.startsWith("/s/")) return;
   event.respondWith(fetch(request).then((response) => {
-    if (response.ok) {
+    if (response.status === 200) {
       const copy = response.clone();
-      caches.open(CACHE).then((cache) => cache.put(request, copy));
+      caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
     }
     return response;
   }).catch(async () => (await caches.match(request)) || (request.mode === "navigate" ? caches.match("/") : Response.error())));

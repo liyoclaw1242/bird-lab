@@ -175,7 +175,7 @@
       <section class="gc-clearing">
         <div class="gc-today-boss">
           <div class="gc-scrap gc-boss-note tilt"><span>${t("home.bossToday")}</span><b>${esc(bossSelf(fight.boss))}</b><span>${S.day}</span></div>
-          <img class="gc-perched" src="${fight.boss.img}" alt="${esc(t("home.stickerAlt", { name: bossName(fight.boss) }))}">
+          <img class="gc-perched" src="${fight.boss.img}" fetchpriority="high" alt="${esc(t("home.stickerAlt", { name: bossName(fight.boss) }))}">
         </div>
         <div class="gc-scrap tilt-r"><p class="gc-h">${t("home.fiveMoves")}</p>${moveLeaves(fight)}${chain}</div>
       </section>

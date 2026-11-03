@@ -373,7 +373,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 
 /* 桌機：兩欄、所有東西放大一號，讓畫面不要像放大的手機頁 */
 @media (min-width: 1024px) {
-  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"]) { max-width: 1120px; padding-inline: 24px; }
+  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"], :not([data-screen])) { max-width: 1120px; padding-inline: 24px; }
   .gc-header { grid-template-columns: 1fr minmax(0, 440px) 1fr; gap: 16px; margin-bottom: 16px; }
   .gc-header .gc-nav { grid-column: 2; grid-row: 1; margin-bottom: 0; }
   .gc-header .gc-brand { margin: 8px 0 0; font-size: 22px; white-space: nowrap; }
@@ -478,13 +478,13 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   .gc-credits { max-width: 1120px; padding: 8px 120px 16px; text-align: center; }
 }
 @media (min-width: 1440px) {
-  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"]) { max-width: 1280px; }
+  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"], :not([data-screen])) { max-width: 1280px; }
   .gc-header { grid-template-columns: 1fr minmax(0, 480px) 1fr; }
   .gc-columns { gap: 40px; }
   .gc-credits { max-width: 1280px; }
 }
 @media (min-width: 2000px) {
-  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"]) { max-width: 1400px; }
+  #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"], :not([data-screen])) { max-width: 1400px; }
   #gc-app[data-screen="result"] { max-width: 840px; }
   [data-screen="home"] .gc-perched { height: clamp(300px, 100vh - 500px, 720px); }
   [data-screen="forest"] .gc-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); }
@@ -507,3 +507,5 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-rar.R { background: #437a2c; }
 .gc-rar.UR { text-shadow: 0 0 2px #000, 0 1px 1px #000; }
 .gc-shake { background: linear-gradient(170deg, #5c7735, #4b6529); }
+/* 版面位移：畫面要等 API 回來才畫。載入中先藏起頁尾，免得它先出現在畫面底部、再被內容擠出去（手機 CLS 0.16） */
+#gc-app:not([data-screen]) + .gc-credits { visibility: hidden; }
