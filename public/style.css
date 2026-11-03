@@ -509,3 +509,5 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-shake { background: linear-gradient(170deg, #5c7735, #4b6529); }
 /* 版面位移：畫面要等 API 回來才畫。載入中先藏起頁尾，免得它先出現在畫面底部、再被內容擠出去（手機 CLS 0.16） */
 #gc-app:not([data-screen]) + .gc-credits { visibility: hidden; }
+/* 手機上手掌中間那隻的貼紙會蓋到「百鳥在林」分頁，點不到；分頁要疊在貼紙上面（彈窗是 20，仍在分頁之上） */
+.gc-header { position: relative; z-index: 3; }

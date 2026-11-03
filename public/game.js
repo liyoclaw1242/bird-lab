@@ -144,7 +144,7 @@
 
   const brand = `<a class="gc-brand" href="/" aria-label="${t("app.name")}"><img src="logo.svg" alt="" width="46" height="46"><span>${t("app.name")}</span></a>`;
   const nav = () => `<header class="gc-header">${brand}<nav class="gc-nav" aria-label="${t("nav.label")}">${["home", "forest", "hand"].map((id) =>
-    `<button class="gc-tab" data-go="${id}" ${view.screen === id ? 'aria-current="page"' : ""}>${t(`nav.${id}`)}</button>`).join("")}</nav><button type="button" class="gc-lang"><span aria-hidden="true">🌐</span> ${t("lang.switch")}</button></header>`;
+    `<button class="gc-tab" data-go="${id}" ${view.screen === id ? 'aria-current="page"' : ""}>${t(`nav.${id}`)}</button>`).join("")}</nav><button type="button" class="gc-lang" lang="${I18n.lang === "en" ? "zh-Hant" : "en"}"><span aria-hidden="true">🌐</span> ${t("lang.switch")}</button></header>`;
 
   const errorBox = () => (view.error ? `<div class="gc-scrap" role="alert"><p class="gc-h">${esc(view.error.message)}</p><button class="gc-plank" data-do="retry">${esc(view.error.label || t("retry"))}</button></div>` : "");
 
