@@ -21,7 +21,8 @@ async function sticker(url) {
   const hit = await cache.match(url);
   if (hit) return hit;
   const response = await fetch(new Request(url, { mode: "cors" }));
-  if (response.ok) cache.put(url, response.clone());
+  // 磁碟滿了存不進去也沒關係，這次照樣回圖
+  if (response.ok) cache.put(url, response.clone()).catch(() => {});
   return response;
 }
 
