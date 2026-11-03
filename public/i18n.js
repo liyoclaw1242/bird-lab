@@ -69,7 +69,7 @@
       "app.name": "A Bird in the Hand",
       "app.title": "A Bird in the Hand",
       "lang.switch": "繁體中文",
-      "footer.links": `<a href="privacy.html">Privacy (in Chinese)</a> · <a href="credits.html">Sources and licenses (in Chinese)</a>`,
+      "footer.links": `<a href="privacy-en.html">Privacy</a> · <a href="credits-en.html">Sources and licenses</a>`,
       "footer.license": `Stickers are used under <a href="https://polyformproject.org/licenses/shield/1.0.0">PolyForm Shield 1.0.0</a>. They are illustrations, not identification references. Line art is generated automatically from sticker outlines. See Sources and licenses for other credits, licenses and changes.`,
       "sound.mute": "Mute sound", "sound.unmute": "Unmute sound", "bgm.off": "Turn off ambience", "bgm.on": "Turn on ambience",
       "type.meat": "Meat", "type.mixed": "Mixed", "type.plant": "Plant",
