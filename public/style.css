@@ -490,3 +490,20 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   [data-screen="forest"] .gc-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); }
   .gc-credits { max-width: 1400px; }
 }
+
+/* 無障礙：只給螢幕閱讀器的文字；程式移過去的焦點容器不畫外框 */
+.gc-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+#gc-app:focus, .gc-stage:focus { outline: none; }
+/* 頁尾壓在亮色草地上時，單層陰影不夠讀 */
+.gc-credits { text-shadow: 0 1px 2px #000, 0 0 5px #1b1408, 0 0 9px #1b1408; }
+@media (prefers-reduced-motion: reduce) {
+  .gc-float { animation-name: gc-fade !important; }
+}
+/* 摺疊標題至少要好按（WCAG 2.5.8 最小 24px，手指 44px 較穩） */
+.gc-odds summary, .gc-backup summary { padding: 8px 0; }
+/* 對比：機率表的 li span 把稀有度標籤也染成褐色，幾乎看不見；R 的綠和搖樹按鈕上緣在白字下不到 4.5:1 */
+.gc-odds li span.gc-rar { color: #fff; }
+.gc-odds li span.gc-rar.SSR { color: var(--ink); }
+.gc-rar.R { background: #437a2c; }
+.gc-rar.UR { text-shadow: 0 0 2px #000, 0 1px 1px #000; }
+.gc-shake { background: linear-gradient(170deg, #5c7735, #4b6529); }

@@ -210,10 +210,11 @@
   const button = document.createElement("button");
   button.type = "button";
   button.className = "gc-mute";
+  // 名稱已經說明按下去會怎樣，不再加 aria-pressed，免得讀成「開啟音效，已按下」互相矛盾
   function paint() {
     button.textContent = muted ? "🔇" : "🔊";
     button.setAttribute("aria-label", I18n.t(muted ? "sound.unmute" : "sound.mute"));
-    button.setAttribute("aria-pressed", String(muted));
+    button.title = I18n.t(muted ? "sound.unmute" : "sound.mute");
   }
   // 戰鬥動畫中點畫面會快轉，切換靜音不該影響戰鬥，所以不讓點擊傳到遊戲
   button.addEventListener("click", (event) => {
@@ -234,7 +235,7 @@
   function paintBgm() {
     bgmButton.classList.toggle("on", bgmOn);
     bgmButton.setAttribute("aria-label", I18n.t(bgmOn ? "bgm.off" : "bgm.on"));
-    bgmButton.setAttribute("aria-pressed", String(bgmOn));
+    bgmButton.title = I18n.t(bgmOn ? "bgm.off" : "bgm.on");
   }
   bgmButton.addEventListener("click", (event) => {
     event.stopPropagation();

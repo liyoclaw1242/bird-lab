@@ -128,7 +128,7 @@
       "fight.resume": "Picking up where you left off.", "fight.start": "Watch its next move, then choose who goes.", "fight.logHit": "{name} used {word} for {n}.",
       "fight.logBoss": "{boss} used {intent} and countered for {n}.", "fight.logBossDown": "{boss} used {intent} and countered for {n}. {name} fainted.",
       "result.words": ["You lost. It wasn't even looking at you", "You won, but it can still walk", "Nice fight. It's questioning its life as a bird", "Perfect! It has crashed"],
-      "result.stars": "{n} stars",
+      "result.stars": "{n} of 3 stars",
       "result.tip": "Damage {score}. Your current birds could deal at most {best} today ({pct}%). 1 star takes {a}%, 2 stars {b}%, 3 stars {c}%.",
       "result.home": "Back to the woods", "result.homeMore": "Back to the woods and shake another tree",
     },

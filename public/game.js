@@ -68,6 +68,48 @@
 
   const set = (patch) => { view = { ...view, ...patch }; render(); };
 
+  // 無障礙：畫面每次整個重畫，焦點會掉回 body。記住最後聚焦的按鈕，重畫後找回同一顆；
+  // 彈窗打開時把焦點移進去、背景設成 inert，關掉後回到打開它的那顆按鈕
+  const FOCUS_KEYS = ["do", "go", "draw", "play", "open", "openHand", "share", "take", "release", "replace", "page"];
+  const keyOf = (el) => {
+    if (!app.contains(el) || el === app) return null;
+    if (el.id) return `#${CSS.escape(el.id)}`;
+    const name = FOCUS_KEYS.find((k) => el.dataset[k] !== undefined);
+    return name ? `[data-${name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}="${CSS.escape(el.dataset[name])}"]` : null;
+  };
+  let focusKey = null;
+  let dialogReturn = null;
+  let hadDialog = false;
+  document.addEventListener("focusin", (event) => { focusKey = keyOf(event.target) || focusKey; });
+  app.tabIndex = -1;
+  // 戰鬥訊息放在不會被重畫的區塊，螢幕閱讀器才會穩定念出來
+  const live = document.createElement("p");
+  live.className = "gc-sr";
+  live.setAttribute("aria-live", "polite");
+  document.body.append(live);
+  let spoken = "";
+
+  function restoreFocus() {
+    const stage = app.querySelector(".gc-stage");
+    for (const el of [...app.children, document.querySelector(".gc-credits")]) if (el) el.inert = Boolean(stage) && el !== stage;
+    const opened = stage && !hadDialog;
+    const closed = !stage && hadDialog;
+    hadDialog = Boolean(stage);
+    if (opened) dialogReturn = focusKey;
+    const active = document.activeElement;
+    const lost = !active || active === document.body || active === app;
+    // 還沒用過鍵盤或滑鼠聚焦任何東西（剛開頁）時不搶焦點
+    if (!opened && (!lost || !focusKey)) return;
+    const scope = stage || app;
+    const want = closed ? dialogReturn : focusKey;
+    const usable = (el) => el && !el.disabled && !el.closest("[inert]");
+    let target = opened ? null : want && scope.querySelector(want);
+    if (!usable(target)) target = scope.querySelector("[data-play]:not([disabled])");
+    if (!usable(target)) target = scope;
+    if (target === stage) stage.tabIndex = -1;
+    target.focus({ preventScroll: true });
+  }
+
   async function refresh(patch = {}) {
     S = await call("GET", "state");
     hand = S.team.slice();
@@ -351,7 +393,7 @@
     const birds = f.cards.map((c, i) => {
       const p = scene.perches[i], q = wide.perches[i];
       const pos = `--l:${pct(p.left)};--t:${pct(p.top)};--w:${pct(p.size)};--lw:${pct(q.left)};--tw:${pct(q.top)};--ww:${pct(q.size)}`;
-      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}"><img src="${sticker(c)}" alt="" loading="lazy"></button>`;
+      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}"><img src="${sticker(c)}" alt="" loading="lazy"></button>`;
     }).join("");
     // 桌機的側欄多一份名單：鳥多了以後，用名字找比在樹上找快
     const roster = f.cards.length ? `<div class="gc-scrap gc-desk-only"><p class="gc-h">${t("forest.list")}</p><div class="gc-roster">${f.cards.map((c) =>
@@ -449,15 +491,15 @@
         : locked ? ""
         : !legal ? `<span class="gc-tired">${t("fight.tired")}</span>`
         : `<span class="gc-preview"><span class="dealt">${t("fight.deal", { n: Math.round(p.dealt) })}</span>${t("fight.sep")}<span class="taken">${t("fight.take", { n: Math.round(p.taken) })}</span>${fatal ? `<span class="fatal">${t("fight.fatal")}</span>` : ""}</span>`;
-      return `<button class="gc-act rim-${c.rarity} ${down ? "down" : ""}" data-play="${i}" ${legal ? "" : "disabled"}><span class="gc-act-name">${esc(birdName(c))}</span><img src="${sticker(c)}" alt=""><span class="gc-hp" style="display:block" aria-label="${t("fight.hp", { n: pct })}"><i class="${pct < 35 ? "low" : ""}" style="width:${pct}%"></i></span>${rarityTag(c.rarity)} ${typeTag(c.type)}${info}</button>`;
+      return `<button class="gc-act rim-${c.rarity} ${down ? "down" : ""}" data-play="${i}" ${legal ? "" : "disabled"}><span class="gc-act-name">${esc(birdName(c))}</span><img src="${sticker(c)}" alt=""><span class="gc-hp" style="display:block" role="img" aria-label="${t("fight.hp", { n: pct })}"><i class="${pct < 35 ? "low" : ""}" style="width:${pct}%"></i></span>${rarityTag(c.rarity)} ${typeTag(c.type)}${info}</button>`;
     }).join("");
     const round = Math.min(state.round, E.ROUNDS - 1);
     // 手機上下一欄；桌機左邊擂台、右邊出招
     return `<div class="gc-columns"><div class="gc-col-main">
       <div class="gc-versus">
-        <div class="gc-bar-side"><span class="gc-bar-name">${t("fight.team")}</span><div class="gc-bar ${hpPct < 35 ? "low" : ""}" aria-label="${t("fight.teamHp", { n: hpPct })}"><i style="width:${hpPct}%"></i></div></div>
+        <div class="gc-bar-side"><span class="gc-bar-name">${t("fight.team")}</span><div class="gc-bar ${hpPct < 35 ? "low" : ""}" role="img" aria-label="${t("fight.teamHp", { n: hpPct })}"><i style="width:${hpPct}%"></i></div></div>
         <div class="gc-round">${round + 1}/${E.ROUNDS}</div>
-        <div class="gc-bar-side right"><span class="gc-bar-name">${esc(bossSelf(fight.boss))}</span><div class="gc-bar boss" aria-label="${t("fight.bossHp", { n: bossPct })}"><i style="width:${bossPct}%"></i>${ticks}</div></div>
+        <div class="gc-bar-side right"><span class="gc-bar-name">${esc(bossSelf(fight.boss))}</span><div class="gc-bar boss" role="img" aria-label="${t("fight.bossHp", { n: bossPct })}"><i style="width:${bossPct}%"></i>${ticks}</div></div>
       </div>
       <div class="gc-arena">${float}
         <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(birdName(shown))}</span><img src="${sticker(shown)}" alt="${esc(birdName(shown))}"></div>
@@ -465,7 +507,7 @@
       </div>
       </div><div class="gc-col-side">
       <div class="gc-scrap" style="padding:6px 8px">${moveLeaves(fight, round)}</div>
-      <p class="gc-scrap gc-log" aria-live="polite">${esc(log)}</p>
+      <p class="gc-scrap gc-log">${esc(log)}</p>
       <button class="gc-sig" data-do="toggle-sig" aria-pressed="${signature}" ${state.signatureUsed || locked ? "disabled" : ""}>${state.signatureUsed ? t("sig.used") : signature ? t("sig.ready") : t("sig.use")}</button>
       <div class="gc-actions">${cards}</div>
       ${errorBox()}
@@ -480,7 +522,7 @@
     const pct = Math.round((r.score / r.best) * 100);
     return `<div class="gc-scrap gc-result" style="margin-top:18px">
         <img src="${view.fight.boss.img}" alt="${esc(bossName(view.fight.boss))}">
-        <div class="gc-stars" aria-label="${t("result.stars", { n: r.stars })}">${stars}</div>
+        <div class="gc-stars" role="img" aria-label="${t("result.stars", { n: r.stars })}">${stars}</div>
         <p class="gc-h">${words}</p>
         <p class="gc-tip">${t("result.tip", { score: Math.round(r.score), best: Math.round(r.best), pct, a: E.STAR_CUTS[0] * 100, b: E.STAR_CUTS[1] * 100, c: E.STAR_CUTS[2] * 100 })}</p>
       </div>
@@ -496,6 +538,11 @@
     }
     app.dataset.screen = view.screen;
     app.innerHTML = screens[view.screen]();
+    restoreFocus();
+    const r = view.result;
+    const say = view.screen === "fight" ? view.log : view.screen === "result" && r ? `${t("result.stars", { n: r.stars })}${t("match.sep")}${I18n.list("result.words")[r.stars]}` : "";
+    if (say && say !== spoken) live.textContent = say;
+    spoken = say || "";
     mountGoogle();
     window.scrollTo(0, scroll);
   }
@@ -696,6 +743,16 @@
         await refresh();
       }),
     })[d.do]?.();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && view.card && !view.busy) {
+      event.preventDefault();
+      set(view.swapping ? { swapping: false } : { card: null, drew: false, drawKind: null, swapping: false, gift: null, shareLink: null });
+    } else if ((event.key === "Enter" || event.key === " ") && view.anim && animSteps.length && !event.target.closest?.(".gc-mute")) {
+      event.preventDefault();
+      nextStep();
+    }
   });
 
   async function copyText(text) {
