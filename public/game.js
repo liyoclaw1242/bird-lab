@@ -55,6 +55,14 @@
   const warm = (cards) => cards.forEach((c) => preload(sticker(c)));
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  // 林子跟著玩家的時鐘換色：清晨偏粉、黃昏偏橘、夜裡偏藍，只是淡淡一層。?tod= 可以強制指定，方便看效果
+  const TOD_ASK = new URLSearchParams(location.search).get("tod");
+  function tint() {
+    const h = new Date().getHours();
+    document.documentElement.dataset.tod = TOD_ASK || (h < 5 ? "night" : h < 8 ? "dawn" : h < 16 ? "day" : h < 19 ? "dusk" : "night");
+  }
+  tint();
+  setInterval(tint, 10 * 60 * 1000);
   document.documentElement.style.setProperty("--gc-bird", window.Scenery.BIRD_URL);
 
   const memory = {};

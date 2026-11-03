@@ -550,6 +550,29 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-mini-row small { display: block; font-size: 14px; font-weight: 400; color: var(--muted); }
 .gc-hand-card .gc-text-btn { margin-top: 2px; }
 
+/* 按鈕的手感：懸停浮起、按下壓下。只動 translate、scale 和陰影，不碰版面 */
+.gc-plank, .gc-shake, .gc-act, .gc-tab, .gc-sig, .gc-lang { transition: translate .12s ease-out, box-shadow .12s ease-out; }
+.gc-perched-bird img, .gc-slot img, .gc-mini-row img, .gc-roster img { transition: scale .18s ease-out; }
+@media (hover: hover) {
+  .gc-plank:not(:disabled):hover, .gc-shake:not(:disabled):hover, .gc-sig:not(:disabled):hover { translate: 0 -2px; box-shadow: 0 7px 0 rgba(30, 20, 8, .5); }
+  .gc-shake:not(:disabled):hover svg { transform-origin: 50% 100%; animation: gc-nudge .6s ease-in-out; }
+  .gc-act:not(:disabled):hover { translate: 0 -3px; box-shadow: 0 7px 0 rgba(30, 20, 8, .5); }
+  .gc-tab:hover { translate: 0 2px; }
+  .gc-lang:hover { translate: 0 -1px; }
+  .gc-perched-bird:hover img, .gc-slot:hover img, .gc-mini-row:hover img, .gc-roster button:hover img { scale: 1.08; }
+  .gc-mini-row:hover { background: rgba(243, 207, 106, .5); }
+}
+.gc-shake:active:not(:disabled), .gc-act:active:not(:disabled), .gc-sig:active:not(:disabled) { translate: 0 3px; box-shadow: 0 2px 0 rgba(30, 20, 8, .5); }
+.gc-tab:active { translate: 0 4px; }
+@keyframes gc-nudge { 25% { transform: rotate(-6deg); } 60% { transform: rotate(5deg); } }
+
+/* 時段的淡淡色調：疊在背景的林子上，卡片和字不受影響。只有一層靜態漸層，沒有動畫 */
+#gc-woods { isolation: isolate; }
+#gc-woods::after { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: 0; transition: opacity 1.2s; }
+[data-tod="dawn"] #gc-woods::after { opacity: 1; background: linear-gradient(180deg, #f3d4cc, #fbf0e2 50%, #eadcc4); }
+[data-tod="dusk"] #gc-woods::after { opacity: 1; background: linear-gradient(180deg, #f5c48c, #f6ddb0 55%, #d9b48a); }
+[data-tod="night"] #gc-woods::after { opacity: 1; background: linear-gradient(180deg, #8c98c4, #a7b0cf 50%, #9794ae); }
+
 @media (prefers-reduced-motion: reduce) {
   .gc-pic, .gc-bird-doodle, .gc-stars i, .gc-sheen::before, .gc-note-card.dropping .gc-stamp, .gc-shake-glow, .gc-shake svg { animation: none !important; }
   .gc-plank, .gc-shake, .gc-act, .gc-tab, .gc-sig, .gc-lang, .gc-perched-bird img, .gc-slot img, .gc-big-tree, .gc-shake-glow, #gc-woods::after { transition: none !important; }
