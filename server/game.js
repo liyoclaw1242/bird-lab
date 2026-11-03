@@ -173,17 +173,28 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     };
   }
 
+  // 遇過幾個科、幾個目：貼紙路徑就是 目/科，不必另存欄位。只回數字，不列舉卡池。
+  // 全卡池的總數每個程序算一次就夠，卡池在執行中不會變
+  let lineageTotals = null;
+  async function lineage(q, playerId) {
+    const distinct = "count(DISTINCT split_part(data->>'file', '/', 2))::int AS orders, count(DISTINCT split_part(data->>'file', '/', 3))::int AS families";
+    lineageTotals ||= (await q.query(`SELECT ${distinct} FROM cards`)).rows[0];
+    const { rows: [mine] } = await q.query(`SELECT ${distinct} FROM owned o JOIN cards c ON c.id = o.card_id WHERE o.player_id = $1`, [playerId]);
+    return { orders: { owned: mine.orders, total: lineageTotals.orders }, families: { owned: mine.families, total: lineageTotals.families } };
+  }
+
   async function collection(playerId, page = 0) {
     const safePage = Math.max(0, Math.floor(Number(page)) || 0);
-    const [{ rows }, { rows: [{ count }] }] = await Promise.all([
+    const [{ rows }, { rows: [{ count }] }, lineageView] = await Promise.all([
       db.query(
         `SELECT c.data FROM owned o JOIN cards c ON c.id = o.card_id WHERE o.player_id = $1
          ORDER BY o.seq DESC LIMIT $2 OFFSET $3`,
         [playerId, PAGE_SIZE, safePage * PAGE_SIZE],
       ),
       db.query("SELECT count(*)::int AS count FROM owned WHERE player_id = $1", [playerId]),
+      lineage(db, playerId),
     ]);
-    return { page: safePage, pageSize: PAGE_SIZE, pages: Math.max(1, Math.ceil(count / PAGE_SIZE)), owned: count, cards: rows.map(toCard) };
+    return { page: safePage, pageSize: PAGE_SIZE, pages: Math.max(1, Math.ceil(count / PAGE_SIZE)), owned: count, cards: rows.map(toCard), lineage: lineageView };
   }
 
   async function assertOwned(q, playerId, ids) {

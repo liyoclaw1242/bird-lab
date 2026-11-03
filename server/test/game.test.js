@@ -181,6 +181,20 @@ test("收藏分頁：新抽的在最前面，頁數正確", async () => {
   assert.strictEqual(ids.size, 29);
 });
 
+test("收藏頁回報遇過幾個科、幾個目，總數來自整個卡池", async () => {
+  const p = await newPlayer();
+  const c = await game.collection(p.id, 0);
+  const part = (i) => new Set(all.map((x) => x.file.split("/")[i])).size;
+  assert.strictEqual(c.lineage.families.total, part(2));
+  assert.strictEqual(c.lineage.orders.total, part(1));
+  assert.ok(c.lineage.families.owned >= 1 && c.lineage.families.owned <= 3);
+  assert.ok(c.lineage.orders.owned >= 1 && c.lineage.orders.owned <= c.lineage.families.owned);
+  const s = await game.state(p.id);
+  const stranger = all.find((x) => !s.team.some((m) => m.id === x.id || m.file.split("/")[2] === x.file.split("/")[2]));
+  await db.query("INSERT INTO owned (player_id, card_id) VALUES ($1, $2)", [p.id, stranger.id]);
+  assert.strictEqual((await game.collection(p.id, 0)).lineage.families.owned, c.lineage.families.owned + 1);
+});
+
 test("稀有度抽完會把機率分給其他稀有度，全收後回報收集完成", async () => {
   const small = await open({ url: null });
   await migrate(small);
