@@ -30,7 +30,12 @@
   const pic = (src, alt = "", attrs = "") => `<img class="gc-pic${loaded.has(absUrl(src)) ? " ready" : ""}" src="${esc(src)}" alt="${esc(alt)}" decoding="async" ${attrs}>`;
   document.addEventListener("load", (event) => {
     const el = event.target;
-    if (el.tagName === "IMG" && el.classList.contains("gc-pic")) { loaded.add(el.currentSrc || el.src); el.classList.add("landed"); }
+    if (el.tagName !== "IMG" || !el.classList.contains("gc-pic")) return;
+    // 第一次載到才淡入；重畫時同一張圖又觸發 load（有 SW 時每次都會），不再重播
+    const url = el.currentSrc || el.src;
+    if (!loaded.has(url)) el.classList.add("landed");
+    loaded.add(url);
+    el.classList.add("ready");
   }, true);
   document.addEventListener("error", (event) => {
     const el = event.target;
@@ -552,12 +557,9 @@
     }
     app.dataset.screen = view.screen;
     app.innerHTML = screens[view.screen]();
-    // 瀏覽器快取裡已經有的圖，重畫時就直接算到位，不會先閃出佔位鳥；反過來，記得載過但快取已經沒了的，就退回佔位鳥
-    app.querySelectorAll("img.gc-pic").forEach((img) => {
-      const url = img.currentSrc || img.src;
-      if (img.complete && img.naturalWidth) { loaded.add(url); img.classList.add("ready"); }
-      else if (img.classList.contains("ready")) { loaded.delete(url); img.classList.remove("ready"); }
-    });
+    // 瀏覽器快取裡已經有的圖，重畫時就直接算到位，不會先閃出佔位鳥。
+    // 有 service worker 接管時，重畫的 img 要走一趟 SW 才會 complete，所以已載過的只能靠 loaded 這份名單判斷，不能反過來拿掉 ready
+    app.querySelectorAll("img.gc-pic:not(.ready)").forEach((img) => { if (img.complete && img.naturalWidth) { loaded.add(img.currentSrc || img.src); img.classList.add("ready"); } });
     mountGoogle();
     window.scrollTo(0, scroll);
   }
