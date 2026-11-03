@@ -1,7 +1,7 @@
 // PWA：網頁先走網路，確保部署後馬上是新版；斷網時才用快取開出畫面。
 // API 不經手。跨網域的貼紙也不經手，交給瀏覽器的 HTTP 快取，線稿才讀得到圖片像素。
 const CACHE = "yi-niao-v3";
-const SHELL = ["/", "/style.css", "/engine.js", "/data.js", "/i18n.js", "/sound.js", "/scenery.js", "/doodle.js", "/game.js", "/logo.svg"];
+const SHELL = ["/", "/style.css", "/engine.js", "/data.js", "/i18n.js", "/birdnotes.js", "/sound.js", "/scenery.js", "/doodle.js", "/game.js", "/logo.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
