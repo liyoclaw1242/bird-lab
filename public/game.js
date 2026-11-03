@@ -837,7 +837,8 @@
 
   document.addEventListener("click", (event) => {
     if (view.anim && animSteps.length) { nextStep(); return; }
-    const el = event.target.closest("button");
+    // 存檔區的 <summary> 也要記下開合，不然任何重畫（戳 BOSS、抽卡）都會把它關回去
+    const el = event.target.closest("button, summary[data-do]");
     if (!el || el.disabled) return;
     const d = el.dataset;
     Sound.play(clickSound(d));
