@@ -60,7 +60,7 @@ img { display: block; }
 .gc-h { margin: 0 0 6px; font-size: 17px; }
 
 .gc-plank { display: block; width: 100%; min-height: 52px; padding: 10px 16px; color: #fbeecb; font-size: 19px; background: linear-gradient(177deg, #7a5c33, #4d3920); background-size: 100% 100%; border: 3px solid var(--bark-dark); border-radius: var(--wiggle-2); box-shadow: 0 5px 0 rgba(30, 20, 8, .5); transition: transform .08s; }
-.gc-plank:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(30, 20, 8, .5); }
+.gc-plank:active:not(:disabled) { translate: 0 3px; box-shadow: 0 2px 0 rgba(30, 20, 8, .5); }
 .gc-plank:disabled { color: #4b4330; background: #b8ab85; border-color: #877a5a; box-shadow: none; }
 .gc-plank.hot { color: var(--ink); background: linear-gradient(177deg, #efc55f, #c98f28); }
 .gc-plank + .gc-plank { margin-top: 12px; }
@@ -98,9 +98,9 @@ img { display: block; }
 /* 搖樹 */
 .gc-stage { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; overflow-y: auto; padding: 16px; background: rgba(28, 22, 10, .72); }
 .gc-shaking { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; overflow: hidden; background: rgba(28, 22, 10, .55); }
-.gc-big-tree { width: 260px; height: 320px; transform-origin: 50% 100%; animation: gc-tree-shake .9s ease-in-out; }
+.gc-big-tree { width: 280px; height: 325px; transform-origin: 50% 100%; animation: gc-tree-shake .9s ease-in-out infinite; transition: scale .5s; }
 @keyframes gc-tree-shake { 10% { transform: rotate(-5deg); } 25% { transform: rotate(6deg); } 40% { transform: rotate(-7deg); } 55% { transform: rotate(6deg); } 70% { transform: rotate(-4deg); } 85% { transform: rotate(2deg); } }
-.gc-burst { position: absolute; top: 18%; left: 50%; width: 24px; height: 32px; animation: gc-burst 1s ease-in both; }
+.gc-burst { position: absolute; top: 18%; left: 50%; width: 24px; height: 32px; animation: gc-burst 1.2s ease-in infinite both; }
 @keyframes gc-burst { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: .2; } }
 
 .gc-note-card { position: relative; width: min(430px, 100%); background: var(--paper); border: 3px solid var(--ink); border-radius: var(--wiggle); padding: 14px; box-shadow: 4px 7px 0 rgba(10, 6, 2, .55); background-image: radial-gradient(rgba(120, 90, 40, .1) 1px, transparent 1.6px); background-size: 7px 7px; }
@@ -489,4 +489,68 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   [data-screen="home"] .gc-perched { height: clamp(300px, 100vh - 500px, 720px); }
   [data-screen="forest"] .gc-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); }
   .gc-credits { max-width: 1400px; }
+}
+
+/* 貼紙載入：先站一隻潦草鳥，圖到了再淡入。重畫畫面時已載過的直接是 ready，不會再閃 */
+.gc-pic:not(.ready):not(.landed):not(.failed) { background: var(--gc-bird) center / contain no-repeat; animation: gc-pic-wait 1.6s ease-in-out infinite; }
+.gc-pic.landed { animation: gc-pic-in .45s ease-out both; }
+@keyframes gc-pic-wait { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+@keyframes gc-pic-in { from { opacity: 0; scale: .9; } }
+/* 還沒有圖的 img 沒有高度，給個方框讓佔位鳥站得住 */
+.gc-perched-bird img:not(.ready):not(.landed) { aspect-ratio: 1; }
+.gc-card-bird.gc-pic:not(.ready):not(.landed) { aspect-ratio: 4 / 3; background: var(--gc-bird) center / 38% no-repeat, linear-gradient(180deg, #cfdcb0, #a9b57a 75%, #7c6a3d); }
+
+/* 搖樹：葉子一直掉；結果一到就換成稀有度的顏色和光，卡片才掉下來 */
+.gc-shake-glow { position: absolute; inset: -20%; opacity: 0; pointer-events: none; transition: opacity .6s; }
+.gc-shaking.rar-SR .gc-shake-glow { opacity: 1; background: radial-gradient(circle at 50% 45%, rgba(190, 230, 255, .55), transparent 55%); }
+.gc-shaking.rar-SSR .gc-shake-glow { opacity: 1; background: radial-gradient(circle at 50% 45%, rgba(255, 215, 90, .75), rgba(255, 215, 90, .2) 40%, transparent 62%); }
+.gc-shaking.rar-UR .gc-shake-glow { opacity: 1; background: conic-gradient(from 0deg, rgba(255, 70, 70, .6), rgba(255, 200, 50, .6), rgba(80, 220, 100, .6), rgba(60, 170, 250, .6), rgba(210, 90, 240, .6), rgba(255, 70, 70, .6)); -webkit-mask: radial-gradient(circle, #000 18%, transparent 62%); mask: radial-gradient(circle, #000 18%, transparent 62%); animation: gc-fx-spin 6s linear infinite; }
+.gc-shaking[class*="rar-"] .gc-big-tree { scale: 1.06; }
+.gc-shaking .gc-burst path { transition: fill .5s; }
+.gc-shaking.rar-SR .gc-burst path { fill: #bfe3f2; }
+.gc-shaking.rar-SR .gc-burst:nth-child(3n) path { fill: #7fbfe0; }
+.gc-shaking.rar-SSR .gc-burst path { fill: #ffd84a; }
+.gc-shaking.rar-SSR .gc-burst:nth-child(3n) path { fill: #fff0a0; }
+.gc-shaking.rar-SSR .gc-burst:nth-child(3n + 1) path { fill: #f2b01e; }
+.gc-shaking.rar-UR .gc-burst path { fill: #ff4d4d; }
+.gc-shaking.rar-UR .gc-burst:nth-child(6n + 1) path { fill: #ff9a2e; }
+.gc-shaking.rar-UR .gc-burst:nth-child(6n + 2) path { fill: #ffe14a; }
+.gc-shaking.rar-UR .gc-burst:nth-child(6n + 3) path { fill: #4fd65c; }
+.gc-shaking.rar-UR .gc-burst:nth-child(6n + 4) path { fill: #3fb8f2; }
+.gc-shaking.rar-UR .gc-burst:nth-child(6n + 5) path { fill: #d65cf0; }
+
+/* 卡片掉下來之後：稀有度章蓋上去，SSR 和 UR 再掃過一道光（只在第一次畫出來時播） */
+.gc-note-card.dropping .gc-stamp { animation: gc-stamp .5s cubic-bezier(.2, 1.6, .4, 1) .3s both; }
+@keyframes gc-stamp { from { transform: scale(2.6) rotate(-18deg); opacity: 0; } 60% { opacity: 1; } to { transform: scale(1) rotate(5deg); } }
+.gc-sheen { position: absolute; inset: 0; z-index: 2; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.gc-sheen::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .55) 50%, transparent 62%); transform: translateX(-110%); animation: gc-sheen 1.2s ease-out .55s both; }
+.aura-UR .gc-sheen::before { background: linear-gradient(115deg, transparent 34%, rgba(255, 120, 220, .4) 44%, rgba(255, 255, 255, .7) 50%, rgba(120, 200, 255, .4) 56%, transparent 66%); }
+@keyframes gc-sheen { to { transform: translateX(110%); } }
+
+/* 結算：亮的星一顆顆蹦出來 */
+.gc-stars i { display: inline-block; font-style: normal; animation: gc-star-pop .55s cubic-bezier(.2, 1.5, .4, 1) calc(.25s + var(--i) * .22s) both; }
+@keyframes gc-star-pop { from { transform: scale(0) rotate(-30deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+
+/* 載入中和空手：紙上有隻潦草鳥 */
+.gc-loading { display: grid; justify-items: center; gap: 2px; padding: 18px 30px; }
+.gc-loading p { margin: 0; font-size: 17px; }
+.gc-bird-doodle { width: 72px; height: 72px; }
+.gc-bird-doodle.hop { transform-origin: 50% 90%; animation: gc-hop .8s ease-in-out infinite; }
+@keyframes gc-hop { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px) rotate(-5deg); } 60% { transform: translateY(0) scaleY(.94); } }
+.gc-empty { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; }
+.gc-empty .gc-bird-doodle { width: 56px; height: 56px; opacity: .6; }
+.gc-empty p { margin: 0; }
+
+/* 桌機首頁側欄：今天帶的三隻 */
+.gc-hand-card { margin-top: 12px; }
+.gc-mini-list { display: grid; }
+.gc-mini-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 0 10px; width: 100%; padding: 5px 4px; text-align: left; font-size: 15px; line-height: 1.3; border-top: 2px dotted #bda877; border-radius: 6px; }
+.gc-mini-row:first-child { border-top: 0; }
+.gc-mini-row img { width: 48px; height: 46px; object-fit: contain; }
+.gc-mini-row small { display: block; font-size: 14px; font-weight: 400; color: var(--muted); }
+.gc-hand-card .gc-text-btn { margin-top: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gc-pic, .gc-bird-doodle, .gc-stars i, .gc-sheen::before, .gc-note-card.dropping .gc-stamp, .gc-shake-glow, .gc-shake svg { animation: none !important; }
+  .gc-plank, .gc-shake, .gc-act, .gc-tab, .gc-sig, .gc-lang, .gc-perched-bird img, .gc-slot img, .gc-big-tree, .gc-shake-glow, #gc-woods::after { transition: none !important; }
 }
