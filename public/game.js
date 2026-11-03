@@ -116,7 +116,24 @@
       const s = stars[d];
       return `<span title="${d}">${LEAF_ICON(s === undefined ? "#d9ceae" : color[s])}<i>${s === undefined ? "" : s || "✕"}</i></span>`;
     }).join("");
-    return `<div class="gc-scrap tilt-r"><p class="gc-h">${t("history", { n: S.streak })}</p><div class="gc-strip">${cells}</div></div>`;
+    // 連勝的註腳：數字已經在標題裡，這裡只講林子對你的看法
+    const n = S.streak;
+    const flavor = n >= 14 ? "streak.long" : n >= 7 ? "streak.week" : n >= 4 ? "streak.some" : n >= 2 ? "streak.few" : n === 1 ? "streak.1" : null;
+    return `<div class="gc-scrap tilt-r"><p class="gc-h">${t("history", { n })}</p><div class="gc-strip">${cells}</div>${flavor ? `<p class="gc-sub gc-streak">${t(flavor)}</p>` : ""}</div>`;
+  }
+
+  // 明天的 BOSS 由日期決定，瀏覽器自己算得出來，只給剪影吊胃口
+  function tomorrowBox() {
+    if (!S.result) return "";
+    const next = E.bossOfDay(D.BOSSES, E.addDays(S.day, 1));
+    return `<div class="gc-scrap gc-tomorrow tilt"><p class="gc-h">${t("tomorrow.title")}</p><div class="gc-tomorrow-row"><img class="gc-silhouette" src="${next.img}" alt=""><p class="gc-sub">${t(`tease.${next.id}`)}</p></div></div>`;
+  }
+
+  // 戳首頁的 BOSS：每戳一下換一句，戳到底就停在最後一句
+  function pokeBubble() {
+    if (!view.pokes) return "";
+    const lines = I18n.list("poke.lines");
+    return `<span class="gc-bubble" role="status">${esc(lines[Math.min(view.pokes, lines.length) - 1])}</span>`;
   }
 
   function homeScreen() {
@@ -133,7 +150,7 @@
       <section class="gc-clearing">
         <div class="gc-today-boss">
           <div class="gc-scrap gc-boss-note tilt"><span>${t("home.bossToday")}</span><b>${esc(bossSelf(fight.boss))}</b><span>${S.day}</span></div>
-          <img class="gc-perched" src="${fight.boss.img}" alt="${esc(t("home.stickerAlt", { name: bossName(fight.boss) }))}">
+          <button type="button" class="gc-poke ${view.pokes ? "poked" : ""}" data-do="poke" aria-label="${esc(t("poke.label", { name: bossName(fight.boss) }))}"><img class="gc-perched" src="${fight.boss.img}" alt="${esc(t("home.stickerAlt", { name: bossName(fight.boss) }))}">${pokeBubble()}</button>
         </div>
         <div class="gc-scrap tilt-r"><p class="gc-h">${t("home.fiveMoves")}</p>${moveLeaves(fight)}${chain}</div>
       </section>
@@ -143,6 +160,7 @@
         ${result?.stars > 0 && !complete ? shake("bonus", draws.bonus ? t("draw.bonusDone") : t("draw.bonus"), t("draw.bonusNote"), draws.bonus) : ""}
       </div>
       <div style="margin-top:12px">${fightBtn}</div>
+      ${tomorrowBox()}
       ${errorBox()}
       <div style="height:12px"></div>
       ${todayDraws()}
@@ -262,6 +280,15 @@
     return `<div class="gc-row"><button class="gc-plank hot" data-do="close-card">${t("gotIt")}</button></div>`;
   }
 
+  // 收藏到整數時在卡片上蓋一張紙條；數字從伺服器回的 owned 來，不另外計數
+  const MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
+  const milestoneOf = (owned) => (MILESTONES.includes(owned) || (owned > 1000 && owned % 1000 === 0) ? owned : null);
+  function milestoneNote() {
+    const n = view.drew && view.milestone;
+    if (!n) return "";
+    return `<div class="gc-milestone"><b>${t("milestone.title", { n })}</b><span>${t(MILESTONES.includes(n) ? `milestone.${n}` : "milestone.more", { n })}</span></div>`;
+  }
+
   function playRarityFx(rarity) {
     Sound.play(rarity);
     const { html, ms } = window.Scenery.rarityFx(rarity);
@@ -330,7 +357,7 @@
         : `<div class="gc-row"><button class="gc-plank hot" data-take="${esc(c.id)}">${t("card.take")}</button><button class="gc-plank" data-do="close-card">${t("close")}</button></div>`;
     return `<div class="gc-stage" role="dialog" aria-modal="true" aria-label="${esc(birdName(c))}"><article class="gc-note-card aura-${c.rarity} ${dropping ? "dropping" : ""}">
       <span class="gc-stamp ${c.rarity}">${c.rarity}</span>
-      ${giftNotice()}
+      ${giftNotice()}${milestoneNote()}
       <img class="gc-card-bird" src="${sticker(c)}" alt="${esc(t("home.stickerAlt", { name: birdName(c) }))}">
       <p class="gc-credit">${t("card.sticker")}${art}${text}</p>
       <b class="gc-name">${esc(birdName(c))}</b><span class="gc-sci">${esc(c.sci)}</span>
@@ -360,7 +387,7 @@
       <div class="gc-columns"><div class="gc-col-main">
       <div class="gc-forest">${scene.svg}${wide.svg}${birds}</div>
       </div><div class="gc-col-side">
-      <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.forest")}</h1><p class="gc-sub">${t("forest.note", { here: f.cards.length, owned: f.owned, left: I18n.number(S.total - f.owned) })}</p></div>
+      <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.forest")}</h1><p class="gc-sub">${t("forest.note", { here: f.cards.length, owned: f.owned, left: I18n.number(S.total - f.owned) })}</p>${f.lineage ? `<p class="gc-sub">${t("forest.lineage", { families: f.lineage.families.owned, orders: f.lineage.orders.owned, familiesTotal: f.lineage.families.total, ordersTotal: f.lineage.orders.total })}</p>` : ""}</div>
       ${errorBox()}
       <div class="gc-pages">
         <button class="gc-plank" data-page="${f.page - 1}" ${f.page <= 0 ? "disabled" : ""}>${t("forest.back")}</button>
@@ -420,7 +447,7 @@
     }
     if (a.phase === "boss") {
       const flip = view.bossFaceRight ? "" : "flip";
-      return `<div class="gc-cutin right" style="--hold:${HOLD.boss}ms"><div class="gc-cutin-art ${flip}"><img src="${view.fight.boss.img}" alt=""></div><div class="gc-cutin-text"><small>${esc(bossSelf(view.fight.boss))}</small><b>${esc(t(`line.${a.intent}`))}</b><em>${t("fight.counter", { n: Math.round(a.taken) })}</em></div></div>`;
+      return `<div class="gc-cutin right" style="--hold:${HOLD.boss}ms"><div class="gc-cutin-art ${flip}"><img src="${view.fight.boss.img}" alt=""></div><div class="gc-cutin-text"><small>${esc(bossSelf(view.fight.boss))}</small><b>${esc(t(a.react ? `react.${a.react}` : `line.${a.intent}`))}</b><em>${t("fight.counter", { n: Math.round(a.taken) })}</em></div></div>`;
     }
     return "";
   }
@@ -476,14 +503,21 @@
   function resultScreen() {
     const r = view.result;
     const stars = "★".repeat(r.stars) + `<span>${"★".repeat(3 - r.stars)}</span>`;
-    const words = I18n.list("result.words")[r.stars];
+    // 結語先看戰況：全倒、無傷三星、剩一隻撐到贏，才輪到依星數的預設句
+    const alive = view.state ? view.state.hp.filter((v) => v > 0).length : E.TEAM_SIZE;
+    const words = alive === 0 && r.stars === 0 ? t("result.wipeout")
+      : r.stars === 3 && alive === E.TEAM_SIZE ? t("result.flawless")
+      : alive === 1 && r.stars > 0 ? t("result.comeback")
+      : I18n.list("result.words")[r.stars];
     const pct = Math.round((r.score / r.best) * 100);
+    const report = view.moves ? reportText(r) : "";
     return `<div class="gc-scrap gc-result" style="margin-top:18px">
         <img src="${view.fight.boss.img}" alt="${esc(bossName(view.fight.boss))}">
         <div class="gc-stars" aria-label="${t("result.stars", { n: r.stars })}">${stars}</div>
         <p class="gc-h">${words}</p>
         <p class="gc-tip">${t("result.tip", { score: Math.round(r.score), best: Math.round(r.best), pct, a: E.STAR_CUTS[0] * 100, b: E.STAR_CUTS[1] * 100, c: E.STAR_CUTS[2] * 100 })}</p>
       </div>
+      ${report ? `<div class="gc-scrap gc-report tilt-r"><p class="gc-h">${t("report.title")}</p><pre>${esc(report)}</pre><p class="gc-legend">${t("report.legend")}</p><button class="gc-plank" data-do="copy-report">${view.reportCopied ? t("copied") : t(navigator.share ? "report.share" : "report.copy")}</button></div>` : ""}
       <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">${t(r.stars > 0 ? "result.homeMore" : "result.home")}</button></div>`;
   }
 
@@ -520,7 +554,8 @@
       } finally {
         view = { ...view, shaking: false };
       }
-      await refresh({ card: result.card, drew: true, landed: false, drawKind: kind, shareLink: null });
+      // 這裡的 S 還是抽之前的狀態，新抽到的剛好是第 owned + 1 隻
+      await refresh({ card: result.card, drew: true, landed: false, drawKind: kind, shareLink: null, milestone: result.repeated ? null : milestoneOf(S.owned + 1) });
       playRarityFx(result.card.rarity);
     }, () => draw(kind));
   }
@@ -581,6 +616,30 @@
 
   const HIT_SOUND = { SR: "hitSR", SSR: "hitSSR", UR: "hitUR" };
 
+  // 這一回合發生了什麼：剋到／被剋看食性，「狠狠」是一擊佔今日最高分三成以上，「快撐不住」是這一下剛好跨過三星線
+  function fightEvents(fight, card, before, next, dealt, signature, best) {
+    const mul = E.typeMul(card.type, fight.forms[before.round]);
+    const line = best * E.STAR_CUTS[2];
+    return { adv: mul > 1, dis: mul < 1, big: !signature && dealt >= best * 0.3, low: before.score < line && next.score >= line };
+  }
+
+  // 戰報的每回合一個表情：先看倒地，再看招牌，再看剋不剋
+  const ROUND_EMOJI = { faint: "💤", signature: "💥", adv: "🔥", dis: "💧", plain: "🐦" };
+  const DAY_EMOJI = { 3: "🍁", 2: "🍂", 1: "🍃", 0: "🌑" };
+  function reportText(r) {
+    const { fight, team, moves } = view;
+    let s = E.startState(team);
+    const rounds = moves.map((m) => {
+      const card = team[m.slot];
+      const mul = E.typeMul(card.type, fight.forms[s.round]);
+      s = E.step(fight, team, s, m.slot, m.signature);
+      return ROUND_EMOJI[s.hp[m.slot] <= 0 ? "faint" : m.signature ? "signature" : mul > 1 ? "adv" : mul < 1 ? "dis" : "plain"];
+    }).join("");
+    const stars = Object.fromEntries(S.history.map((h) => [h.day, h.stars]));
+    const week = Array.from({ length: 7 }, (_, i) => E.addDays(S.day, i - 6)).map((d) => DAY_EMOJI[stars[d]] ?? "◽").join("");
+    return t("report.text", { day: S.day, boss: bossSelf(fight.boss), stars: "★".repeat(r.stars) + "☆".repeat(3 - r.stars), rounds, streak: S.streak, week, url: location.origin });
+  }
+
   function play(slot) {
     const { fight, team, state, signature, anim } = view;
     if (anim || E.isOver(state) || !E.legalSlots(state).includes(slot)) return;
@@ -595,13 +654,18 @@
     const fainted = next.hp[slot] <= 0;
     view.moves = moves;
     saveFight();
+    // 戰報和 BOSS 的反應跟著真的發生的事走：剋到、被剋、招牌、倒地、牠快撐不住
+    const ev = fightEvents(fight, card, before, next, dealt, signature, view.best);
+    const hitKey = signature ? "fight.logHitSig" : ev.adv ? "fight.logHitAdv" : ev.dis ? "fight.logHitDis" : ev.big ? "fight.logHitBig" : "fight.logHit";
+    const react = fainted ? "faint" : signature ? "signature" : ev.low ? "low" : ev.adv ? "adv" : ev.dis ? "dis" : null;
+    const bossKey = fainted ? "fight.logBossDown" : ev.low ? "fight.logBossLow" : "fight.logBoss";
     // 分數先動、血量等 BOSS 打回來才扣，血條才會跟著畫面走
     const midway = { ...next, hp: before.hp };
     runSteps([
       { ms: signature ? HOLD.super : HOLD.player, run: () => { Sound.play(signature ? "super" : "attack"); set({ active: slot, moves, signature: false, anim: { phase: "player", card, signature, word, dealt } }); } },
-      { ms: HOLD.hit, run: () => { Sound.play(HIT_SOUND[card.rarity] || "hit"); set({ state: midway, anim: { phase: "hit", dealt }, log: t("fight.logHit", { name: birdName(card), word, n: Math.round(dealt) }) }); } },
-      { ms: HOLD.boss, run: () => { Sound.play("boss"); set({ anim: { phase: "boss", intent, taken } }); } },
-      { ms: HOLD.bossHit, run: () => { Sound.play(fainted ? "faint" : "bossHit"); set({ state: next, anim: { phase: "bossHit", taken }, log: t(fainted ? "fight.logBossDown" : "fight.logBoss", { boss: bossName(fight.boss), intent: t(`intent.${intent}`), n: Math.round(taken), name: birdName(card) }) }); } },
+      { ms: HOLD.hit, run: () => { Sound.play(HIT_SOUND[card.rarity] || "hit"); set({ state: midway, anim: { phase: "hit", dealt }, log: t(hitKey, { name: birdName(card), word, n: Math.round(dealt) }) }); } },
+      { ms: HOLD.boss, run: () => { Sound.play("boss"); set({ anim: { phase: "boss", intent, taken, react } }); } },
+      { ms: HOLD.bossHit, run: () => { Sound.play(fainted ? "faint" : "bossHit"); set({ state: next, anim: { phase: "bossHit", taken }, log: t(bossKey, { boss: bossName(fight.boss), intent: t(`intent.${intent}`), n: Math.round(taken), name: birdName(card) }) }); } },
       { run: () => { set({ anim: null }); if (E.isOver(next)) submit(); } },
     ]);
   }
@@ -622,7 +686,7 @@
     if (d.take || d.replace) return hand.length >= E.TEAM_SIZE && !d.replace ? "tap" : "take";
     if (d.do === "toggle-sig") return view.signature ? "tap" : "charge";
     if (d.do === "copy-link" || d.do === "copy-code") return "ding";
-    if (d.open || d.openHand !== undefined) return "chirp";
+    if (d.open || d.openHand !== undefined || d.do === "poke") return "chirp";
     return "tap";
   }
 
@@ -634,7 +698,7 @@
     Sound.play(clickSound(d));
     if (d.go) {
       if (d.go === "forest") return openForest(0);
-      set({ screen: d.go, card: null, swapping: false, drew: false, drawKind: null, shareLink: null, gift: null, error: null });
+      set({ screen: d.go, card: null, swapping: false, drew: false, drawKind: null, shareLink: null, gift: null, error: null, reportCopied: false });
       if (d.go === "home" && pendingGift) openGift();
       return;
     }
@@ -661,8 +725,16 @@
     }
     ({
       retry: () => { const retry = view.error?.retry; view = { ...view, error: null }; retry?.(); },
-      "close-card": () => set({ card: null, drew: false, drawKind: null, swapping: false, gift: null, shareLink: null }),
+      "close-card": () => set({ card: null, drew: false, drawKind: null, swapping: false, gift: null, shareLink: null, milestone: null }),
       claim: claimGift,
+      poke: () => set({ pokes: (view.pokes || 0) + 1 }),
+      "copy-report": async () => {
+        const text = reportText(view.result);
+        // 手機有分享面板就用它，桌機退回複製
+        if (navigator.share) await navigator.share({ text }).catch(() => {});
+        else await copyText(text);
+        set({ reportCopied: !navigator.share });
+      },
       "copy-link": async () => {
         await copyText(view.shareLink.url);
         set({ shareLink: { ...view.shareLink, copied: true } });
@@ -734,7 +806,7 @@
     const { code } = view.gift;
     return guarded(async () => {
       const result = await call("POST", "claim", { body: { code } });
-      await refresh({ card: result.card, drew: true, landed: false, drawKind: null, gift: null, shareLink: null });
+      await refresh({ card: result.card, drew: true, landed: false, drawKind: null, gift: null, shareLink: null, milestone: result.repeated ? null : milestoneOf(S.owned + 1) });
       playRarityFx(result.card.rarity);
     }, claimGift);
   }
