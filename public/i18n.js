@@ -7,6 +7,7 @@
     "zh-Hant": {
       "app.name": "一鳥在手",
       "app.title": "一鳥在手｜百鳥在林，不如一鳥在手",
+      "app.description": "每天搖一棵樹，遇見一隻真實世界的鳥，再帶三隻潦草的牠們去打看起來超正經的 BOSS。今天搖到的鳥，還能分給朋友。",
       "lang.switch": "English",
       "footer.links": `<a href="privacy.html">隱私說明</a> · <a href="credits.html">資料來源與授權</a>`,
       "footer.license": `貼紙依 <a href="https://polyformproject.org/licenses/shield/1.0.0">PolyForm Shield 1.0.0</a> 使用，是插畫不是鑑定依據。線稿由貼紙輪廓自動產生。其他素材的作者、授權和更動說明請見資料來源與授權。`,
@@ -80,8 +81,9 @@
     en: {
       "app.name": "A Bird in the Hand",
       "app.title": "A Bird in the Hand",
+      "app.description": "Shake a tree every day to meet a real-world bird, then take three scribbly birds to fight a very serious-looking BOSS. Share today's bird with a friend.",
       "lang.switch": "繁體中文",
-      "footer.links": `<a href="privacy.html">Privacy (in Chinese)</a> · <a href="credits.html">Sources and licenses (in Chinese)</a>`,
+      "footer.links": `<a href="privacy-en.html">Privacy</a> · <a href="credits-en.html">Sources and licenses</a>`,
       "footer.license": `Stickers are used under <a href="https://polyformproject.org/licenses/shield/1.0.0">PolyForm Shield 1.0.0</a>. They are illustrations, not identification references. Line art is generated automatically from sticker outlines. See Sources and licenses for other credits, licenses and changes.`,
       "sound.mute": "Mute sound", "sound.unmute": "Unmute sound", "bgm.off": "Turn off ambience", "bgm.on": "Turn on ambience",
       "type.meat": "Meat", "type.mixed": "Mixed", "type.plant": "Plant",
@@ -143,7 +145,7 @@
       "fight.resume": "Picking up where you left off.", "fight.start": "Watch its next move, then choose who goes.", "fight.logHit": "{name} used {word} for {n}.",
       "fight.logBoss": "{boss} used {intent} and countered for {n}.", "fight.logBossDown": "{boss} used {intent} and countered for {n}. {name} fainted.",
       "result.words": ["You lost. It wasn't even looking at you", "You won, but it can still walk", "Nice fight. It's questioning its life as a bird", "Perfect! It has crashed"],
-      "result.stars": "{n} stars",
+      "result.stars": "{n} of 3 stars",
       "result.tip": "Damage {score}. Your current birds could deal at most {best} today ({pct}%). 1 star takes {a}%, 2 stars {b}%, 3 stars {c}%.",
       "result.home": "Back to the woods", "result.homeMore": "Back to the woods and shake another tree",
       "notes.taxon": "Order {order}, family {family}",
@@ -236,6 +238,8 @@
   root.I18n = api;
   document.documentElement.lang = lang;
   document.title = api.t("app.title");
+  // 會執行 JS 的搜尋引擎看 ?lang=en 時，描述也要是英文
+  document.querySelector('meta[name="description"]')?.setAttribute("content", api.t("app.description"));
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = api.t(el.dataset.i18n); });
   // 切換鈕在每次重畫的頁首裡，所以掛在 document 上
   document.addEventListener("click", (event) => {

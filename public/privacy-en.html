@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Privacy | A Bird in the Hand</title>
+<meta name="description" content="What A Bird in the Hand stores to run the game, and how to ask us to delete it.">
+<link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/privacy.html"><link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/privacy-en.html">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
+<style>
+:root { --paper: #fbf5e3; --ink: #2b2316; --line: #3a2d18; --muted: #5a4c32; --link: #2a6f8f; --body: #e9dcb8; --beak: #e0902f; --feather: #c98f4e; --sky: #8fb6c4; --leaf: #7f9a4c; --rose: #d98b7b; --cream: #f4e6c4; }
+* { box-sizing: border-box; }
+body { max-width: 640px; margin: 0 auto; padding: 24px 16px 40px; font: 17px/1.6 "LXGW WenKai TC", "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: var(--ink); background: #efe3c2; }
+a { color: var(--link); }
+header { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 18px; }
+h1 { flex: 1; margin: 0; font-size: 30px; line-height: 1.2; }
+header p { margin: 4px 0 0; font-size: 16px; color: var(--muted); }
+header svg { flex: none; width: 104px; height: 88px; }
+.note { position: relative; display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 14px 16px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px 18px 13px 20px; box-shadow: 2px 3px 0 rgba(58, 45, 24, .22); }
+.note:nth-of-type(even) { flex-direction: row-reverse; border-radius: 18px 13px 20px 14px; }
+.note svg { flex: none; width: 84px; height: 84px; }
+.note:nth-of-type(odd) svg { transform: rotate(-3deg); }
+.note:nth-of-type(even) svg { transform: rotate(3deg) scaleX(-1); }
+.note h2 { margin: 0 0 2px; font-size: 18px; }
+.note p { margin: 0; }
+.bye { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; font-weight: 700; }
+.bye svg { width: 58px; height: 58px; }
+.links { margin-top: 8px; text-align: center; font-size: 15px; }
+.links a { white-space: nowrap; }
+.b { fill: var(--body); stroke: var(--line); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.l { fill: none; stroke: var(--line); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.w { fill: var(--feather); stroke: var(--line); stroke-width: 2.4; stroke-linejoin: round; }
+.k { fill: var(--beak); stroke: var(--line); stroke-width: 2; stroke-linejoin: round; }
+.e { fill: var(--line); }
+.c { fill: var(--rose); opacity: .65; }
+@media (max-width: 420px) { .note svg { width: 68px; height: 68px; } header svg { width: 84px; height: 72px; } }
+</style></head>
+<body>
+<!-- 中文版 privacy.html 的英文對照，兩頁要一起改。小鳥插圖和中文版相同，是本站自己畫的，不沿用貼紙授權 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="hand" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+  <g id="bird"><path class="l" d="M40 80 L38 90 M38 90 L32 92 M38 90 L43 93 M56 80 L58 90 M58 90 L52 93 M58 90 L64 92"/><path class="b" d="M14 58 C10 34 28 16 50 17 C72 18 86 36 82 56 C79 74 62 83 46 82 C30 81 17 73 14 58 Z"/><path class="w" d="M26 54 C34 46 49 49 53 58 C49 69 34 72 25 65 C22 62 23 57 26 54 Z"/><circle class="e" cx="58" cy="37" r="3.6"/><circle cx="59.3" cy="35.7" r="1.1" fill="#fff"/><circle class="c" cx="67" cy="47" r="4.6"/><path class="k" d="M74 37 L89 42 L74 48 Z"/></g>
+</defs></svg>
+
+<header>
+  <div style="flex:1"><h1>Privacy</h1><p>A little bird checked for you: we only keep what the game needs to run.</p></div>
+  <svg viewBox="0 0 110 96" role="img" aria-label="A bird wearing tiny glasses, reading a note"><g filter="url(#hand)"><use href="#bird"/><circle class="l" cx="58" cy="37" r="7.5"/><path class="l" d="M50.5 36 L40 33"/><path d="M78 60 L102 54 L106 76 L82 82 Z" fill="#fff" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path class="l" d="M84 63 L99 59.5 M86 69 L101 65.5 M87 75 L97 72.5" stroke-width="1.8"/></g></svg>
+</header>
+
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><rect x="56" y="58" width="26" height="22" rx="4" fill="#e6b84a" stroke="#3a2d18" stroke-width="2.4"/><path class="l" d="M61 58 V50 C61 39 77 39 77 50 V58"/><circle class="e" cx="69" cy="67" r="2.6"/><path class="l" d="M69 68 V73"/></g></svg>
+  <div><h2>Google sign-in is optional</h2><p>If you sign in, we only store the account ID that Google provides, so your birds can be tied to your account. We do not store your name, email address or profile picture.</p></div>
+</section>
+
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><path d="M6 74 C20 94 76 94 90 74 C80 66 16 66 6 74 Z" fill="#a9824f" stroke="#3a2d18" stroke-width="2.4" stroke-linejoin="round"/><g transform="translate(14 -4) scale(.72)"><path class="b" d="M14 58 C10 34 28 16 50 17 C72 18 86 36 82 56 C79 74 62 83 46 82 C30 81 17 73 14 58 Z"/><path class="w" d="M26 54 C34 46 49 49 53 58 C49 69 34 72 25 65 C22 62 23 57 26 54 Z"/><path class="l" d="M53 37 C56 34 60 34 63 37"/><circle class="c" cx="67" cy="47" r="4.6"/><path class="k" d="M74 37 L89 42 L74 48 Z"/></g><path class="l" d="M14 78 L34 84 M32 74 L54 86 M60 74 L44 86 M82 78 L62 85"/><path d="M84 10 h4 M86 8 v4 M72 8 q6 -3 8 3" class="l" stroke-width="1.6"/></g></svg>
+  <div><h2>Game data</h2><p>We store the birds you own, your team, your daily draw and fight records, and records of who claimed birds from share links.</p></div>
+</section>
+
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><rect x="24" y="44" width="48" height="48" rx="7" fill="#d8e3e5" stroke="#3a2d18" stroke-width="2.4"/><path class="l" d="M42 86 H54"/><path d="M48 56 L44 62 L48 74 L52 62 Z" fill="#8fb6c4" stroke="#3a2d18" stroke-width="1.6" stroke-linejoin="round"/><g transform="translate(19 -7) scale(.62)"><path class="l" d="M40 80 L38 90 M56 80 L58 90"/><path class="b" d="M14 58 C10 34 28 16 50 17 C72 18 86 36 82 56 C79 74 62 83 46 82 C30 81 17 73 14 58 Z"/><path class="w" d="M26 54 C34 46 49 49 53 58 C49 69 34 72 25 65 C22 62 23 57 26 54 Z"/><circle class="e" cx="58" cy="37" r="3.6"/><circle class="c" cx="67" cy="47" r="4.6"/><path class="k" d="M74 37 L89 42 L74 48 Z"/></g></g></svg>
+  <div><h2>Data on your device</h2><p>Your browser stores a sign-in token and any fight in progress. The server only stores a hash of the token.</p></div>
+</section>
+
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path d="M66 12 L88 8 L92 26 L70 30 Z" fill="#fff" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path class="l" d="M72 18 L74 26 M81 16 L83 24 M70 21 L86 18 M71 25 L87 22" stroke-width="1.6"/><path class="l" d="M16 18 q5 -5 10 0 M30 12 q4 -4 8 0" stroke-width="1.8"/></g></svg>
+  <div><h2>IP addresses</h2><p>To limit mass account creation, we temporarily keep hashes of IP addresses and delete them after one hour. Our service providers (Vercel, Supabase, Cloudflare, Google) may also keep access logs under their own terms. The page font is served by Google Fonts, so your browser connects to Google when loading it.</p></div>
+</section>
+
+<p class="bye"><svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path class="l" d="M8 16 L22 30 M22 16 L8 30" stroke="#a9451d"/></g></svg>We do not sell data, and there is no ad tracking.</p>
+<p class="links">Questions, or want your data deleted? Email <a href="mailto:liyoclaw1242@gmail.com">liyoclaw1242@gmail.com</a></p>
+<p class="links"><a href="credits-en.html">Sources and licenses</a> · <a href="/?lang=en">Back to the woods</a> · <a href="privacy.html" hreflang="zh-Hant" lang="zh-Hant">繁體中文</a></p>
+</body></html>

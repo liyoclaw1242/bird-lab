@@ -1,0 +1,6 @@
+# 分享頁 /s/ 和桌布不擋：頁面本身已經是 noindex，擋了爬蟲反而看不到 noindex；社群預覽的爬蟲也會看這份檔案
+User-agent: *
+Disallow: /api/
+Disallow: /auth/
+
+Sitemap: https://bird-lab-three.vercel.app/sitemap.xml
