@@ -10,7 +10,8 @@ const FILE = path.join(__dirname, "../server/data/cards.json.gz");
 
 // IOC 簡體名裡打不出的字用「(共鳥)」代替，其實是「䳍」（tinamou）；另有幾個名字帶了註記
 function fixName(zh) {
-  return zh.replace(/\(共鳥\)/g, "䳍").replace(/\s*滅絕\?$/, "").replace(/\[.*\]$/, "");
+  // 有些名字尾巴還黏著來源字型的私用區字元（U+E000–F8FF），畫面上會變方框，名字本身在前面已經完整
+  return zh.replace(/[\uE000-\uF8FF]/g, "").trim().replace(/\(共鳥\)/g, "䳍").replace(/\s*滅絕\?$/, "").replace(/\[.*\]$/, "");
 }
 
 // 雜食（Omnivore）在 AVONET 的定義是沒有單一食物超過六成，「什麼都吃」講過頭了；

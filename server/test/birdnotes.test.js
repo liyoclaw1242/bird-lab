@@ -33,7 +33,7 @@ test("家麻雀的比例由體重算出", () => {
 
 test("卡池已套用修正：鳥名沒有替代字，解說沒有過時說法", () => {
   for (const card of cards) {
-    assert.ok(!/\(共鳥\)|滅絕\?|\[/.test(card.zh), card.zh);
+    assert.ok(!/\(共鳥\)|滅絕\?|\[|[\uE000-\uF8FF]/.test(card.zh) && card.zh === card.zh.trim(), card.zh);
     const text = card.facts.map((f) => f.d).join("");
     assert.ok(!/什麼都吃|在水裡抓獵物|岩壁| 0% /.test(text), `${card.id}: ${text}`);
     assert.deepStrictEqual(fixCard(card), card, card.id);
