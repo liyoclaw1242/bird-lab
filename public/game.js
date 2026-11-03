@@ -179,7 +179,7 @@
 
   function accountBox() {
     if (S.google) {
-      return `<div class="gc-scrap gc-backup"><p class="gc-h">${t("account.bound")}</p><p class="gc-sub">${t("account.boundNote")}</p><div class="gc-row"><button class="gc-plank" data-do="logout">${t("account.logout")}</button></div></div>`;
+      return `<div class="gc-scrap gc-backup"><p class="gc-h">${t("account.bound")}</p><p class="gc-sub">${t("account.boundNote")}</p><div class="gc-row"><button class="gc-plank" data-do="logout">${t("account.logout")}</button><button class="gc-plank" data-do="revoke">${t("account.revoke")}</button></div>${view.revoked ? `<p class="gc-sub" role="status">${t("account.revoked")}</p>` : ""}</div>`;
     }
     const ask = view.switchAsk;
     const google = !S.googleClientId ? "" : ask
@@ -234,11 +234,22 @@
     }, logout);
   }
 
+  // 換一組新憑證，其他裝置和外流的存檔碼一起失效
+  function revokeOthers() {
+    if (!window.confirm(t(S.google ? "account.revokeAsk" : "backup.rotateAsk"))) return;
+    return guarded(async () => {
+      const { token } = await call("POST", "revoke");
+      store.set(TOKEN_KEY, token);
+      await refresh({ revoked: true, codeCopied: false, backup: !S.google });
+    }, revokeOthers);
+  }
+
   function backupBox() {
     const open = view.backup;
     return `<details class="gc-scrap gc-backup" ${open ? "open" : ""}><summary data-do="toggle-backup">${t("backup.title")}</summary>
       <p class="gc-sub">${t("backup.note")}</p>
-      <div class="gc-row"><button class="gc-plank" data-do="copy-code">${view.codeCopied ? t("copied") : t("backup.copy")}</button></div>
+      <div class="gc-row"><button class="gc-plank" data-do="copy-code">${view.codeCopied ? t("copied") : t("backup.copy")}</button><button class="gc-plank" data-do="revoke">${t("backup.rotate")}</button></div>
+      ${view.revoked ? `<p class="gc-sub" role="status">${t("backup.rotated")}</p>` : ""}
       <label class="gc-restore">${t("backup.have")}<input id="gc-restore-code" autocomplete="off" spellcheck="false" placeholder="${t("backup.paste")}"></label>
       <div class="gc-row"><button class="gc-plank" data-do="restore">${t("backup.restore")}</button></div>
       ${view.restoreError ? `<p class="gc-bad" role="alert">${esc(view.restoreError)}</p>` : ""}
@@ -674,6 +685,7 @@
       "toggle-backup": () => { view.backup = !view.backup; },
       restore: restorePlayer,
       logout,
+      revoke: revokeOthers,
       "confirm-switch": () => googleLogin(view.switchAsk.credential, true),
       "cancel-switch": () => set({ switchAsk: null }),
       install: async () => {

@@ -7,6 +7,13 @@ const { BOSSES, SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY, PITY, TIERS, catchUp, od
 const PAGE_SIZE = 12;
 const CANDIDATES_PER_TYPE = 6;
 const SIGNUPS_PER_HOUR = 20;
+// 同一個帳號最多同時保留幾台裝置的登入。一張 Google 憑證一小時內可以重送，不設上限就能灌出無數筆 sessions
+const MAX_SESSIONS = 20;
+// 欄位長度上限：正常值都遠小於此，擋掉塞大字串進資料庫或查詢的請求
+const MAX_CREDENTIAL = 4096;
+const MAX_TOKEN = 256;
+const MAX_CARD_ID = 64;
+const MAX_PAGE = 10000;
 
 class GameError extends Error {
   constructor(status, code, message, detail) {
@@ -18,9 +25,23 @@ class GameError extends Error {
 }
 
 const hash = (token) => crypto.createHash("sha256").update(token).digest("hex");
+
+// IPv6 使用者通常整段 /64 都是自己的，換位址不用成本，所以限流以 /64 為單位；IPv4 照原樣
+function ipKey(ip) {
+  const text = String(ip || "").trim().toLowerCase();
+  if (!text.includes(":")) return text;
+  if (/^::ffff:\d+\.\d+\.\d+\.\d+$/.test(text)) return text.slice(7);
+  const [head, tail = ""] = text.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const groups = text.includes("::") ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right] : left;
+  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, "")).join(":")}::/64`;
+}
 const toCard = (row) => row.data;
 
-function createGame(db, { now = () => new Date(), random = crypto.randomInt ? () => crypto.randomInt(0, 2 ** 32) / 2 ** 32 : Math.random, verifyGoogle = defaultVerifyGoogle } = {}) {
+// sessionDays：綁了 Google 的帳號，登入憑證幾天後失效（從建立那天算）。預設不失效，要由站長設 GACHA_SESSION_DAYS 才開。
+// 匿名玩家永遠不失效：存檔碼就是他們唯一的鑰匙，過期等於把鳥丟掉
+function createGame(db, { now = () => new Date(), random = crypto.randomInt ? () => crypto.randomInt(0, 2 ** 32) / 2 ** 32 : Math.random, verifyGoogle = defaultVerifyGoogle, sessionDays = Number(process.env.GACHA_SESSION_DAYS) || 0 } = {}) {
   const dayOf = (offset = 0) => E.addDays(E.taipeiDate(now()), offset);
 
   async function starters(q) {
@@ -41,7 +62,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     const { rows } = await db.query(
       `INSERT INTO signup_limits (ip_hash, hour) VALUES ($1, $2)
        ON CONFLICT (ip_hash, hour) DO UPDATE SET count = signup_limits.count + 1 RETURNING count`,
-      [hash(ip), current.toISOString()],
+      [hash(ipKey(ip)), current.toISOString()],
     );
     if (rows[0].count === 1) await db.query("DELETE FROM signup_limits WHERE hour < $1", [current.toISOString()]);
     if (rows[0].count > SIGNUPS_PER_HOUR) throw new GameError(429, "too_many_players", "這裡一小時內來了太多新玩家，晚點再試");
@@ -49,8 +70,17 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   async function newSession(q, playerId) {
     const token = crypto.randomBytes(32).toString("hex");
-    await q.query("INSERT INTO sessions (token_hash, player_id) VALUES ($1, $2)", [hash(token), playerId]);
+    await q.query("INSERT INTO sessions (token_hash, player_id, created_at) VALUES ($1, $2, $3)", [hash(token), playerId, new Date(now()).toISOString()]);
     return token;
+  }
+
+  // 超過上限時踢掉最舊的裝置。被踢的裝置再用 Google 登入一次就好，鳥不會少
+  async function pruneSessions(q, playerId) {
+    await q.query(
+      `DELETE FROM sessions WHERE player_id = $1 AND token_hash NOT IN (
+         SELECT token_hash FROM sessions WHERE player_id = $1 ORDER BY created_at DESC, token_hash LIMIT $2)`,
+      [playerId, MAX_SESSIONS],
+    );
   }
 
   async function insertPlayer(q, googleSub = null) {
@@ -69,7 +99,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   // 不合併兩片林子：匿名帳號能無限開，能合併就能靠開分身養大一個 Google 帳號
   async function login({ credential, token, confirm = false, ip = "" }) {
-    if (typeof credential !== "string") throw new GameError(400, "bad_credential", "Google 登入沒有成功，再試一次");
+    if (typeof credential !== "string" || credential.length > MAX_CREDENTIAL) throw new GameError(400, "bad_credential", "Google 登入沒有成功，再試一次");
     const sub = await verifyGoogle(credential).catch((error) => {
       console.error("google verify", error.message);
       throw new GameError(400, "bad_credential", "Google 登入沒有成功，再試一次");
@@ -91,7 +121,9 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
               throw new GameError(409, "needs_switch", "這個 Google 帳號已經有一片林子了", { here, there: await ownedCount(q, target) });
             }
           }
-          return { token: await newSession(q, target), switched: true };
+          const fresh = await newSession(q, target);
+          await pruneSessions(q, target);
+          return { token: fresh, switched: true };
         }
         if (!current) return { token: await insertPlayer(q, sub), switched: true };
         const { rows } = await q.query("UPDATE players SET google_sub = $2 WHERE id = $1 AND google_sub IS NULL RETURNING id", [current, sub]);
@@ -109,9 +141,25 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     return { ok: true };
   }
 
+  // 換一組新憑證，這個玩家其他所有憑證（其他裝置、外流的存檔碼）立刻失效
+  async function revoke(playerId) {
+    return db.tx(async (q) => {
+      await q.query("SELECT id FROM players WHERE id = $1 FOR UPDATE", [playerId]);
+      await q.query("DELETE FROM sessions WHERE player_id = $1", [playerId]);
+      return { token: await newSession(q, playerId) };
+    });
+  }
+
   async function authenticate(token) {
     if (!token) throw new GameError(401, "no_token", "沒有玩家憑證");
-    const { rows } = await db.query("SELECT player_id FROM sessions WHERE token_hash = $1", [hash(token)]);
+    if (typeof token !== "string" || token.length > MAX_TOKEN) throw new GameError(401, "bad_token", "找不到這位玩家");
+    const { rows } = sessionDays > 0
+      ? await db.query(
+        `SELECT s.player_id FROM sessions s JOIN players p ON p.id = s.player_id
+         WHERE s.token_hash = $1 AND (p.google_sub IS NULL OR s.created_at > $2::timestamptz - make_interval(days => $3::int))`,
+        [hash(token), new Date(now()).toISOString(), sessionDays],
+      )
+      : await db.query("SELECT player_id FROM sessions WHERE token_hash = $1", [hash(token)]);
     if (!rows.length) throw new GameError(401, "bad_token", "找不到這位玩家");
     return Number(rows[0].player_id);
   }
@@ -174,7 +222,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
   }
 
   async function collection(playerId, page = 0) {
-    const safePage = Math.max(0, Math.floor(Number(page)) || 0);
+    const safePage = Math.min(MAX_PAGE, Math.max(0, Math.floor(Number(page)) || 0));
     const [{ rows }, { rows: [{ count }] }] = await Promise.all([
       db.query(
         `SELECT c.data FROM owned o JOIN cards c ON c.id = o.card_id WHERE o.player_id = $1
@@ -192,7 +240,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
   }
 
   function validTeam(ids) {
-    if (!Array.isArray(ids) || ids.length !== E.TEAM_SIZE || new Set(ids).size !== E.TEAM_SIZE || !ids.every((id) => typeof id === "string")) {
+    if (!Array.isArray(ids) || ids.length !== E.TEAM_SIZE || new Set(ids).size !== E.TEAM_SIZE || !ids.every((id) => typeof id === "string" && id.length <= MAX_CARD_ID)) {
       throw new GameError(400, "bad_team", `隊伍要剛好 ${E.TEAM_SIZE} 隻不同的鳥`);
     }
     return ids;
@@ -311,11 +359,13 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       const fight = fightFor(day, candidates);
       const team = await cardsById(q, teamIds);
       const final = replay(fight, team, moves);
+      // 只存重播用得到的欄位：出牌紀錄是玩家送來的，原樣存進 JSONB 會被塞進好幾 MB 的垃圾
+      const kept = moves.map((move) => ({ slot: move.slot, signature: move.signature === true }));
       const best = E.bestScore(fight, candidates);
       const stars = E.starsFor(final.score, best);
       await q.query(
         "INSERT INTO fights (player_id, day, stars, score, best, team, moves) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-        [playerId, day, stars, final.score, best, teamIds, JSON.stringify(moves)],
+        [playerId, day, stars, final.score, best, teamIds, JSON.stringify(kept)],
       );
       return { stars, score: final.score, best, repeated: false };
     });
@@ -323,6 +373,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   // 只有當天抽到的牌能分享，一次抽卡只有一條連結；領取只是複製，分享的人不會失去牠
   async function share(playerId, kind, offset = 0) {
+    if (kind !== "free" && kind !== "bonus") throw new GameError(400, "bad_kind", "沒有這種抽法");
     const day = dayOf(offset);
     const { rows: [drawn] } = await db.query(
       "SELECT d.card_id, c.rarity FROM draws d JOIN cards c ON c.id = d.card_id WHERE d.player_id = $1 AND d.day = $2 AND d.kind = $3",
@@ -390,7 +441,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     return { ok: true };
   };
 
-  return { health, login, logout, share, sharePreview, claim, createPlayer, authenticate, state, collection, setTeam, draw, submitFight, dayOf };
+  return { health, login, logout, revoke, share, sharePreview, claim, createPlayer, authenticate, state, collection, setTeam, draw, submitFight, dayOf };
 }
 
-module.exports = { createGame, GameError, PAGE_SIZE };
+module.exports = { createGame, GameError, PAGE_SIZE, MAX_SESSIONS, ipKey };

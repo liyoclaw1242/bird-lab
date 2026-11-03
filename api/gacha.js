@@ -9,11 +9,14 @@ const api = () => (ready ||= open().then((db) => createApi(createGame(db))));
 module.exports = async function handler(req, res) {
   try {
     const handle = await api();
+    // Vercel 讀 req.body 時才解析 JSON，格式壞掉會丟錯；這是玩家送錯，不是森林休息
+    let body;
+    try { body = req.body; } catch { return res.status(400).setHeader("cache-control", "no-store").json({ error: "bad_request", message: "送來的資料格式不對" }); }
     const result = await handle({
       method: req.method,
       op: req.query.op,
       query: req.query,
-      body: req.body,
+      body,
       token: (req.headers.authorization || "").replace(/^Bearer /, ""),
       cookie: req.headers.cookie || "",
       ip: req.headers["x-real-ip"] || "",
