@@ -773,7 +773,7 @@
     }).join("");
     const stars = Object.fromEntries(S.history.map((h) => [h.day, h.stars]));
     const week = Array.from({ length: 7 }, (_, i) => E.addDays(S.day, i - 6)).map((d) => DAY_EMOJI[stars[d]] ?? "◽").join("");
-    return t("report.text", { day: S.day, boss: bossSelf(fight.boss), stars: "★".repeat(r.stars) + "☆".repeat(3 - r.stars), rounds, streak: S.streak, week, url: location.origin });
+    return t("report.text", { day: S.day, boss: bossSelf(fight.boss), stars: "★".repeat(r.stars) + "☆".repeat(3 - r.stars), rounds, streak: S.streak > 0 ? t("report.streak", { n: S.streak }) : "", week, url: location.origin });
   }
 
   function play(slot) {
