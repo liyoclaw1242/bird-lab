@@ -36,7 +36,7 @@ function createApi(game, { dev = false, googleClientId = process.env.GOOGLE_CLIE
       // 給連結預覽爬蟲看的頁面，CDN 快取一小時，所以剩餘份數可能稍微落後
       if (key === "GET share-page") {
         const preview = await game.sharePreview(query.code, null, 0).catch(() => null);
-        return { status: 200, html: sharePage(String(query.code || ""), preview, origin), cache: "public, s-maxage=3600" };
+        return { status: 200, html: sharePage(String(query.code || ""), preview, origin, query.lang === "en" ? "en" : "zh-Hant"), cache: "public, s-maxage=3600" };
       }
       if (key === "POST google-callback") return googleCallback(body || {}, cookie);
       const route = routes[key];

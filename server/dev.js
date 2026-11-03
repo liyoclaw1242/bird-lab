@@ -10,7 +10,7 @@ const { createApi } = require("./api.js");
 const ROOT = path.join(__dirname, "..");
 const PUBLIC = path.join(ROOT, "public");
 const PORT = Number(process.env.PORT) || 5298;
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".webp": "image/webp", ".png": "image/png", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".webp": "image/webp", ".png": "image/png", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml; charset=utf-8", ".mp3": "audio/mpeg" };
 
 (async () => {
   const dataDir = process.env.GACHA_DATA_DIR || path.join(ROOT, ".data/gacha");
@@ -27,7 +27,7 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
     const url = new URL(req.url, "http://localhost");
     const shareLink = url.pathname.match(/^\/s\/([^/]+)$/);
     if (shareLink) {
-      const result = await handle({ method: "GET", op: "share-page", query: { code: shareLink[1] } });
+      const result = await handle({ method: "GET", op: "share-page", query: { code: shareLink[1], lang: url.searchParams.get("lang") } });
       res.writeHead(result.status, { "content-type": "text/html; charset=utf-8" });
       return res.end(result.html);
     }

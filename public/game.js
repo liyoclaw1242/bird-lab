@@ -762,7 +762,8 @@
   function shareDraw(kind) {
     return guarded(async () => {
       const link = await call("POST", "share", { body: { kind } });
-      const url = `${location.origin}/s/${link.code}`;
+      // 預覽卡片的語言跟著分享的人：爬蟲不帶語言，只能從連結看出來
+      const url = `${location.origin}/s/${link.code}${I18n.lang === "en" ? "?lang=en" : ""}`;
       await refresh({ shareLink: { ...link, url, copied: false } });
       if (navigator.share) {
         await navigator.share({ title: t("app.name"), text: t("share.text"), url }).catch(() => {});

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 中英文是同一頁或成對的頁面，用 hreflang 標出對應。桌布 wallpaper.html 不收錄 -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://bird-lab-three.vercel.app/</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bird-lab-three.vercel.app/"/>
+  </url>
+  <url>
+    <loc>https://bird-lab-three.vercel.app/?lang=en</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://bird-lab-three.vercel.app/"/>
+  </url>
+  <url>
+    <loc>https://bird-lab-three.vercel.app/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/privacy-en.html"/>
+  </url>
+  <url>
+    <loc>https://bird-lab-three.vercel.app/privacy-en.html</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/privacy-en.html"/>
+  </url>
+  <url>
+    <loc>https://bird-lab-three.vercel.app/credits.html</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/credits.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/credits-en.html"/>
+  </url>
+  <url>
+    <loc>https://bird-lab-three.vercel.app/credits-en.html</loc>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/credits.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/credits-en.html"/>
+  </url>
+</urlset>

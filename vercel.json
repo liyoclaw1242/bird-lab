@@ -4,6 +4,7 @@
   "outputDirectory": "public",
   "regions": ["hnd1"],
   "rewrites": [
+    { "source": "/s/:code", "has": [{ "type": "query", "key": "lang", "value": "en" }], "destination": "/api/gacha?op=share-page&code=:code&lang=en" },
     { "source": "/s/:code", "destination": "/api/gacha?op=share-page&code=:code" },
     { "source": "/auth/google", "destination": "/api/gacha?op=google-callback" }
   ],

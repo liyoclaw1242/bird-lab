@@ -283,6 +283,19 @@ test("分享頁：有鳥名和 OG，連結代碼被跳脫，失效連結不露�
   assert.ok(!old.html.includes(card.zh));
 });
 
+test("分享頁：英文連結的預覽用英文鳥名，轉進遊戲時不帶語言", async () => {
+  const { code, card } = await shareSetup("2030-04-10");
+  const en = await api({ method: "GET", op: "share-page", query: { code, lang: "en" } });
+  assert.match(en.html, /<html lang="en">/);
+  assert.match(en.html, /og:locale" content="en_US"/);
+  assert.ok(en.html.includes(card.en || card.sci));
+  assert.ok(!en.html.includes(card.zh));
+  assert.ok(en.html.includes(`location.replace("/?s=${code}")`));
+  const zh = await api({ method: "GET", op: "share-page", query: { code, lang: "xx" } });
+  assert.match(zh.html, /<html lang="zh-Hant">/);
+  assert.ok(zh.html.includes(card.zh));
+});
+
 test("建立玩家有 IP 流量限制，下一小時恢復", async () => {
   clock = new Date("2030-06-01T04:10:00Z");
   for (let i = 0; i < 20; i += 1) assert.strictEqual((await api({ method: "POST", op: "player", ip: "1.2.3.4" })).status, 200);
