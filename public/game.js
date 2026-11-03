@@ -128,6 +128,11 @@
   let dialogReturn = null;
   let hadDialog = false;
   document.addEventListener("focusin", (event) => { focusKey = keyOf(event.target) || focusKey; });
+  // Safari 點按鈕不會讓按鈕取得焦點，focusin 不觸發，focusKey 會停在很久以前碰過的東西（例如存檔碼輸入框），
+  // 重畫時焦點被拉回去，iOS 還會跳出鍵盤。所以按下時也記一次：按在沒有記號的地方就清掉，不替滑鼠和手指找回焦點
+  document.addEventListener("pointerdown", (event) => {
+    if (app.contains(event.target)) focusKey = keyOf(event.target.closest("button, input, summary") || app);
+  }, true);
   app.tabIndex = -1;
   // 戰鬥訊息放在不會被重畫的區塊，螢幕閱讀器才會穩定念出來
   const live = document.createElement("p");
