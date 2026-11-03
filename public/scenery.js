@@ -136,15 +136,40 @@
     return html;
   }
 
-  function burst(count = 18) {
+  // 搖樹時掉的葉子：一直循環到卡片掉下來為止，每片時間錯開才不會一波一波的
+  function burst(count = 22) {
     let html = "";
     for (let i = 0; i < count; i++) {
       const color = LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)];
-      const style = `--x:${((Math.random() - 0.5) * 340).toFixed(0)}px;--y:${(60 + Math.random() * 300).toFixed(0)}px;--r:${(Math.random() * 720).toFixed(0)}deg;animation-delay:${(Math.random() * 0.25).toFixed(2)}s`;
+      const style = `--x:${((Math.random() - 0.5) * 360).toFixed(0)}px;--y:${(80 + Math.random() * 320).toFixed(0)}px;--r:${(Math.random() * 720).toFixed(0)}deg;animation-delay:${(-Math.random() * 1.4).toFixed(2)}s;animation-duration:${(1.1 + Math.random() * 0.5).toFixed(2)}s`;
       html += `<svg class="gc-burst" style="${style}" viewBox="-14 -18 28 38" aria-hidden="true"><path d="${LEAF}" fill="${color}" stroke="#3d2b14" stroke-width="1.2"/></svg>`;
     }
     return html;
   }
+
+  // 搖的那棵樹：三層樹冠加幾片葉子，比按鈕上的小圖示有份量，但仍是幾十筆而已
+  function shakeTree() {
+    const rand = seeded("shake-tree");
+    let art = `<path d="M54 142 L57 92 L67 92 L70 142 Z" fill="#3f3019"/>
+      <path d="M60 134 q1 -12 -2 -26 M65 128 q2 -10 1 -22" stroke="#2b2316" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <path d="M61 96 Q46 88 34 76 M63 94 Q80 82 90 68" stroke="#3f3019" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    art += blob(62, 56, 44, rand, "#2f4d1d") + blob(40, 66, 30, rand, "#3c5e25") + blob(86, 64, 30, rand, "#3c5e25") + blob(62, 40, 30, rand, "#5c7f34") + blob(50, 54, 20, rand, "#7f9a45");
+    for (let i = 0; i < 16; i++) {
+      const a = rand() * Math.PI * 2, r = 22 + rand() * 26;
+      art += `<path d="${LEAF}" transform="translate(${(62 + Math.cos(a) * r * 1.2).toFixed(0)} ${(56 + Math.sin(a) * r * 0.8).toFixed(0)}) rotate(${(rand() * 360).toFixed(0)}) scale(.55)" fill="${["#7f9a45", "#a39a35", "#5c7f34"][i % 3]}" stroke="#1f3013" stroke-width="1.4"/>`;
+    }
+    return `<svg class="gc-big-tree" viewBox="0 0 124 144" aria-hidden="true">${art}</svg>`;
+  }
+
+  // 貼紙還沒載入時先站著的潦草鳥，也當作載入中和空手的小圖
+  const BIRD = `<g fill="none" stroke="#2b2316" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 60 C22 46 36 36 52 38 C66 40 74 50 72 62 C70 74 58 80 44 78 C32 76 28 70 26 60 Z" fill="#f4ecd6"/>
+    <path d="M26 60 L10 50 L17 61 L8 70 L29 67"/><path d="M40 57 q10 -9 21 -1 q-10 9 -21 1"/>
+    <path d="M50 34 C50 24 60 20 68 24 C74 27 76 34 72 40 C66 46 52 44 50 34 Z" fill="#f4ecd6"/>
+    <path d="M74 31 L88 34 L74 39 Z" fill="#f4ecd6"/><circle cx="64" cy="31" r="2.6" fill="#2b2316" stroke="none"/>
+    <path d="M44 78 L42 90 M36 90 L48 90 M56 77 L58 90 M51 90 L64 90"/></g>`;
+  const birdSvg = (cls = "") => `<svg class="gc-bird-doodle ${cls}" viewBox="0 0 100 100" aria-hidden="true">${BIRD}</svg>`;
+  const BIRD_URL = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity=".55">${BIRD}</svg>`)}")`;
 
   // 收藏的一片林子：每頁的樹和停棲位置都不同，但版面固定不會互相擋死
   const FOREST_W = 400, FOREST_H = 780;
@@ -278,5 +303,5 @@
     return `<div class="gc-cutin-fx" aria-hidden="true">${leaves}</div>`;
   }
 
-  window.Scenery = { cutinLeaves, backdrop, fallingLeaves, burst, forestPage, forestWide, HAND, LEAF, rarityFx };
+  window.Scenery = { cutinLeaves, backdrop, fallingLeaves, burst, shakeTree, birdSvg, BIRD_URL, forestPage, forestWide, HAND, LEAF, rarityFx };
 })();

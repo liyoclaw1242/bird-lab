@@ -23,6 +23,53 @@
   const rarityTag = (r) => `<span class="gc-rar ${r}">${r}</span>`;
   const typeTag = (type) => `<span class="gc-type ${type}">${t(`type.${type}`)}</span>`;
 
+  // 貼紙從 Cloudflare 來，第一次看到要等一下：先站一隻紙底的潦草鳥，圖到了再淡入。
+  // 載過的網址記下來，重畫畫面時直接標成 ready，不會再閃一次
+  const loaded = new Set();
+  const absUrl = (src) => new URL(src, location.href).href;
+  const pic = (src, alt = "", attrs = "") => `<img class="gc-pic${loaded.has(absUrl(src)) ? " ready" : ""}" src="${esc(src)}" alt="${esc(alt)}" decoding="async" ${attrs}>`;
+  document.addEventListener("load", (event) => {
+    const el = event.target;
+    if (el.tagName !== "IMG" || !el.classList.contains("gc-pic")) return;
+    // 第一次載到才淡入；重畫時同一張圖又觸發 load（有 SW 時每次都會），不再重播
+    const url = el.currentSrc || el.src;
+    if (!loaded.has(url)) el.classList.add("landed");
+    loaded.add(url);
+    el.classList.add("ready");
+  }, true);
+  document.addEventListener("error", (event) => {
+    const el = event.target;
+    if (el.tagName === "IMG" && el.classList.contains("gc-pic")) el.classList.add("failed");
+  }, true);
+  // 下一個畫面會用到的貼紙先悄悄載好：手上的三隻進戰鬥、抽到的鳥掉下來時都不必再等
+  const warming = new Map();
+  function preload(src) {
+    const url = absUrl(src);
+    if (loaded.has(url)) return Promise.resolve(true);
+    if (!warming.has(url)) {
+      warming.set(url, new Promise((resolve) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.onload = () => { loaded.add(url); warming.delete(url); resolve(true); };
+        img.onerror = () => { warming.delete(url); resolve(false); };
+        img.src = url;
+      }));
+    }
+    return warming.get(url);
+  }
+  const warm = (cards) => cards.forEach((c) => preload(sticker(c)));
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // 林子跟著玩家的時鐘換色：清晨偏粉、黃昏偏橘、夜裡偏藍，只是淡淡一層。?tod= 可以強制指定，方便看效果
+  const TOD_ASK = new URLSearchParams(location.search).get("tod");
+  function tint() {
+    const h = new Date().getHours();
+    document.documentElement.dataset.tod = TOD_ASK || (h < 5 ? "night" : h < 8 ? "dawn" : h < 16 ? "day" : h < 19 ? "dusk" : "night");
+  }
+  tint();
+  setInterval(tint, 10 * 60 * 1000);
+  document.documentElement.style.setProperty("--gc-bird", window.Scenery.BIRD_URL);
+
   const memory = {};
   const store = {
     get(key) { try { return localStorage.getItem(key); } catch { return memory[key] ?? null; } },
@@ -115,6 +162,7 @@
     hand = S.team.slice();
     view = { ...view, ...patch };
     render();
+    warm([...hand, ...S.drawn.map((d) => d.card)]);
   }
 
   // 網路失敗都走這裡，畫面留下能重試的按鈕，不會卡死
@@ -147,6 +195,8 @@
     `<button class="gc-tab" data-go="${id}" ${view.screen === id ? 'aria-current="page"' : ""}>${t(`nav.${id}`)}</button>`).join("")}</nav><button type="button" class="gc-lang" lang="${I18n.lang === "en" ? "zh-Hant" : "en"}"><span aria-hidden="true">🌐</span> ${t("lang.switch")}</button></header>`;
 
   const errorBox = () => (view.error ? `<div class="gc-scrap" role="alert"><p class="gc-h">${esc(view.error.message)}</p><button class="gc-plank" data-do="retry">${esc(view.error.label || t("retry"))}</button></div>` : "");
+  // 載入中：一隻潦草鳥在紙上跳，不只是一行字
+  const loadingBox = () => `<div class="gc-scrap gc-loading" role="status">${window.Scenery.birdSvg("hop")}<p>${t("loading")}</p></div>`;
 
   const miniTree = `<svg viewBox="0 0 60 64" aria-hidden="true"><path d="M26 62 L28 34 L32 34 L35 62 Z" fill="#3f3019"/><path d="M30 3 C47 3 57 14 54 26 C58 38 44 44 32 40 C20 45 4 39 7 27 C3 14 14 3 30 3 Z" fill="#2f4d1d" stroke="#1b2b10" stroke-width="2"/></svg>`;
   const LEAF_ICON = (color) => `<svg viewBox="-14 -18 28 38" aria-hidden="true"><path d="${window.Scenery.LEAF}" fill="${color}" stroke="#3d2b14" stroke-width="1.4"/></svg>`;
@@ -203,6 +253,7 @@
       </div>
       <div style="margin-top:12px">${fightBtn}</div>
       ${tomorrowBox()}
+      ${handCard()}
       ${errorBox()}
       <div style="height:12px"></div>
       ${todayDraws()}
@@ -215,9 +266,16 @@
       ${shakeStage()}${cardStage()}`;
   }
 
+  // 桌機的側欄多一張「今天帶的三隻」：出發前就看得到誰對今天的 BOSS 有利，不用先跑去手上那頁
+  function handCard() {
+    const rows = hand.map((c, i) => `<button class="gc-mini-row" data-open-hand="${i}">${pic(sticker(c))}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}<small>${t("hand.today", { text: matchup(c, S.fight) })}</small></span></button>`).join("");
+    const body = rows ? `<div class="gc-mini-list">${rows}</div>` : `<div class="gc-empty">${window.Scenery.birdSvg()}<p class="gc-sub">${t("home.handEmpty")}</p></div>`;
+    return `<div class="gc-scrap gc-desk-only gc-hand-card"><p class="gc-h">${t("home.handTitle")}</p>${body}<button class="gc-text-btn" data-go="hand">${t("home.handEdit")}</button></div>`;
+  }
+
   function todayDraws() {
     if (!S.drawn.length) return "";
-    const rows = S.drawn.map((d) => `<div class="gc-gift-row"><img src="${sticker(d.card)}" alt=""><span>${esc(birdName(d.card))} ${rarityTag(d.card.rarity)}<small>${d.share ? t("share.claimed", d.share) : t("share.max", { n: SHARE_CAPS[d.card.rarity] })}</small></span><button class="gc-plank" data-share="${d.kind}">${t("share.button")}</button></div>`).join("");
+    const rows = S.drawn.map((d) => `<div class="gc-gift-row">${pic(sticker(d.card))}<span>${esc(birdName(d.card))} ${rarityTag(d.card.rarity)}<small>${d.share ? t("share.claimed", d.share) : t("share.max", { n: SHARE_CAPS[d.card.rarity] })}</small></span><button class="gc-plank" data-share="${d.kind}">${t("share.button")}</button></div>`).join("");
     return `<div class="gc-scrap"><p class="gc-h">${t("share.today")}</p>${rows}${view.card ? "" : shareBox()}</div>`;
   }
 
@@ -352,9 +410,11 @@
     setTimeout(() => fx.remove(), ms + 400);
   }
 
+  // 搖樹：結果一到，view.shaking 就從 true 變成稀有度，葉子先換色當預告
   function shakeStage() {
     if (!view.shaking) return "";
-    return `<div class="gc-shaking"><svg class="gc-big-tree" viewBox="0 0 60 64" aria-hidden="true"><path d="M26 62 L28 34 L32 34 L35 62 Z" fill="#3f3019"/><path d="M30 3 C47 3 57 14 54 26 C58 38 44 44 32 40 C20 45 4 39 7 27 C3 14 14 3 30 3 Z" fill="#3c5e25" stroke="#1b2b10" stroke-width="1.5"/></svg>${burst()}</div>`;
+    const told = typeof view.shaking === "string" ? `rar-${view.shaking}` : "";
+    return `<div class="gc-shaking ${told}"><div class="gc-shake-glow"></div>${window.Scenery.shakeTree()}${burst()}</div>`;
   }
 
   // 機率寫在遊戲裡而不是藏在別頁：有保底和補運時，玩家要看得到自己這一抽的實際機率
@@ -403,7 +463,7 @@
       : "";
     const inHand = hand.some((b) => b.id === c.id);
     const swap = view.swapping
-      ? `<div class="gc-swap"><p>${t("card.swap")}</p><div class="gc-swap-grid">${hand.map((b) => `<button data-replace="${esc(b.id)}"><img src="${sticker(b)}" alt="">${esc(birdName(b))} ${rarityTag(b.rarity)}</button>`).join("")}</div></div>`
+      ? `<div class="gc-swap"><p>${t("card.swap")}</p><div class="gc-swap-grid">${hand.map((b) => `<button data-replace="${esc(b.id)}">${pic(sticker(b))}${esc(birdName(b))} ${rarityTag(b.rarity)}</button>`).join("")}</div></div>`
       : "";
     const canShare = view.drew && view.drawKind;
     // 掉落動畫只播一次，之後按分享或複製重畫時不再重播
@@ -418,7 +478,7 @@
     return `<div class="gc-stage" role="dialog" aria-modal="true" aria-label="${esc(birdName(c))}"><article class="gc-note-card aura-${c.rarity} ${dropping ? "dropping" : ""}">
       <span class="gc-stamp ${c.rarity}">${c.rarity}</span>
       ${giftNotice()}${milestoneNote()}
-      <img class="gc-card-bird" src="${sticker(c)}" alt="${esc(t("home.stickerAlt", { name: birdName(c) }))}">
+      ${pic(sticker(c), t("home.stickerAlt", { name: birdName(c) }), 'fetchpriority="high"').replace('class="gc-pic', 'class="gc-card-bird gc-pic')}
       <p class="gc-credit">${t("card.sticker")}${art}${text}</p>
       <b class="gc-name">${esc(birdName(c))}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
@@ -431,7 +491,7 @@
 
   function forestScreen() {
     const f = view.collection;
-    if (!f) return `${nav()}${errorBox()}<div class="gc-center"><p class="gc-scrap">${t("loading")}</p></div>`;
+    if (!f) return `${nav()}${errorBox()}<div class="gc-center">${view.error ? "" : loadingBox()}</div>`;
     // 直版和橫版的林子都畫好，CSS 依寬度只顯示一張；鳥的按鈕只有一組，兩種位置都寫在變數裡
     const scene = forestPage(f.page, f.cards.length);
     const wide = forestWide(f.page, f.cards.length);
@@ -440,11 +500,11 @@
     const birds = f.cards.map((c, i) => {
       const p = scene.perches[i], q = wide.perches[i];
       const pos = `--l:${pct(p.left)};--t:${pct(p.top)};--w:${pct(p.size)};--lw:${pct(q.left)};--tw:${pct(q.top)};--ww:${pct(q.size)}`;
-      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}"><img src="${sticker(c)}" alt="" loading="lazy"></button>`;
+      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}">${pic(sticker(c))}</button>`;
     }).join("");
     // 桌機的側欄多一份名單：鳥多了以後，用名字找比在樹上找快
     const roster = f.cards.length ? `<div class="gc-scrap gc-desk-only"><p class="gc-h">${t("forest.list")}</p><div class="gc-roster">${f.cards.map((c) =>
-      `<button data-open="${esc(c.id)}"><img src="${sticker(c)}" alt="" loading="lazy"><span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}${inHand.has(c.id) ? ` <span class="gc-stamp-mini">${t("forest.inHand")}</span>` : ""}</span><small>${t("hand.stats", c)}</small></button>`).join("")}</div></div>` : "";
+      `<button data-open="${esc(c.id)}">${pic(sticker(c), "", 'loading="lazy"')}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}${inHand.has(c.id) ? ` <span class="gc-stamp-mini">${t("forest.inHand")}</span>` : ""}</span><small>${t("hand.stats", c)}</small></button>`).join("")}</div></div>` : "";
     return `${nav()}
       <div class="gc-columns"><div class="gc-col-main">
       <div class="gc-forest">${scene.svg}${wide.svg}${birds}</div>
@@ -474,7 +534,7 @@
       const c = hand[i];
       const style = `left:${left}%;top:${top}%`;
       return c
-        ? `<button class="gc-slot" style="${style}" data-open-hand="${i}" aria-label="${esc(t("card.view", { name: birdName(c) }))}"><img src="${sticker(c)}" alt=""></button>`
+        ? `<button class="gc-slot" style="${style}" data-open-hand="${i}" aria-label="${esc(t("card.view", { name: birdName(c) }))}">${pic(sticker(c))}</button>`
         : `<button class="gc-slot empty" style="${style}" data-go="forest">${t("hand.find")}</button>`;
     }).join("");
     const rows = hand.map((c) => `<div class="gc-team-row"><span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}</span><span>${t("hand.stats", c)}</span><small style="grid-column:1/3">${t("hand.today", { text: matchup(c, S.fight) })}</small></div>`).join("");
@@ -487,7 +547,7 @@
       </div><div class="gc-col-side">
       <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.hand")}</h1><p class="gc-sub">${t("hand.note", { n: E.TEAM_SIZE })}</p></div>
       ${errorBox()}
-      <div class="gc-scrap tilt-r">${rows ? `<div class="gc-team-list">${rows}</div>` : `<p class='gc-h'>${t("hand.empty")}</p>`}</div>
+      <div class="gc-scrap tilt-r">${rows ? `<div class="gc-team-list">${rows}</div>` : `<div class="gc-empty">${window.Scenery.birdSvg()}<p class="gc-h">${t("hand.empty")}</p></div>`}</div>
       <div class="gc-scrap gc-desk-only"><p class="gc-h">${esc(bossSelf(S.fight.boss))}</p><p class="gc-sub">${t("home.fiveMoves")}</p>${moveLeaves(S.fight)}${chain}</div>
       <div style="margin-top:12px">${fightBtn}</div>
       </div></div>
@@ -538,7 +598,7 @@
         : locked ? ""
         : !legal ? `<span class="gc-tired">${t("fight.tired")}</span>`
         : `<span class="gc-preview"><span class="dealt">${t("fight.deal", { n: Math.round(p.dealt) })}</span>${t("fight.sep")}<span class="taken">${t("fight.take", { n: Math.round(p.taken) })}</span>${fatal ? `<span class="fatal">${t("fight.fatal")}</span>` : ""}</span>`;
-      return `<button class="gc-act rim-${c.rarity} ${down ? "down" : ""}" data-play="${i}" ${legal ? "" : "disabled"}><span class="gc-act-name">${esc(birdName(c))}</span><img src="${sticker(c)}" alt=""><span class="gc-hp" style="display:block" role="img" aria-label="${t("fight.hp", { n: pct })}"><i class="${pct < 35 ? "low" : ""}" style="width:${pct}%"></i></span>${rarityTag(c.rarity)} ${typeTag(c.type)}${info}</button>`;
+      return `<button class="gc-act rim-${c.rarity} ${down ? "down" : ""}" data-play="${i}" ${legal ? "" : "disabled"}><span class="gc-act-name">${esc(birdName(c))}</span>${pic(sticker(c))}<span class="gc-hp" style="display:block" role="img" aria-label="${t("fight.hp", { n: pct })}"><i class="${pct < 35 ? "low" : ""}" style="width:${pct}%"></i></span>${rarityTag(c.rarity)} ${typeTag(c.type)}${info}</button>`;
     }).join("");
     const round = Math.min(state.round, E.ROUNDS - 1);
     // 手機上下一欄；桌機左邊擂台、右邊出招
@@ -549,7 +609,7 @@
         <div class="gc-bar-side right"><span class="gc-bar-name">${esc(bossSelf(fight.boss))}</span><div class="gc-bar boss" role="img" aria-label="${t("fight.bossHp", { n: bossPct })}"><i style="width:${bossPct}%"></i>${ticks}</div></div>
       </div>
       <div class="gc-arena">${float}
-        <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(birdName(shown))}</span><img src="${sticker(shown)}" alt="${esc(birdName(shown))}"></div>
+        <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(birdName(shown))}</span>${pic(sticker(shown), birdName(shown))}</div>
         <div class="gc-fighter right ${bossFlip} ${theirs}"><img src="${fight.boss.img}" alt="${esc(bossName(fight.boss))}"></div>
       </div>
       </div><div class="gc-col-side">
@@ -564,7 +624,8 @@
 
   function resultScreen() {
     const r = view.result;
-    const stars = "★".repeat(r.stars) + `<span>${"★".repeat(3 - r.stars)}</span>`;
+    // 亮的星一顆顆蹦出來，和音效的節奏一致
+    const stars = Array.from({ length: r.stars }, (_, i) => `<i style="--i:${i}">★</i>`).join("") + `<span>${"★".repeat(3 - r.stars)}</span>`;
     // 結語先看戰況：全倒、無傷三星、剩一隻撐到贏，才輪到依星數的預設句
     const alive = view.state ? view.state.hp.filter((v) => v > 0).length : E.TEAM_SIZE;
     const words = alive === 0 && r.stars === 0 ? t("result.wipeout")
@@ -587,7 +648,7 @@
     const scroll = window.scrollY;
     const screens = { home: homeScreen, forest: forestScreen, hand: handScreen, fight: fightScreen, result: resultScreen };
     if (view.screen === "loading") {
-      app.innerHTML = `<div class="gc-center">${view.error ? errorBox() : `<p class="gc-scrap">${t("loading")}</p>`}</div>`;
+      app.innerHTML = `<div class="gc-center">${view.error ? errorBox() : loadingBox()}</div>`;
       return;
     }
     app.dataset.screen = view.screen;
@@ -597,6 +658,9 @@
     const say = view.screen === "fight" ? view.log : view.screen === "result" && r ? `${t("result.stars", { n: r.stars })}${t("match.sep")}${I18n.list("result.words")[r.stars]}` : "";
     if (say && say !== spoken) live.textContent = say;
     spoken = say || "";
+    // 瀏覽器快取裡已經有的圖，重畫時就直接算到位，不會先閃出佔位鳥。
+    // 有 service worker 接管時，重畫的 img 要走一趟 SW 才會 complete，所以已載過的只能靠 loaded 這份名單判斷，不能反過來拿掉 ready
+    app.querySelectorAll("img.gc-pic:not(.ready)").forEach((img) => { if (img.complete && img.naturalWidth) { loaded.add(img.currentSrc || img.src); img.classList.add("ready"); } });
     mountGoogle();
     window.scrollTo(0, scroll);
   }
@@ -611,13 +675,18 @@
 
   function draw(kind) {
     return guarded(async () => {
-      const wait = new Promise((resolve) => setTimeout(resolve, 1000));
+      const shaken = wait(1000);
       Sound.play("rustle");
       view = { ...view, shaking: true };
       render();
       let result;
       try {
-        [result] = await Promise.all([call("POST", "draw", { body: { kind } }), wait]);
+        result = await call("POST", "draw", { body: { kind } });
+        // 結果一到先讓葉子換色：金葉、七彩葉是稀有的預告。直接改 class，不重畫，漸變才接得上
+        view.shaking = result.card.rarity;
+        document.querySelector(".gc-shaking")?.classList.add(`rar-${result.card.rarity}`);
+        // 貼紙載好才讓卡片掉下來，不然卡片上會先是一個空框。快取裡有的話不會比以前慢，最多多等 3 秒
+        await Promise.all([shaken, wait(450), Promise.race([preload(sticker(result.card)), wait(3000)])]);
       } finally {
         view = { ...view, shaking: false };
       }
