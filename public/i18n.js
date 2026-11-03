@@ -64,6 +64,16 @@
       "result.stars": "{n} 星",
       "result.tip": "傷害 {score}，你現有的鳥今天最多能打 {best}（{pct}%）。1 星要 {a}%，2 星 {b}%，3 星 {c}%。",
       "result.home": "回林間", "result.homeMore": "回林間，再搖一棵樹",
+      "notes.taxon": "{order}・{family} 科",
+      "notes.hand": "放在手上", "notes.handMany": "大約有 {n} 隻家麻雀那麼重（一隻家麻雀約 {g} 公克）。", "notes.handSame": "跟一隻家麻雀差不多重（家麻雀約 {g} 公克）。",
+      "notes.handFew": "大約要 {n} 隻牠，才抵得上一隻家麻雀的重量（家麻雀約 {g} 公克）。", "notes.handSelf": "其他牌都拿牠當秤砣：一隻家麻雀約 {g} 公克。",
+      "notes.why": "這張牌的數字從哪來？",
+      "notes.whyType": "屬性看主食：牠{diet}，所以是{type}。獵捕脊椎動物、在水裡或水邊捕食、吃腐肉的算吃肉；吃昆蟲或食性很雜的算雜食；吃種子、果實、花蜜和植物的算吃素。",
+      "notes.whyAtk": "<b>攻擊</b>看體重、嘴長、嘴的厚度和腳長，再依食性加分，獵捕脊椎動物的加最多。",
+      "notes.whyDef": "<b>防禦</b>看體重、腳長、尾長和翅膀形狀（翅膀越尖長，越擅長長距離飛行）。",
+      "notes.whyLog": "量測值都先取對數再比，所以 5 公斤的鶴不會比 5 公克的蜂鳥強上一千倍。",
+      "notes.whyRarity": "<b>稀有度</b>不是野外剩多少隻，而是兩件事加起來：身材比例有多不尋常（嘴、腳、尾跟體型相比），以及在 IUCN 紅色名錄上受威脅的程度。越稀有，攻防倍率越高；身材越奇特，攻防的保底也越高。",
+      "notes.whySource": "量測來自 AVONET 資料庫，攻防是遊戲換算出來的，不是原始資料。",
     },
     en: {
       "app.name": "A Bird in the Hand",
@@ -131,34 +141,53 @@
       "result.stars": "{n} stars",
       "result.tip": "Damage {score}. Your current birds could deal at most {best} today ({pct}%). 1 star takes {a}%, 2 stars {b}%, 3 stars {c}%.",
       "result.home": "Back to the woods", "result.homeMore": "Back to the woods and shake another tree",
+      "notes.taxon": "Order {order}, family {family}",
+      "notes.hand": "In the hand", "notes.handMany": "About as heavy as {n} house sparrows (one house sparrow is about {g} g).", "notes.handSame": "About as heavy as one house sparrow (about {g} g).",
+      "notes.handFew": "It takes about {n} of these to weigh as much as one house sparrow (about {g} g).", "notes.handSelf": "Every other card is weighed against this one: a house sparrow is about {g} g.",
+      "notes.why": "Where do this card's numbers come from?",
+      "notes.whyType": "Type follows its main food: it {diet}, so it's {type}. Birds that hunt vertebrates, catch animals in or near water, or eat carrion are Meat. Insect eaters and birds with a varied diet are Mixed. Seed, fruit, nectar and plant eaters are Plant.",
+      "notes.whyAtk": "<b>ATK</b> comes from body weight, bill length, bill depth and leg length, plus a diet bonus that is biggest for birds that hunt vertebrates.",
+      "notes.whyDef": "<b>DEF</b> comes from body weight, leg length, tail length and wing shape (longer, more pointed wings mean a stronger long-distance flier).",
+      "notes.whyLog": "Measurements are compared on a log scale, so a 5 kg crane isn't a thousand times stronger than a 5 g hummingbird.",
+      "notes.whyRarity": "<b>Rarity</b> isn't how many are left in the wild. It adds up two things: how unusual its proportions are (bill, legs and tail compared with body size) and how threatened it is on the IUCN Red List. Rarer cards get a bigger stat multiplier, and odder shapes get a higher stat floor.",
+      "notes.whySource": "Measurements come from the AVONET dataset. ATK and DEF are game conversions, not the original data.",
     },
   };
 
   // 卡片解說的三種模板可以機械翻譯。其餘是人工趣聞，還沒有英文版，先不顯示
   const FACT_TITLES = { 牠的數字: "By the numbers", 牠怎麼過日子: "How it lives", 保育狀況: "Conservation" };
-  const PHRASES = {
+  // 棲地、食性、遷徙分開查表，英文才能寫成兩句通順的話，而不是一串逗號。
+  // 舊說法（什麼都吃、在水裡抓獵物、岩壁）留著：線上資料庫重新匯入前，舊牌面也要翻得出來
+  const HABITATS = {
     主要待在森林: "Lives mainly in forests", 主要待在灌叢: "Lives mainly in shrubland", 主要待在疏林: "Lives mainly in open woodland", 主要待在草原: "Lives mainly in grassland",
-    主要待在濕地: "Lives mainly in wetlands", 主要待在海上: "Lives mainly at sea", 主要待在岩壁: "Lives mainly on rocky cliffs", 主要待在人類活動的環境: "Lives mainly around people",
+    主要待在濕地: "Lives mainly in wetlands", 主要待在海上: "Lives mainly at sea", 主要待在岩石地帶: "Lives mainly in rocky places", 主要待在岩壁: "Lives mainly in rocky places", 主要待在人類活動的環境: "Lives mainly around people",
     主要待在海岸: "Lives mainly on coasts", 主要待在河邊: "Lives mainly along rivers", 主要待在沙漠: "Lives mainly in deserts",
-    吃昆蟲這類無脊椎動物: "eats insects and other invertebrates", 什麼都吃: "eats almost anything", 吃果實: "eats fruit", 在水裡抓獵物: "hunts prey in water", 吃種子: "eats seeds", 吸花蜜: "drinks nectar",
-    獵捕其他脊椎動物: "hunts other vertebrates", 吃陸上的植物: "eats land plants", 吃水生植物: "eats aquatic plants", 吃腐肉: "eats carrion",
-    一年到頭大多待在同一區: "stays in the same area most of the year", 會長途遷徙: "migrates long distances", 有些族群會遷徙: "some populations migrate",
   };
+  const DIETS = {
+    吃昆蟲這類無脊椎動物: "eats insects and other invertebrates", 食性很雜: "has a varied diet", 什麼都吃: "has a varied diet", 吃果實: "eats fruit",
+    在水裡或水邊捕食動物: "catches animals in or near water", 在水裡抓獵物: "catches animals in or near water", 吃種子: "eats seeds", 吸花蜜: "drinks nectar",
+    獵捕其他脊椎動物: "hunts other vertebrates", 吃陸上的植物: "eats plants on land", 吃水生植物: "eats water plants", 吃腐肉: "eats carrion",
+  };
+  const MOVES = { 一年到頭大多待在同一區: "Stays in the same area most of the year.", 會長途遷徙: "Migrates long distances.", 有些族群會遷徙: "Some populations migrate." };
   const IUCN = { 接近受脅: "Near Threatened", 易危: "Vulnerable", 瀕危: "Endangered", 極危: "Critically Endangered", 野外滅絕: "Extinct in the Wild", 已滅絕: "Extinct" };
-  const NUMBERS = /^平均約 ([\d.,]+) (公克|公斤)，比資料庫裡 (\d+)% 的鳥重。嘴長 ([\d.,]+) 公釐，腳（跗蹠）長 ([\d.,]+) 公釐。(部分數值是從近親推估的。)?$/;
+  const NUMBERS = /^平均約 ([\d.,]+) (公克|公斤)，(?:比資料庫裡 (\d+)% 的鳥重|屬於資料庫裡最輕的 1%)。嘴長 ([\d.,]+) 公釐，腳（跗蹠）長 ([\d.,]+) 公釐。(部分數值是從近親推估的。)?$/;
 
   function translateFact({ t, d }) {
     if (t === "牠的數字") {
       const m = NUMBERS.exec(d);
       if (!m) return null;
       const unit = m[2] === "公斤" ? "kg" : "g";
-      return { t: FACT_TITLES[t], d: `Averages about ${m[1]} ${unit}, heavier than ${m[3]}% of birds in the database. Bill ${m[4]} mm, leg (tarsus) ${m[5]} mm.${m[6] ? " Some values are estimated from close relatives." : ""}` };
+      const rank = m[3] && m[3] !== "0" ? `heavier than ${m[3]}% of birds in the database` : "among the lightest 1% of birds in the database";
+      return { t: FACT_TITLES[t], d: `Averages about ${m[1]} ${unit}, ${rank}. Bill ${m[4]} mm, leg (tarsus) ${m[5]} mm.${m[6] ? " Some values are estimated from close relatives." : ""}` };
     }
     if (t === "牠怎麼過日子") {
-      const parts = d.replace(/。$/, "").split("，").map((p) => PHRASES[p]);
-      if (parts.some((p) => !p)) return null;
-      const text = parts.join(", ");
-      return { t: FACT_TITLES[t], d: `${text[0].toUpperCase()}${text.slice(1)}.` };
+      const parts = d.replace(/。$/, "").split("，");
+      const habitat = HABITATS[parts[0]] ? HABITATS[parts.shift()] : null;
+      const diet = DIETS[parts.shift()];
+      const move = parts.length ? MOVES[parts.shift()] : "";
+      if (!diet || move === undefined || parts.length) return null;
+      const first = habitat ? `${habitat} and ${diet}.` : `${diet[0].toUpperCase()}${diet.slice(1)}.`;
+      return { t: FACT_TITLES[t], d: move ? `${first} ${move}` : first };
     }
     if (t === "保育狀況") {
       const status = IUCN[/「(.+)」/.exec(d)?.[1]];
@@ -194,7 +223,7 @@
     return /^zh/i.test(first) ? FALLBACK : "en";
   }
 
-  const api = { DICT, FALLBACK, create, detect, translateFact };
+  const api = { DICT, FALLBACK, create, detect, translateFact, DIETS };
   if (typeof module !== "undefined") { module.exports = api; return; }
 
   const lang = detect(root);
