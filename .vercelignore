@@ -4,7 +4,8 @@
 /stickers
 /.github
 /server/test
-/server/data
+# server/data/photos.json 要跟著伺服器上線（決定誰有照片），卡池檔只在匯入時用
+/server/data/cards.json.gz
 /server/seed.js
 /server/setup.js
 /server/dev.js
