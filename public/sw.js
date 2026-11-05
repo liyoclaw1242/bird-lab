@@ -1,7 +1,8 @@
 // PWA：網頁先走網路，確保部署後馬上是新版；斷網時才用快取開出畫面。
-// API 不經手。貼紙永遠不會變，所以快取優先：看過的鳥第二次就不必再等 Cloudflare。
+// API 不經手。同一個網址的貼紙不會變（換圖時網址的 ?v= 會加一），所以快取優先：看過的鳥第二次就不必再等 Cloudflare。
 const CACHE = "yi-niao-v4";
-const STICKERS = "yi-niao-stickers-v1";
+// 換圖時改名，舊版的貼紙快取在 activate 時整批刪掉
+const STICKERS = "yi-niao-stickers-v2";
 const STICKER_ORIGIN = "https://yi-niao-stickers.yi-niao.workers.dev";
 const SHELL = ["/", "/style.css", "/engine.js", "/data.js", "/i18n.js", "/birdnotes.js", "/sound.js", "/scenery.js", "/doodle.js", "/game.js", "/logo.svg"];
 

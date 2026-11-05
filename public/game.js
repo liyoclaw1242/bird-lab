@@ -2,6 +2,8 @@
   const E = window.GachaEngine;
   const { HAND, burst, forestPage, forestWide } = window.Scenery;
   const STICKER_BASE = "https://yi-niao-stickers.yi-niao.workers.dev/";
+  // 貼紙站設了一年的不可變快取，換圖（重跑 tools/build-stickers.js）時加一，瀏覽器才會抓新圖
+  const STICKER_VERSION = 2;
   const TOKEN_KEY = "gacha-token";
   const OFFSET_KEY = "gacha-dev-offset";
   const FIGHT_KEY = "gacha-fight";
@@ -19,7 +21,7 @@
   document.getElementById("gc-falling").innerHTML = window.Scenery.fallingLeaves();
 
   const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const sticker = (c) => STICKER_BASE + c.file;
+  const sticker = (c) => `${STICKER_BASE}${c.file}?v=${STICKER_VERSION}`;
   const rarityTag = (r) => `<span class="gc-rar ${r}">${r}</span>`;
   const typeTag = (type) => `<span class="gc-type ${type}">${t(`type.${type}`)}</span>`;
 
@@ -449,12 +451,9 @@
   }
 
   const STORY_FACTS = ["第一印象", "你可能不知道"];
-  // 部分照片來源只記錄「CC BY」沒有版本，連到照片頁才看得到實際條款，這裡不猜版本
   function licenseUrl(name) {
-    if (name.startsWith("PolyForm")) return "https://polyformproject.org/licenses/shield/1.0.0";
-    if (name.startsWith("CC0")) return "https://creativecommons.org/publicdomain/zero/1.0/";
-    const m = /^CC (BY(?:-SA)?) ([\d.]+)(?: (\w+))?$/.exec(name);
-    return m ? `https://creativecommons.org/licenses/${m[1].toLowerCase()}/${m[2]}/${m[3] ? `${m[3]}/` : ""}` : null;
+    const m = /^CC (BY(?:-SA)?) ([\d.]+)$/.exec(name);
+    return m ? `https://creativecommons.org/licenses/${m[1].toLowerCase()}/${m[2]}/` : null;
   }
   function licenseLink(name) {
     const url = licenseUrl(name);
@@ -472,9 +471,8 @@
     const why = `<details class="gc-why"><summary>${t("notes.why")}</summary>
       ${diet ? `<p>${t("notes.whyType", { diet: esc(diet), type: typeTag(c.type) })}</p>` : ""}
       <p>${t("notes.whyAtk")}</p><p>${t("notes.whyDef")}</p><p>${t("notes.whyLog")}</p><p>${t("notes.whyRarity")}</p><p class="gc-why-src">${t("notes.whySource")}</p></details>`;
-    const art = c.credit
-      ? `${c.credit.page ? `<a href="${esc(c.credit.page)}" target="_blank" rel="noopener">${esc(c.credit.artist)}</a>` : esc(c.credit.artist)} · ${licenseLink(c.credit.license)}${t("card.bgRemoved")}`
-      : `[removed] · ${licenseLink("PolyForm Shield 1.0.0")}`;
+    // 原作者 2.2.0 起貼紙全部改為 CC BY 4.0，照片去背的也重畫成插畫了，資料庫裡舊的 credit 不再顯示
+    const art = `<a href="[removed]" target="_blank" rel="noopener">[removed]</a>${t("card.stickerBy")} · ${licenseLink("CC BY 4.0")}`;
     // 趣聞的授權跟著文字走，少數牌沒有記錄參考條目，一樣要標示
     const hasStory = I18n.facts(c).some((n) => STORY_FACTS.includes(n.t));
     const text = hasStory

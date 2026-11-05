@@ -6,3 +6,5 @@ stickers/dist
 stickers/.cache
 .env*
 !.env.example
+stickers/dist-*
+__pycache__

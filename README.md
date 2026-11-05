@@ -85,8 +85,10 @@ tools/restore-backup.sh backup.dump 'postgresql://...'
 
 貼紙、鳥類資料和背景音各有不同授權，完整標示見 [public/credits.html](public/credits.html)。
 
-- 貼紙來自 [[removed]]([removed])，依 PolyForm Shield 1.0.0 使用，不能用於和原作者競爭的產品（觀鳥、識鳥、圖鑑類）。
-- 商業化前要先處理 IUCN 資料和貼紙參考照片的授權，Vercel Hobby 方案也限非商業使用。
+- 貼紙來自 [[removed]]([removed])，原作者 2.2.0 版（2026-11-05）起改為 CC BY 4.0，任何用途都可以，只要署名。
+- 卡池固定在建立時的鳥種和數值。原作者後來改用 AviList 分類，更新卡面文字用 `tools/gacha-refresh-cards.py`，不要重跑 `tools/gacha-build-pool.py`（會讓玩家手上的鳥消失或變數值）。
+- 換貼紙：清空 `stickers/dist`、改 `tools/build-stickers.js` 的 `COMMIT` 後重跑，部署貼紙站，並把 `public/game.js` 的 `STICKER_VERSION` 加一。
+- 商業化前要先處理 IUCN 資料的授權，Vercel Hobby 方案也限非商業使用。
 
 開發脈絡和已知問題見 [docs/gacha-research/HANDOFF.md](docs/gacha-research/HANDOFF.md)。
 
