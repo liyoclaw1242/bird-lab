@@ -123,6 +123,8 @@ img { display: block; }
 .gc-facts li { padding: 7px 0; border-top: 2px dotted #bda877; }
 .gc-facts b { display: block; font-size: 15px; }
 .gc-credit { margin: 4px 0 8px; font-size: 12px; font-weight: 400; color: var(--muted); overflow-wrap: anywhere; }
+.gc-boss-credit { margin: 2px 0 0; text-align: right; color: rgba(255, 250, 235, .82); text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+.gc-boss-credit a { color: inherit; }
 .gc-credit a { color: inherit; }
 .gc-swap { margin-top: 8px; }
 .gc-swap p { margin: 0 0 6px; font-size: 15px; }
@@ -520,6 +522,8 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-tomorrow { margin-top: 12px; }
 .gc-tomorrow-row { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; align-items: center; }
 .gc-silhouette { width: 88px; height: 88px; object-fit: contain; filter: brightness(0) opacity(.82); }
+/* 照片描不出輪廓，改成糊掉、壓暗的照片，只看得出大概的體型 */
+.gc-silhouette.blurred { object-fit: contain; filter: grayscale(1) brightness(.8) contrast(1.6) blur(2.2px); }
 .gc-tomorrow-row .gc-sub { margin: 0; }
 .gc-streak { margin-top: 8px; }
 .gc-milestone { margin: 0 44px 8px 0; padding: 6px 10px; font-size: 15px; line-height: 1.35; background: #f3cf6a; border: 2px solid var(--ink); border-radius: var(--wiggle-2); transform: rotate(-1.5deg); }

@@ -4,7 +4,7 @@ const assert = require("node:assert");
 const fs = require("fs");
 const path = require("path");
 const { open } = require("../db.js");
-const { migrate, seed, loadCards } = require("../setup.js");
+const { migrate, seed, loadCards, withoutPhotos } = require("../setup.js");
 const { createGame, MAX_SESSIONS, ipKey } = require("../game.js");
 const { createApi, createLimiter } = require("../api.js");
 const E = require("../../public/engine.js");
@@ -29,7 +29,7 @@ const sub = () => `g-${Math.random().toString(36).slice(2)}`;
 test.before(async () => {
   db = await open({ url: null });
   await migrate(db);
-  await seed(db, loadCards());
+  await seed(db, withoutPhotos(loadCards()));
   clock = new Date("2026-11-01T04:00:00Z");
   game = createGame(db, { now: () => clock, verifyGoogle: async (credential) => credential });
   api = createApi(game, { limiter: () => true });

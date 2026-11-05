@@ -6,6 +6,8 @@ const zlib = require("zlib");
 const migrate = (db) => db.exec(fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8"));
 
 const loadCards = () => JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(__dirname, "data/cards.json.gz"))).toString("utf8"));
+// 測試用：拿掉照片，整個卡池都可抽，測試結果才不受照片涵蓋率影響（照片凍結規則有專門的測試）
+const withoutPhotos = (cards) => cards.map(({ photo, ...card }) => card);
 
 async function seed(db, cards = loadCards(), batch = 500) {
   for (let i = 0; i < cards.length; i += batch) {
@@ -20,4 +22,4 @@ async function seed(db, cards = loadCards(), batch = 500) {
   return cards.length;
 }
 
-module.exports = { migrate, seed, loadCards };
+module.exports = { migrate, seed, loadCards, withoutPhotos };

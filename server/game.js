@@ -38,17 +38,39 @@ function ipKey(ip) {
   const groups = text.includes("::") ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right] : left;
   return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, "")).join(":")}::/64`;
 }
-const toCard = (row) => row.data;
+// 照片資料跟著程式部署（server/data/photos.json，由 tools/gacha-photo-json.py 產生），不必寫進資料庫：
+// 回給前端的牌都補上照片；沒照片的牌凍結。測試設 GACHA_BUNDLED_PHOTOS=off，改看資料庫裡的 photo 欄位
+const BUNDLED = process.env.GACHA_BUNDLED_PHOTOS === "off" ? null : require("./data/photos.json");
+const withPhoto = (data) => (data && !data.photo && BUNDLED?.photos[data.id] ? { ...data, photo: BUNDLED.photos[data.id] } : data);
+// 牌號只有英數和底線，檢查過才直接寫進 SQL
+const FROZEN_SQL = BUNDLED?.frozen.length
+  ? ` AND c.id NOT IN (${BUNDLED.frozen.map((id) => { if (!/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error(`bad card id ${id}`); return `'${id}'`; }).join(",")})`
+  : "";
+const toCard = (row) => withPhoto(row.data);
 
 // sessionDays：綁了 Google 的帳號，登入憑證幾天後失效（從建立那天算）。預設不失效，要由站長設 GACHA_SESSION_DAYS 才開。
 // 匿名玩家永遠不失效：存檔碼就是他們唯一的鑰匙，過期等於把鳥丟掉
 function createGame(db, { now = () => new Date(), random = crypto.randomInt ? () => crypto.randomInt(0, 2 ** 32) / 2 ** 32 : Math.random, verifyGoogle = defaultVerifyGoogle, sessionDays = Number(process.env.GACHA_SESSION_DAYS) || 0 } = {}) {
   const dayOf = (offset = 0) => E.addDays(E.taipeiDate(now()), offset);
 
+  // 卡池換成真實照片後，還沒找到照片的鳥先凍結：抽不到、不算進收集總數，已經有的玩家保留。
+  // 卡池裡完全沒有照片時（換照片之前）照舊全部可抽。
+  // 站長在 SQL Editor 寫入照片後，Vercel 上還熱著的程序要能自己發現，所以每 5 分鐘重查一次
+  let photoMode = false, checkedAt = -Infinity;
+  async function drawable(q) {
+    if (BUNDLED && Object.keys(BUNDLED.photos).length) { photoMode = true; return FROZEN_SQL; }
+    if (Date.now() - checkedAt > 5 * 60 * 1000) {
+      photoMode = (await q.query("SELECT EXISTS (SELECT 1 FROM cards WHERE data ? 'photo') AS on")).rows[0].on;
+      checkedAt = Date.now();
+    }
+    return photoMode ? " AND c.data ? 'photo'" : "";
+  }
+
   async function starters(q) {
     const picked = [];
+    const only = await drawable(q);
     for (const type of Object.keys(E.TYPES)) {
-      const { rows } = await q.query("SELECT id FROM cards WHERE rarity = 'N' AND type = $1 ORDER BY random() LIMIT 1", [type]);
+      const { rows } = await q.query(`SELECT id FROM cards c WHERE rarity = 'N' AND type = $1${only} ORDER BY random() LIMIT 1`, [type]);
       if (!rows.length) throw new GameError(503, "pool_empty", "卡池還沒準備好");
       picked.push(rows[0].id);
     }
@@ -180,15 +202,16 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   async function cardsById(q, ids) {
     const { rows } = await q.query("SELECT id, data FROM cards WHERE id = ANY($1)", [ids]);
-    const found = Object.fromEntries(rows.map((r) => [r.id, r.data]));
+    const found = Object.fromEntries(rows.map((r) => [r.id, toCard(r)]));
     return ids.map((id) => found[id]);
   }
 
   async function state(playerId, offset = 0) {
     const day = dayOf(offset);
+    const only = await drawable(db);
     const [{ rows: [player] }, { rows: [counts] }, { rows: draws }, { rows: fights }, candidates, odds] = await Promise.all([
       db.query("SELECT team, google_sub FROM players WHERE id = $1", [playerId]),
-      db.query("SELECT (SELECT count(*) FROM owned WHERE player_id = $1)::int AS owned, (SELECT count(*) FROM cards)::int AS total", [playerId]),
+      db.query(`SELECT (SELECT count(*) FROM owned o JOIN cards c ON c.id = o.card_id WHERE o.player_id = $1${only})::int AS owned, (SELECT count(*) FROM cards c WHERE true${only})::int AS total`, [playerId]),
       db.query(
         `SELECT d.kind, c.data, s.code, s.cap, s.claimed FROM draws d JOIN cards c ON c.id = d.card_id
          LEFT JOIN shares s ON s.player_id = d.player_id AND s.day = d.day AND s.kind = d.kind
@@ -213,10 +236,11 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       best: today ? today.best : E.bestScore(fight, candidates),
       result: today && { stars: today.stars, score: today.score, best: today.best },
       draws: { free: draws.some((d) => d.kind === "free"), bonus: draws.filter((d) => d.kind !== "free").length, bonusAllowed: today ? bonusAllowed(today.stars) : 0 },
-      drawn: draws.map((d) => ({ kind: d.kind, card: d.data, share: d.code ? { code: d.code, cap: d.cap, claimed: d.claimed } : null })),
+      drawn: draws.map((d) => ({ kind: d.kind, card: toCard(d), share: d.code ? { code: d.code, cap: d.cap, claimed: d.claimed } : null })),
       team: await cardsById(db, player.team),
       owned: counts.owned,
       total: counts.total,
+      photoMode,
       streak,
       history: fights.slice(0, 14).map((f) => ({ day: f.day, stars: f.stars })),
     };
@@ -299,9 +323,10 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   // 只從還沒有的牌抽
   async function pickUnowned(q, playerId) {
+    const only = await drawable(q);
     const { rows: tiers } = await q.query(
       `SELECT DISTINCT c.rarity FROM cards c
-       WHERE NOT EXISTS (SELECT 1 FROM owned o WHERE o.player_id = $1 AND o.card_id = c.id)`,
+       WHERE NOT EXISTS (SELECT 1 FROM owned o WHERE o.player_id = $1 AND o.card_id = c.id)${only}`,
       [playerId],
     );
     const available = tiers.map((t) => t.rarity);
@@ -315,7 +340,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     }
     const { rows } = await q.query(
       `SELECT c.id, c.data FROM cards c
-       WHERE c.rarity = $2 AND NOT EXISTS (SELECT 1 FROM owned o WHERE o.player_id = $1 AND o.card_id = c.id)
+       WHERE c.rarity = $2 AND NOT EXISTS (SELECT 1 FROM owned o WHERE o.player_id = $1 AND o.card_id = c.id)${only}
        ORDER BY random() LIMIT 1`,
       [playerId, tier],
     );
@@ -332,7 +357,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
         "SELECT c.data FROM draws d JOIN cards c ON c.id = d.card_id WHERE d.player_id = $1 AND d.day = $2 AND d.kind = $3",
         [playerId, day, kind],
       );
-      if (done.length) return { card: done[0].data, repeated: true };
+      if (done.length) return { card: toCard(done[0]), repeated: true };
       if (kind !== "free") {
         const { rows } = await q.query("SELECT stars FROM fights WHERE player_id = $1 AND day = $2", [playerId, day]);
         if (!rows.length) throw new GameError(403, "not_won", "先打今天的 BOSS 才有獎勵抽");
@@ -341,7 +366,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       const picked = await pickUnowned(q, playerId);
       await q.query("INSERT INTO owned (player_id, card_id) VALUES ($1, $2)", [playerId, picked.id]);
       await q.query("INSERT INTO draws (player_id, day, kind, card_id) VALUES ($1, $2, $3, $4)", [playerId, day, kind, picked.id]);
-      return { card: picked.data, repeated: false };
+      return { card: toCard(picked), repeated: false };
     });
   }
 
@@ -413,7 +438,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     );
     if (!row) return { status: "missing" };
     if (expired(row.day, day)) return { status: "expired" };
-    const base = { card: row.data, cap: row.cap, left: row.cap - row.claimed, lastDay: E.addDays(row.day, SHARE_DAYS - 1) };
+    const base = { card: toCard(row), cap: row.cap, left: row.cap - row.claimed, lastDay: E.addDays(row.day, SHARE_DAYS - 1) };
     if (playerId !== null && Number(row.player_id) === playerId) return { ...base, status: "mine" };
     if (playerId !== null) {
       const { rows } = await db.query("SELECT 1 FROM owned WHERE player_id = $1 AND card_id = $2", [playerId, row.data.id]);
@@ -434,7 +459,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       );
       if (!row) throw new GameError(404, "missing", "找不到這條連結");
       const { rows: done } = await q.query("SELECT 1 FROM claims WHERE player_id = $1 AND code = $2", [playerId, code]);
-      if (done.length) return { card: row.data, repeated: true };
+      if (done.length) return { card: toCard(row), repeated: true };
       if (Number(row.player_id) === playerId) throw new GameError(409, "mine", "這是你自己分享的鳥");
       if (expired(row.day, day)) throw new GameError(410, "expired", "這條連結過期了");
       const { rows: owned } = await q.query("SELECT 1 FROM owned WHERE player_id = $1 AND card_id = $2", [playerId, row.card_id]);
@@ -445,7 +470,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       if (!taken.length) throw new GameError(410, "gone", "這隻已經被領完了");
       await q.query("INSERT INTO owned (player_id, card_id) VALUES ($1, $2)", [playerId, row.card_id]);
       await q.query("INSERT INTO claims (player_id, code, card_id, day) VALUES ($1, $2, $3, $4)", [playerId, code, row.card_id, day]);
-      return { card: row.data, repeated: false };
+      return { card: toCard(row), repeated: false };
     });
   }
 

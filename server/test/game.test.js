@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert");
 const { open } = require("../db.js");
-const { migrate, seed, loadCards } = require("../setup.js");
+const { migrate, seed, loadCards, withoutPhotos } = require("../setup.js");
 const { createGame } = require("../game.js");
 const { createApi } = require("../api.js");
 const E = require("../../public/engine.js");
@@ -38,7 +38,7 @@ const bestMoves = (fight, team) => {
 test.before(async () => {
   db = await open({ url: null });
   await migrate(db);
-  all = loadCards();
+  all = withoutPhotos(loadCards());
   await seed(db, all);
   at("2026-11-01");
   game = createGame(db, { now: () => clock, verifyGoogle: async (credential) => {
@@ -234,6 +234,37 @@ test("稀有度抽完會把機率分給其他稀有度，全收後回報收集�
   assert.ok(finished);
   assert.strictEqual((await g.state(id)).owned, total);
   assert.strictEqual(seen.size, total - 3);
+});
+
+test("換成照片後，沒照片的鳥凍結：抽不到、不算總數，已有的保留", async () => {
+  const small = await open({ url: null });
+  await migrate(small);
+  const photo = { file: "photos/x.webp", w: 800, h: 600, artist: "a", license: "CC BY 4.0", licenseUrl: null, page: null, taxonMatch: true };
+  const n = all.filter((c) => c.rarity === "N");
+  const types = Object.keys(E.TYPES).map((type) => n.find((c) => c.type === type));
+  const lit = [...types, ...n.filter((c) => !types.includes(c)).slice(0, 7)].map((c) => ({ ...c, photo }));
+  const dark = n.filter((c) => !lit.some((l) => l.id === c.id)).slice(0, 30);
+  await seed(small, [...lit, ...dark]);
+  const g = createGame(small, { now: () => clock });
+  const { token } = await g.createPlayer();
+  const id = await g.authenticate(token);
+  const litIds = new Set(lit.map((c) => c.id));
+  let s = await g.state(id);
+  assert.strictEqual(s.photoMode, true);
+  assert.strictEqual(s.total, lit.length);
+  assert.ok(s.team.every((c) => litIds.has(c.id)), "新玩家的起始鳥都有照片");
+  // 已經有的凍結鳥：留在收藏裡，但不算進收集進度
+  await small.query("INSERT INTO owned (player_id, card_id) VALUES ($1, $2)", [id, dark[0].id]);
+  s = await g.state(id);
+  assert.strictEqual(s.owned, types.length);
+  assert.ok((await g.collection(id)).cards.some((c) => c.id === dark[0].id));
+  let day = "2030-01-01";
+  for (let i = 0; i < lit.length; i += 1) {
+    at(day);
+    try { assert.ok(litIds.has((await g.draw(id, "free")).card.id)); } catch (e) { assert.strictEqual(e.code, "complete"); break; }
+    day = E.addDays(day, 1);
+  }
+  assert.strictEqual((await g.state(id)).owned, lit.length);
 });
 
 test("效能：完整卡池上抽卡和讀狀態都夠快", async () => {

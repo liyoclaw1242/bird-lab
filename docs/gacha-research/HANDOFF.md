@@ -49,7 +49,7 @@
 ## 抽卡與授權（2026-11-01）
 
 - 保底和補運在 `public/data.js`，設計依據在 `docs/gacha-research/ODDS.md`，模擬用 `node tools/gacha-odds-sim.js`。改參數要同步更新面板上的長期平均。
-- 授權總表在 `public/credits.html`。改貼紙授權標示要重跑 `node tools/build-stickers.js` 和 `stickers/` 的 wrangler deploy。
+- 授權總表在 `public/credits.html`。2026-11-06 起鳥的圖片全部改成真實照片（`tools/build-photos.py`），不再使用 AI 貼紙，見 README「授權與素材」。
 - 背景音：`public/audio/countryside.mp3`（CC0，`tools/build-bgm.sh` 產生），🎵 開關，`?bgm=1` 給 Windows Lively 桌布用；Lively 上的自動播放還沒實測。
 - 刪除資料目前靠信箱人工處理，沒有自助功能。
 - 商業化前要處理：IUCN 資料、參考照片（約 6,300 張的參考照是 NC／ND 或保留所有權利）。原作者接受撤圖，但我們鎖定固定版本，撤圖不會自動同步。

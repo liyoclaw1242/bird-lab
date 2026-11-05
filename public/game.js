@@ -1,8 +1,9 @@
 (function () {
   const E = window.GachaEngine;
   const { HAND, burst, forestPage, forestWide } = window.Scenery;
-  const STICKER_BASE = "https://yi-niao-stickers.yi-niao.workers.dev/";
-  // 貼紙站設了一年的不可變快取，換圖（重跑 tools/build-stickers.js）時加一，瀏覽器才會抓新圖
+  // 本機開發時由 server/dev.js 從 stickers/dist 供圖（還沒部署的照片也看得到），沒有的檔案會轉回正式的貼紙站
+  const STICKER_BASE = location.hostname === "localhost" ? "/_stickers/" : "https://yi-niao-stickers.yi-niao.workers.dev/";
+  // 照片站設了一年的不可變快取，換照片（重跑 tools/build-photos.py）時加一，瀏覽器才會抓新圖
   const STICKER_VERSION = 2;
   const TOKEN_KEY = "gacha-token";
   const OFFSET_KEY = "gacha-dev-offset";
@@ -21,7 +22,8 @@
   document.getElementById("gc-falling").innerHTML = window.Scenery.fallingLeaves();
 
   const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const sticker = (c) => `${STICKER_BASE}${c.file}?v=${STICKER_VERSION}`;
+  // 鳥一律用真實照片（已加紙框），還沒找到照片的鳥顯示剪影。照片不描線稿也不左右翻轉，翻轉會變成鏡像
+  const sticker = (c) => (c.photo ? `${STICKER_BASE}${c.photo.file}?v=${STICKER_VERSION}` : "silhouette.svg");
   const rarityTag = (r) => `<span class="gc-rar ${r}">${r}</span>`;
   const typeTag = (type) => `<span class="gc-type ${type}">${t(`type.${type}`)}</span>`;
 
@@ -227,7 +229,7 @@
   function tomorrowBox() {
     if (!S.result) return "";
     const next = E.bossOfDay(D.BOSSES, E.addDays(S.day, 1));
-    return `<div class="gc-scrap gc-tomorrow tilt"><p class="gc-h">${t("tomorrow.title")}</p><div class="gc-tomorrow-row"><img class="gc-silhouette" src="${next.img}" alt=""><p class="gc-sub">${t(`tease.${next.id}`)}</p></div></div>`;
+    return `<div class="gc-scrap gc-tomorrow tilt"><p class="gc-h">${t("tomorrow.title")}</p><div class="gc-tomorrow-row"><img class="gc-silhouette${next.photo ? " blurred" : ""}" src="${next.img}" alt=""><p class="gc-sub">${t(`tease.${next.id}`)}</p></div></div>`;
   }
 
   // 戳首頁的 BOSS：每戳一下換一句，戳到底就停在最後一句
@@ -267,6 +269,7 @@
         <div class="gc-today-boss">
           <div class="gc-scrap gc-boss-note tilt"><span>${t("home.bossToday")}</span><b>${esc(bossSelf(fight.boss))}</b><span>${S.day}</span></div>
           <button type="button" class="gc-poke ${view.pokes ? "poked" : ""}" data-do="poke" aria-label="${esc(t("poke.label", { name: bossName(fight.boss) }))}"><img class="gc-perched" src="${fight.boss.img}" fetchpriority="high" alt="${esc(t("home.stickerAlt", { name: bossName(fight.boss) }))}">${pokeBubble()}</button>
+          ${photoCredit(fight.boss.photo, "gc-boss-credit")}
         </div>
         <div class="gc-scrap tilt-r"><p class="gc-h">${t("home.fiveMoves")}</p>${moveLeaves(fight)}${chain}</div>
       </section>
@@ -455,6 +458,13 @@
     const m = /^CC (BY(?:-SA)?) ([\d.]+)$/.exec(name);
     return m ? `https://creativecommons.org/licenses/${m[1].toLowerCase()}/${m[2]}/` : null;
   }
+  // 照片的攝影者和授權，牌面和 BOSS 都要標
+  function photoCredit(p, cls = "") {
+    if (!p) return "";
+    const link = (url, text) => (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
+    const text = `${t("card.photoBy")}${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}${t("card.photoVia", { site: p.source === "inaturalist" ? "iNaturalist" : "Wikimedia Commons" })}`;
+    return cls ? `<p class="gc-credit ${cls}">${text}</p>` : text;
+  }
   function licenseLink(name) {
     const url = licenseUrl(name);
     return url ? `<a href="${url}" target="_blank" rel="noopener">${esc(name)}</a>` : esc(name);
@@ -471,12 +481,12 @@
     const why = `<details class="gc-why"><summary>${t("notes.why")}</summary>
       ${diet ? `<p>${t("notes.whyType", { diet: esc(diet), type: typeTag(c.type) })}</p>` : ""}
       <p>${t("notes.whyAtk")}</p><p>${t("notes.whyDef")}</p><p>${t("notes.whyLog")}</p><p>${t("notes.whyRarity")}</p><p class="gc-why-src">${t("notes.whySource")}</p></details>`;
-    // 原作者 2.2.0 起貼紙全部改為 CC BY 4.0，照片去背的也重畫成插畫了，資料庫裡舊的 credit 不再顯示
-    const art = `<a href="[removed]" target="_blank" rel="noopener">[removed]</a>${t("card.stickerBy")} · ${licenseLink("CC BY 4.0")}`;
-    // 趣聞的授權跟著文字走，少數牌沒有記錄參考條目，一樣要標示
+    // 照片要標攝影者和授權；資料庫裡舊的 credit（照片去背貼紙）不再顯示
+    const art = c.photo ? photoCredit(c.photo) : t("card.noPhoto");
+    // 趣聞是 CC BY-SA 的文字，牌上標授權和維基來源，改寫者的署名在資料來源與授權頁
     const hasStory = I18n.facts(c).some((n) => STORY_FACTS.includes(n.t));
     const text = hasStory
-      ? `${t("card.storyLabel")}<a href="[removed]" target="_blank" rel="noopener">[removed]</a>${c.source ? `、<a href="${esc(c.source)}" target="_blank" rel="noopener">${t("card.wikiSource")}</a>` : ""} · ${licenseLink("CC BY-SA 4.0")}${t("card.storyConverted")}`
+      ? `${t("card.storyLabel")}${c.source ? `<a href="${esc(c.source)}" target="_blank" rel="noopener">${t("card.wikiSource")}</a> · ` : ""}${licenseLink("CC BY-SA 4.0")}${t("card.storyConverted")}`
       : "";
     const inHand = hand.some((b) => b.id === c.id);
     const swap = view.swapping
@@ -496,7 +506,7 @@
       <span class="gc-stamp ${c.rarity}">${c.rarity}</span>
       ${giftNotice()}${milestoneNote()}
       ${pic(sticker(c), t("home.stickerAlt", { name: birdName(c) }), 'fetchpriority="high"').replace('class="gc-pic', 'class="gc-card-bird gc-pic')}
-      <p class="gc-credit">${t("card.sticker")}${art}${text}</p>
+      <p class="gc-credit">${art}${text}</p>
       <b class="gc-name">${esc(birdName(c))}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
@@ -527,7 +537,7 @@
     const birds = f.cards.map((c, i) => {
       const p = scene.perches[i], q = wide.perches[i];
       const pos = `--l:${pct(p.left)};--t:${pct(p.top)};--w:${pct(p.size)};--lw:${pct(q.left)};--tw:${pct(q.top)};--ww:${pct(q.size)}`;
-      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""} ${filterClass(c)}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}">${pic(sticker(c))}</button>`;
+      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${filterClass(c)}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}">${pic(sticker(c))}</button>`;
     }).join("");
     // 桌機的側欄多一份名單：鳥多了以後，用名字找比在樹上找快
     const roster = f.cards.length ? `<div class="gc-scrap gc-desk-only"><p class="gc-h">${t("forest.list")}</p><div class="gc-roster">${f.cards.map((c) =>
@@ -745,14 +755,13 @@
   const loadFight = () => { try { return JSON.parse(store.get(FIGHT_KEY)); } catch { return null; } };
 
   async function enterFight(team, moves) {
-    const traced = await Promise.all(team.map((c) => window.Doodle.get(sticker(c), c.id)));
-    const bossTrace = await window.Doodle.get(new URL(S.fight.boss.img, location.href).href, S.fight.boss.id);
+    const bossTrace = S.fight.boss.photo ? null : await window.Doodle.get(new URL(S.fight.boss.img, location.href).href, S.fight.boss.id);
     const state = moves.reduce((s, m) => E.step(S.fight, team, s, m.slot, m.signature), E.startState(team));
     view = {
       screen: "fight", fight: S.fight, best: S.best, team, state, moves, signature: false,
       active: moves.length ? moves[moves.length - 1].slot : 0,
       log: moves.length ? t("fight.resume") : t("fight.start"),
-      anim: null, doodles: Object.fromEntries(team.map((c, i) => [c.id, traced[i]])),
+      anim: null, doodles: {},
       bossFaceRight: bossTrace ? bossTrace.faceRight : false,
     };
     saveFight();

@@ -8,12 +8,13 @@
   const BONUS_KINDS = ["bonus", "bonus2", "bonus3", "bonus4"];
   const bonusAllowed = (stars) => Math.min(BONUS_KINDS.length, 1 + Math.max(0, stars | 0));
   const CLAIMS_PER_DAY = 5;
+  // BOSS 用 Wikimedia Commons 的真實照片（tools/build-photos.py 產生，加了紙框），photo 是署名資料。
   const BOSSES = [
-  { id: "passer", name: "麻雀", type: "plant", atkShape: 0.19, defShape: 0.2, img: "stickers/passer.webp" },
-  { id: "urocissa", name: "臺灣藍鵲", type: "mixed", atkShape: 0.5, defShape: 0.44, img: "stickers/urocissa.webp" },
-  { id: "platalea", name: "黑面琵鷺", type: "meat", atkShape: 0.78, defShape: 0.6, img: "stickers/platalea.webp" },
-  { id: "syrmaticus", name: "帝雉", type: "mixed", atkShape: 0.55, defShape: 0.56, img: "stickers/syrmaticus.webp" },
-  { id: "balaeniceps", name: "鯨頭鸛", type: "meat", atkShape: 0.9, defShape: 0.75, img: "stickers/balaeniceps.webp" },
+  { id: "passer", name: "麻雀", type: "plant", atkShape: 0.19, defShape: 0.2, img: "stickers/passer-photo.webp", photo: {"artist": "Andreas Trepte", "license": "CC BY-SA 2.5", "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5", "page": "https://commons.wikimedia.org/wiki/File:Tree-Sparrow-2009-16-02.jpg"} },
+  { id: "urocissa", name: "臺灣藍鵲", type: "mixed", atkShape: 0.5, defShape: 0.44, img: "stickers/urocissa-photo.webp", photo: {"artist": "Charles J. Sharp", "license": "CC BY-SA 4.0", "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0", "page": "https://commons.wikimedia.org/wiki/File:Taiwan_blue_magpie_(Urocissa_caerulea)_Xindian.jpg"} },
+  { id: "platalea", name: "黑面琵鷺", type: "meat", atkShape: 0.78, defShape: 0.6, img: "stickers/platalea-photo.webp", photo: {"artist": "spaceaero2", "license": "CC BY 3.0", "licenseUrl": "https://creativecommons.org/licenses/by/3.0", "page": "https://commons.wikimedia.org/wiki/File:Platalea_minor_okinawa.jpg"} },
+  { id: "syrmaticus", name: "帝雉", type: "mixed", atkShape: 0.55, defShape: 0.56, img: "stickers/syrmaticus-photo.webp", photo: {"artist": "Snowyowls (photographer) / Jako (uploader)", "license": "CC BY-SA 3.0", "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/", "page": "https://commons.wikimedia.org/wiki/File:Mikado_Pheasant_398.jpg"} },
+  { id: "balaeniceps", name: "鯨頭鸛", type: "meat", atkShape: 0.9, defShape: 0.75, img: "stickers/balaeniceps-photo.webp", photo: {"artist": "zeroexposure (Flickr)", "license": "CC BY 2.0", "licenseUrl": "https://creativecommons.org/licenses/by/2.0", "page": "https://commons.wikimedia.org/wiki/File:Entebbe_Shoe_Bill_Stork.jpg"} },
 ];
 
   // 保底：連續沒抽到時機率線性上升，到 hard 那一抽必中。一天最多兩抽，門檻依「幾週一隻」訂，不是照搬付費遊戲的 90 抽

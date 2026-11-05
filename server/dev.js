@@ -9,6 +9,7 @@ const { createApi } = require("./api.js");
 
 const ROOT = path.join(__dirname, "..");
 const PUBLIC = path.join(ROOT, "public");
+const STICKERS = path.join(ROOT, "stickers/dist");
 const PORT = Number(process.env.PORT) || 5298;
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".webp": "image/webp", ".png": "image/png", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml; charset=utf-8", ".mp3": "audio/mpeg" };
 
@@ -54,6 +55,16 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
       }
       res.writeHead(result.status, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify(result.body));
+    }
+    // 貼紙和照片：先用本機 stickers/dist（還沒部署的照片也看得到），沒有的轉回正式貼紙站
+    if (url.pathname.startsWith("/_stickers/")) {
+      const local = path.normalize(path.join(STICKERS, decodeURIComponent(url.pathname.slice("/_stickers/".length))));
+      if (local.startsWith(STICKERS + path.sep) && fs.existsSync(local)) {
+        res.writeHead(200, { "content-type": MIME[path.extname(local)] || "application/octet-stream", "access-control-allow-origin": "*" });
+        return fs.createReadStream(local).pipe(res);
+      }
+      res.writeHead(302, { location: `https://yi-niao-stickers.yi-niao.workers.dev/${url.pathname.slice("/_stickers/".length)}${url.search}` });
+      return res.end();
     }
     const target = path.normalize(path.join(PUBLIC, decodeURIComponent(url.pathname)));
     const file = target.endsWith(path.sep) || url.pathname.endsWith("/") ? path.join(target, "index.html") : target;

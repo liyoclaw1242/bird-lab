@@ -85,9 +85,9 @@ tools/restore-backup.sh backup.dump 'postgresql://...'
 
 貼紙、鳥類資料和背景音各有不同授權，完整標示見 [public/credits.html](public/credits.html)。
 
-- 貼紙來自 [[removed]]([removed])，原作者 2.2.0 版（2026-11-05）起改為 CC BY 4.0，任何用途都可以，只要署名。
-- 卡池固定在建立時的鳥種和數值。原作者後來改用 AviList 分類，更新卡面文字用 `tools/gacha-refresh-cards.py`，不要重跑 `tools/gacha-build-pool.py`（會讓玩家手上的鳥消失或變數值）。
-- 換貼紙：清空 `stickers/dist`、改 `tools/build-stickers.js` 的 `COMMIT` 後重跑，部署貼紙站，並把 `public/game.js` 的 `STICKER_VERSION` 加一。
+- 鳥的圖片是真實照片（`tools/build-photos.py`）：先用 Wikidata 代表圖（Wikimedia Commons），沒有合用的再用 iNaturalist 研究級觀察裡 CC BY／CC0 的照片。照片只縮圖、加紙框，不裁切不翻轉。找不到照片的鳥凍結：抽不到、不算收集總數，已有的顯示剪影。
+- 照片放在貼紙站 `stickers/dist/photos/`；換照片後部署貼紙站，並把 `public/game.js` 的 `STICKER_VERSION` 加一。再跑 `tools/gacha-photo-json.py` 更新 `server/data/photos.json`：伺服器靠這個檔決定誰有照片、誰凍結，不必改正式資料庫。
+- 卡池固定在建立時的鳥種和數值。鳥名、量測和趣聞最初取自 [removed] 的彙整資料（MIT，趣聞 CC BY-SA 4.0），更新文字用 `tools/gacha-refresh-cards.py`，不要重跑 `tools/gacha-build-pool.py`（會讓玩家手上的鳥消失或變數值）。
 - 商業化前要先處理 IUCN 資料的授權，Vercel Hobby 方案也限非商業使用。
 
 開發脈絡和已知問題見 [docs/gacha-research/HANDOFF.md](docs/gacha-research/HANDOFF.md)。

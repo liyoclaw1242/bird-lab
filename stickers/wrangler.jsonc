@@ -1,5 +1,5 @@
-// 1 萬多張貼紙放在 Cloudflare Workers 靜態資源：不寫 Worker，請求不計額度。
-// 先跑 node tools/build-stickers.js，再到這個資料夾執行 npx wrangler deploy
+// 1 萬張鳥照片放在 Cloudflare Workers 靜態資源：不寫 Worker，請求不計額度。單一版本最多 2 萬個檔案。
+// 先跑 tools/build-photos.py，再到這個資料夾執行 npx wrangler deploy
 {
   "name": "yi-niao-stickers",
   "compatibility_date": "2026-10-01",

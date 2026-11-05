@@ -6,7 +6,7 @@
     "dev": "node server/dev.js",
     "seed": "node server/seed.js",
     "check-env": "node --env-file=.env.local tools/check-env.js",
-    "test": "node --test server/test/*.test.js"
+    "test": "GACHA_BUNDLED_PHOTOS=off node --test server/test/*.test.js"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.0",

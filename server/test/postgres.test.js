@@ -5,7 +5,7 @@ const os = require("os");
 const fs = require("fs");
 const path = require("path");
 const { open } = require("../db.js");
-const { migrate, seed, loadCards } = require("../setup.js");
+const { migrate, seed, loadCards, withoutPhotos } = require("../setup.js");
 const { createGame } = require("../game.js");
 const E = require("../../public/engine.js");
 
@@ -22,7 +22,7 @@ test.before(async () => {
   db = await open({ url: "postgres://postgres:pw@localhost:55433/gacha" });
   await migrate(db);
   await migrate(db);
-  await seed(db, loadCards());
+  await seed(db, withoutPhotos(loadCards()));
   game = createGame(db, { now: () => clock, verifyGoogle: async (credential) => credential });
 });
 test.after(async () => {
