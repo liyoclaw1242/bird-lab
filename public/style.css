@@ -129,7 +129,7 @@ img { display: block; }
 /* 百鳥在林 */
 .gc-forest { position: relative; margin: 10px -12px 0; aspect-ratio: 400 / 780; overflow: hidden; }
 .gc-forest-art { position: absolute; inset: 0; width: 100%; height: 100%; }
-.gc-perched-bird { position: absolute; left: var(--l); top: var(--t); width: var(--w); transform: translate(-50%, -100%); min-width: 44px; min-height: 44px; transform-origin: 50% 100%; animation: gc-sway 4s ease-in-out infinite; }
+.gc-perched-bird { position: absolute; left: var(--l); top: var(--t); width: var(--w); translate: -50% -100%; min-width: 44px; min-height: 44px; transform-origin: 50% 100%; animation: gc-sway 4s ease-in-out infinite; }
 .gc-forest-wide { display: none; }
 .gc-perched-bird img { width: 100%; filter: drop-shadow(0 3px 1px rgba(20, 14, 5, .5)); }
 .gc-perched-bird.flip img { transform: scaleX(-1); }
@@ -137,10 +137,12 @@ img { display: block; }
 .gc-perched-bird:nth-child(3n) { animation-duration: 3.4s; animation-delay: -2.1s; }
 .gc-perched-bird.in-hand::after { content: attr(data-tag); position: absolute; left: 50%; top: 100%; transform: translate(-50%, -12px) rotate(-3deg); padding: 0 5px; font-size: 12px; white-space: nowrap; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 6px; }
 .gc-perched-bird.UR::before, .gc-perched-bird.SSR::before { content: "✦"; position: absolute; top: -2px; right: 2px; color: #ffe07d; font-size: 20px; text-shadow: 0 0 4px #2b2316; }
-@keyframes gc-sway { 0%, 100% { transform: translate(-50%, -100%) rotate(-1.6deg); } 50% { transform: translate(-50%, -100%) rotate(1.6deg); } }
+/* 只轉角度：位移放在 translate 屬性，圖片載入後高度改變時位置會跟著重算，動畫裡寫百分比位移會沿用舊高度 */
+@keyframes gc-sway { 0%, 100% { rotate: -1.6deg; } 50% { rotate: 1.6deg; } }
 
 /* 一鳥在手 */
-.gc-hand { position: relative; margin: 8px auto 0; width: min(420px, 100%); aspect-ratio: 400 / 430; }
+/* 中指上的鳥會高出手的頂端，上面留空間才不會被分頁標籤蓋住 */
+.gc-hand { position: relative; margin: 44px auto 0; width: min(420px, 100%); aspect-ratio: 400 / 430; }
 .gc-hand-art { position: absolute; inset: 0; width: 100%; height: 100%; }
 .gc-slot { position: absolute; width: 33%; aspect-ratio: 1; transform: translate(-50%, -100%); display: grid; place-items: end center; }
 .gc-slot img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 4px 1px rgba(20, 14, 5, .5)); }
@@ -431,7 +433,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   .gc-roster small { font-size: 14px; font-weight: 400; color: var(--muted); white-space: nowrap; }
 
   /* 一鳥在手 */
-  .gc-hand { width: min(600px, 100%, 70vh); margin-top: 0; }
+  .gc-hand { width: min(600px, 100%, 70vh); margin-top: 60px; }
   .gc-slot.empty { font-size: 16px; }
   .gc-team-row { padding: 6px 0; font-size: 17px; }
   .gc-team-row small { font-size: 15px; }

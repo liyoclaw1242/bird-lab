@@ -8,7 +8,7 @@
   const D = window.GachaData;
   const { SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY } = D;
   const HOLD = { player: 1600, super: 2000, hit: 650, boss: 1250, bossHit: 550 };
-  const SLOT_POS = [[17, 48], [44, 24], [78, 37]];
+  const SLOT_POS = [[18, 57], [44, 24], [78, 37]];
   const { t } = I18n;
   const birdName = I18n.name;
   const bossName = (boss) => t(`boss.${boss.id}`);

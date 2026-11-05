@@ -226,8 +226,10 @@
     const cols = [95, 300, 500, 705];
     let perches = [];
     for (const y of [175, 345]) cols.forEach((x) => perches.push({ x: x + (rand() - 0.5) * 34, y: y + (rand() - 0.5) * 34, size: 118 + rand() * 22 }));
-    [120, 330, 540, 720].forEach((x) => perches.push({ x: x + (rand() - 0.5) * 40, y: 586 + (rand() - 0.5) * 10, size: 140 }));
-    perches = perches.map((p) => [rand(), p]).sort((a, b) => a[0] - b[0]).map(([, p]) => p).slice(0, count);
+    const ground = [120, 330, 540, 720].map((x) => ({ x: x + (rand() - 0.5) * 40, y: 586 + (rand() - 0.5) * 10, size: 140 }));
+    // 樹枝先排滿才輪到地面，鳥少的那一頁不會只有一隻站在地上
+    const shuffle = (list) => list.map((p) => [rand(), p]).sort((a, b) => a[0] - b[0]).map(([, p]) => p);
+    perches = [...shuffle(perches), ...shuffle(ground)].slice(0, count);
 
     let art = `<path d="M0 ${WIDE_H - 72} C130 ${WIDE_H - 96} 260 ${WIDE_H - 58} 400 ${WIDE_H - 84} C540 ${WIDE_H - 104} 660 ${WIDE_H - 60} 800 ${WIDE_H - 80} L800 ${WIDE_H} L0 ${WIDE_H} Z" fill="#6b5a32"/>`;
     for (const x of trunks) {
