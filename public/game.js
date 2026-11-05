@@ -8,7 +8,7 @@
   const D = window.GachaData;
   const { SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY } = D;
   const HOLD = { player: 1600, super: 2000, hit: 650, boss: 1250, bossHit: 550 };
-  const SLOT_POS = [[18, 57], [44, 24], [78, 37]];
+  const SLOT_POS = [[14, 58.5], [50, 22.5], [86, 57]];
   const { t } = I18n;
   const birdName = I18n.name;
   const bossName = (boss) => t(`boss.${boss.id}`);
@@ -242,6 +242,15 @@
       : hand.length === E.TEAM_SIZE
         ? `<button class="gc-plank hot" data-do="start">${t("home.challenge")}</button>`
         : `<button class="gc-plank" data-go="hand">${t("home.needThree")}</button>`;
+    // 今天能做的都做完了：搖樹、打 BOSS、獎勵樹收成一行小字，把位置讓給明天的預告和分享
+    const allDone = result && (draws.free || complete) && (draws.bonus || !(result.stars > 0) || complete);
+    const todo = allDone
+      ? `<div class="gc-scrap gc-done">${miniTree}<p><b>${t("home.allDone")}</b><small>${t(result.stars > 0 ? "home.allDoneWin" : "home.allDoneLose", { n: result.stars })}</small></p></div>`
+      : `<div class="gc-trees">
+        ${shake("free", complete ? t("draw.complete") : draws.free ? t("draw.done") : t("draw.free"), t("draw.freeNote"), draws.free || complete)}
+        ${result?.stars > 0 && !complete ? shake("bonus", draws.bonus ? t("draw.bonusDone") : t("draw.bonus"), t("draw.bonusNote"), draws.bonus) : ""}
+      </div>
+      <div style="margin-top:12px">${fightBtn}</div>`;
     return `${nav()}
       <div class="gc-columns"><div class="gc-col-main">
       <section class="gc-clearing">
@@ -252,16 +261,13 @@
         <div class="gc-scrap tilt-r"><p class="gc-h">${t("home.fiveMoves")}</p>${moveLeaves(fight)}${chain}</div>
       </section>
       </div><div class="gc-col-side">
-      <div class="gc-trees">
-        ${shake("free", complete ? t("draw.complete") : draws.free ? t("draw.done") : t("draw.free"), t("draw.freeNote"), draws.free || complete)}
-        ${result?.stars > 0 && !complete ? shake("bonus", draws.bonus ? t("draw.bonusDone") : t("draw.bonus"), t("draw.bonusNote"), draws.bonus) : ""}
-      </div>
-      <div style="margin-top:12px">${fightBtn}</div>
+      ${todo}
       ${tomorrowBox()}
+      ${allDone ? todayDraws() : ""}
       ${handCard()}
       ${errorBox()}
       <div style="height:12px"></div>
-      ${todayDraws()}
+      ${allDone ? "" : todayDraws()}
       ${S.owned < S.total ? oddsBox() : ""}
       ${historyStrip()}
       ${installBox()}

@@ -233,7 +233,7 @@
 
     let art = `<path d="M0 ${WIDE_H - 72} C130 ${WIDE_H - 96} 260 ${WIDE_H - 58} 400 ${WIDE_H - 84} C540 ${WIDE_H - 104} 660 ${WIDE_H - 60} 800 ${WIDE_H - 80} L800 ${WIDE_H} L0 ${WIDE_H} Z" fill="#6b5a32"/>`;
     for (const x of trunks) {
-      art += trunk(x, WIDE_H - 50, -10, 22 + rand() * 8, rand, "#4e3f28");
+      art += trunk(x, WIDE_H - 50, 90, 22 + rand() * 8, rand, "#4e3f28");
       for (let i = 0; i < 12; i++) {
         const y = 40 + rand() * (WIDE_H - 110), off = (rand() - 0.5) * 18;
         art += `<path d="M${x + off} ${y} q${(rand() - 0.5) * 8} 12 ${(rand() - 0.5) * 6} ${16 + rand() * 24}" stroke="#2b2316" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
@@ -247,9 +247,20 @@
       art += `<path d="M${(near + tip) / 2} ${p.y + 20} q${dir * 8} ${-22} ${dir * 24} ${-30}" stroke="#4e3f28" stroke-width="3" fill="none" stroke-linecap="round"/>`;
       art += `<path d="${LEAF}" transform="translate(${tip + dir * 6} ${p.y - 10}) rotate(${dir * 60}) scale(.8)" fill="#6f8a3a" stroke="#34451c" stroke-width="1.2"/>`;
     }
-    for (let i = 0; i < 20; i++) art += blob(30 + rand() * 740, 56 + rand() * 44, 26 + rand() * 22, rand, i % 2 ? "#5e7c3c" : "#44602f");
-    for (let i = 0; i < 90; i++) {
-      art += `<path d="${LEAF}" transform="translate(${(14 + rand() * 772).toFixed(0)} ${(30 + rand() * 100).toFixed(0)}) rotate(${(rand() * 360).toFixed(0)}) scale(${(0.5 + rand() * 0.5).toFixed(2)})" fill="${["#2f4d1d", "#5c7f34", "#7f9a45", "#a39a35"][Math.floor(rand() * 4)]}" stroke="#1f3013" stroke-width="1"/>`;
+    // 每棵樹一團圓圓的樹冠：先畫外框再疊同色的圓蓋掉內側的線，看起來像一朵描邊的雲
+    for (const x of trunks) {
+      const puffs = [];
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + rand() * 0.4;
+        puffs.push([x + Math.cos(a) * (62 + rand() * 18), 104 + Math.sin(a) * (30 + rand() * 8), 32 + rand() * 12]);
+      }
+      puffs.push([x, 100, 56]);
+      art += puffs.map(([cx, cy, r]) => `<circle cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" r="${(r + 2.5).toFixed(0)}" fill="#22361a"/>`).join("");
+      art += puffs.map(([cx, cy, r], i) => `<circle cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" r="${r.toFixed(0)}" fill="${i % 3 ? "#4f6f33" : "#5e7c3c"}"/>`).join("");
+      for (let i = 0; i < 26; i++) {
+        const a = rand() * Math.PI * 2, d = Math.sqrt(rand());
+        art += `<path d="${LEAF}" transform="translate(${(x + Math.cos(a) * d * 90).toFixed(0)} ${(102 + Math.sin(a) * d * 40).toFixed(0)}) rotate(${(rand() * 360).toFixed(0)}) scale(${(0.5 + rand() * 0.4).toFixed(2)})" fill="${["#2f4d1d", "#6f8f3a", "#8aa64a", "#a39a35"][Math.floor(rand() * 4)]}" stroke="#1f3013" stroke-width="1"/>`;
+      }
     }
     for (let i = 0; i < 6; i++) art += mushroom(30 + rand() * 740, WIDE_H - 24 - rand() * 40, rand);
     for (let i = 0; i < 14; i++) art += fern(rand() * 800, WIDE_H - 16 - rand() * 50, rand, "#3f5a26");
@@ -264,10 +275,41 @@
   }
 
   // 手掌朝上，三隻鳥站在手指和掌心
-  const HAND = `<svg class="gc-hand-art" viewBox="0 0 400 430" aria-hidden="true"><g filter="url(#wobble)" fill="#e6c7a1" stroke="#2b2316" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M144 430 C142 380 126 346 92 306 C66 276 36 250 46 230 C56 212 86 228 108 252 L126 272 C112 210 86 150 90 118 C92 94 122 94 132 118 L156 208 C154 150 152 88 168 66 C184 52 202 66 202 88 L206 204 C214 150 230 92 250 84 C270 80 278 98 272 120 L250 216 C266 176 292 128 312 130 C332 132 332 152 324 172 L288 286 C274 336 266 376 264 430 Z"/>
-    <path d="M150 300 C180 330 226 330 258 300 M166 340 C190 352 216 352 240 340 M130 262 C142 250 158 244 176 246" fill="none"/>
-    <path d="M100 134 l18 -4 M172 86 l18 -2 M250 102 l16 4 M306 146 l14 4" fill="none" stroke-width="2.4"/></g></svg>`;
+  // 一鳥在手：本來該嚇跑鳥的稻草人，帽子和兩隻手臂上各站了一隻，表情已經放棄了。
+  // 鳥站的位置對應 game.js 的 SLOT_POS：左手臂 (14%, 58.5%)、帽頂 (50%, 22.5%)、右手臂 (86%, 57%)
+  const STRAW = (x, y, dir, n = 6) => {
+    let d = "";
+    for (let i = 0; i < n; i++) {
+      const dy = (i - (n - 1) / 2) * 5, len = 14 + ((i * 7) % 9);
+      d += `M${x} ${y + dy} l${dir[0] * len} ${dir[1] * len + dy * 0.5} `;
+    }
+    return `<path d="${d}" stroke="#d9b24a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#8a6a1e" stroke-width="1" fill="none" stroke-linecap="round" opacity=".6"/>`;
+  };
+  const HAND = `<svg class="gc-hand-art" viewBox="0 0 400 430" aria-hidden="true"><g filter="url(#wobble)" stroke="#2b2316" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M110 430 C130 404 170 396 200 396 C232 396 272 404 292 430 Z" fill="#6b5a32"/>
+    <path d="M140 414 l-6 -16 M150 410 l2 -18 M252 412 l6 -16 M262 416 l12 -12" stroke="#3f5a26" stroke-width="3"/>
+    <path d="M192 204 L190 418 L210 418 L208 204 Z" fill="#8a6a3a"/>
+    <path d="M42 250 L358 238 L358 250 L42 262 Z" fill="#8a6a3a"/>
+    ${STRAW(62, 252, [-1, 0.15])}${STRAW(338, 246, [1, -0.1])}
+    <path d="M150 230 L64 238 L64 268 L150 280 Z M250 230 L336 232 L336 262 L250 280 Z" fill="#b8553a"/>
+    <path d="M148 226 L252 226 L264 350 L136 350 Z" fill="#b8553a"/>
+    <path d="M168 228 L162 348 M232 228 L240 348 M140 290 L260 290 M92 236 L92 270 M120 233 L120 276 M308 233 L308 270 M280 232 L280 276" stroke="#8d3a26" stroke-width="3" opacity=".8"/>
+    <path d="M200 228 L200 348 M138 318 L262 318" stroke="#e39a68" stroke-width="2.5" opacity=".7"/>
+    <rect x="206" y="266" width="26" height="24" fill="#6f8a3a" stroke-width="3"/>
+    <path d="M210 270 l4 4 M222 270 l4 4 M210 282 l4 4 M222 282 l4 4" stroke-width="1.6"/>
+    <path d="M136 334 L264 334" stroke="#c9a55a" stroke-width="6"/>
+    ${STRAW(150, 352, [-0.4, 1], 5)}${STRAW(200, 352, [0, 1], 5)}${STRAW(250, 352, [0.4, 1], 5)}${STRAW(200, 226, [0, -0.2], 3)}
+    <circle cx="200" cy="182" r="46" fill="#d8bf8a"/>
+    <path d="M168 150 l6 4 M228 150 l-6 4 M160 196 l6 -2 M240 196 l-6 -2 M184 222 l4 -6 M216 222 l-4 -6" stroke="#a88a52" stroke-width="2"/>
+    <path d="M174 166 L192 160 M226 166 L208 160" stroke-width="3.5"/>
+    <path d="M176 178 q8 7 16 0 M208 178 q8 7 16 0" stroke-width="3.5" fill="none"/>
+    <path d="M184 204 h32 M190 199 v10 M200 199 v10 M210 199 v10" stroke-width="2.5"/>
+    <path d="M240 160 q-6 10 0 14 q6 -4 0 -14 Z" fill="#9fd3ef" stroke-width="2"/>
+    <ellipse cx="200" cy="138" rx="80" ry="13" fill="#d9b25a"/>
+    <path d="M160 136 C160 104 168 96 200 96 C232 96 240 104 240 136 Z" fill="#d9b25a"/>
+    <path d="M161 122 L239 122 L240 132 L160 132 Z" fill="#8d3a26" stroke-width="3"/>
+    <path d="M214 102 l12 2 l-2 12 l-12 -2 Z" fill="#b8553a" stroke-width="2"/>
+    </g></svg>`;
 
   // 抽到鳥時落下的葉子，越稀有葉子越多、越亮
   const RARITY_FX = {
