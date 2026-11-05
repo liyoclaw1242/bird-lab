@@ -107,13 +107,34 @@ test("同時送兩個抽卡請求只算一次", async () => {
   assert.strictEqual((await game.state(p.id)).owned, 4);
 });
 
-test("沒打贏不能拿獎勵抽", async () => {
+test("還沒打 BOSS 不能拿獎勵抽", async () => {
   at("2026-11-05");
   const p = await newPlayer();
   await assert.rejects(game.draw(p.id, "bonus"), (e) => e.code === "not_won");
+  await assert.rejects(game.draw(p.id, "bonus9"), (e) => e.code === "bad_kind");
 });
 
-test("完整打一場：分數由伺服器重算，贏了才有獎勵抽，一天一場", async () => {
+test("獎勵樹：有打就有 1 棵，每顆星多 1 棵", async () => {
+  const { bonusAllowed } = require("../../public/data.js");
+  assert.deepStrictEqual([0, 1, 2, 3].map(bonusAllowed), [1, 2, 3, 4]);
+  at("2026-11-08");
+  const p = await newPlayer();
+  const s = await game.state(p.id);
+  const teamIds = s.team.map((c) => c.id);
+  // 一直用第一隻、不放招牌，通常拿不到 3 星；不管幾星，能搖的棵數都要等於星數 + 1
+  const r = await game.submitFight(p.id, teamIds, playOut(s.fight, s.team));
+  const allowed = r.stars + 1;
+  assert.strictEqual((await game.state(p.id)).draws.bonusAllowed, allowed);
+  const kinds = ["bonus", "bonus2", "bonus3", "bonus4"];
+  for (const kind of kinds.slice(0, allowed)) assert.strictEqual((await game.draw(p.id, kind)).repeated, false);
+  assert.strictEqual((await game.draw(p.id, "bonus")).repeated, true);
+  if (allowed < 4) await assert.rejects(game.draw(p.id, kinds[allowed]), (e) => e.code === "bonus_used");
+  const after = await game.state(p.id);
+  assert.strictEqual(after.draws.bonus, allowed);
+  assert.strictEqual(after.drawn.length, allowed);
+});
+
+test("完整打一場：分數由伺服器重算，3 星有 4 棵獎勵樹，一天一場", async () => {
   at("2026-11-06");
   const p = await newPlayer();
   const s = await game.state(p.id);
@@ -122,7 +143,7 @@ test("完整打一場：分數由伺服器重算，贏了才有獎勵抽，一�
   const r = await game.submitFight(p.id, teamIds, moves);
   assert.ok(r.stars === 3, `最佳打法應拿 3 星，拿到 ${r.stars}`);
   assert.ok(Math.abs(r.score - s.best) < 1e-6);
-  assert.strictEqual((await game.draw(p.id, "bonus")).repeated, false);
+  for (const kind of ["bonus", "bonus2", "bonus3", "bonus4"]) assert.strictEqual((await game.draw(p.id, kind)).repeated, false);
   const again = await game.submitFight(p.id, teamIds, playOut(s.fight, s.team));
   assert.strictEqual(again.repeated, true);
   assert.strictEqual(again.stars, 3);

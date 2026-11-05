@@ -377,6 +377,26 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 /* 只有桌機才多出來的區塊（林子名單、手上頁的對手招式） */
 .gc-desk-only { display: none; }
 
+/* 百鳥在林的食性篩選：不符合的變暗，符合的有一圈淡淡的光在呼吸 */
+.gc-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.gc-chip { min-height: 36px; padding: 4px 12px; font: inherit; font-size: 15px; color: var(--ink); background: var(--paper); border: 2px solid var(--ink); border-radius: 18px 14px 17px 13px; box-shadow: 0 2px 0 rgba(30, 20, 8, .45); cursor: pointer; }
+.gc-chip b { font-weight: 400; color: var(--muted); }
+.gc-chip[aria-pressed="true"] { color: #fdf6dc; background: var(--ink); }
+.gc-chip.type-meat[aria-pressed="true"] { background: #b0412e; }
+.gc-chip.type-plant[aria-pressed="true"] { background: #3f7a3a; }
+.gc-chip.type-mixed[aria-pressed="true"] { background: #8a6a1e; }
+.gc-chip[aria-pressed="true"] b { color: inherit; opacity: .85; }
+.gc-perched-bird { transition: opacity .3s, filter .3s; }
+.gc-perched-bird.dim { opacity: .45; filter: grayscale(.85) brightness(.75); }
+.gc-perched-bird.match img { animation: gc-glow 2.6s ease-in-out infinite; }
+@keyframes gc-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 240, 170, .55)) drop-shadow(0 3px 1px rgba(20, 14, 5, .5)); }
+  50% { filter: drop-shadow(0 0 14px rgba(255, 236, 150, .95)) drop-shadow(0 3px 1px rgba(20, 14, 5, .5)); }
+}
+.gc-roster button.dim { opacity: .4; }
+.gc-roster button.match { background: rgba(255, 236, 150, .35); }
+@media (prefers-reduced-motion: reduce) { .gc-perched-bird.match img { animation: none; filter: drop-shadow(0 0 10px rgba(255, 236, 150, .9)); } }
+
 /* 桌機：兩欄、所有東西放大一號，讓畫面不要像放大的手機頁 */
 @media (min-width: 1024px) {
   #gc-app:is([data-screen="home"], [data-screen="forest"], [data-screen="hand"], [data-screen="fight"], :not([data-screen])) { max-width: 1120px; padding-inline: 24px; }
@@ -388,6 +408,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   .gc-col-side { position: sticky; top: 16px; }
   .gc-col-side > :first-child { margin-top: 0; }
   .gc-desk-only { display: block; }
+  .gc-mob-only { display: none; }
 
   /* 字和按鈕都比手機大一點 */
   .gc-scrap { padding: 14px 18px; }
@@ -615,6 +636,13 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 
 /* 桌機首頁側欄：今天帶的三隻 */
 .gc-hand-card { margin-top: 12px; }
+/* 角落的稻草人頭左右晃，提示點了可以去換鳥；右上角原本的葉子讓給它 */
+.gc-hand-card::after { display: none; }
+.gc-scarecrow-btn { position: absolute; top: -14px; right: 10px; width: 58px; height: 58px; padding: 0; background: none; border: 0; cursor: pointer; transform-origin: 50% 85%; animation: gc-scarecrow 2.8s ease-in-out infinite; }
+.gc-scarecrow-btn svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 1px rgba(30, 20, 8, .4)); transition: scale .18s ease-out; }
+.gc-scarecrow-btn:hover svg, .gc-scarecrow-btn:focus-visible svg { scale: 1.12; }
+@keyframes gc-scarecrow { 0%, 100% { rotate: -9deg; } 50% { rotate: 9deg; } }
+@media (prefers-reduced-motion: reduce) { .gc-scarecrow-btn { animation: none; } }
 .gc-mini-list { display: grid; }
 .gc-mini-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 0 10px; width: 100%; padding: 5px 4px; text-align: left; font-size: 15px; line-height: 1.3; border-top: 2px dotted #bda877; border-radius: 6px; }
 .gc-mini-row:first-child { border-top: 0; }

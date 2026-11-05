@@ -2,7 +2,8 @@
 const crypto = require("crypto");
 const E = require("../public/engine.js");
 const { verifyGoogle: defaultVerifyGoogle } = require("./google.js");
-const { BOSSES, SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY, PITY, TIERS, catchUp, oddsFor, redistribute } = require("../public/data.js");
+const { BOSSES, SHARE_CAPS, SHARE_DAYS, BONUS_KINDS, bonusAllowed, CLAIMS_PER_DAY, PITY, TIERS, catchUp, oddsFor, redistribute } = require("../public/data.js");
+const isKind = (kind) => kind === "free" || BONUS_KINDS.includes(kind);
 
 const PAGE_SIZE = 12;
 const CANDIDATES_PER_TYPE = 6;
@@ -211,7 +212,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       fight,
       best: today ? today.best : E.bestScore(fight, candidates),
       result: today && { stars: today.stars, score: today.score, best: today.best },
-      draws: { free: draws.some((d) => d.kind === "free"), bonus: draws.some((d) => d.kind === "bonus") },
+      draws: { free: draws.some((d) => d.kind === "free"), bonus: draws.filter((d) => d.kind !== "free").length, bonusAllowed: today ? bonusAllowed(today.stars) : 0 },
       drawn: draws.map((d) => ({ kind: d.kind, card: d.data, share: d.code ? { code: d.code, cap: d.cap, claimed: d.claimed } : null })),
       team: await cardsById(db, player.team),
       owned: counts.owned,
@@ -323,7 +324,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   // 同一天同一種抽重送，回傳原本那張牌，連點或斷線重試都不會多抽
   async function draw(playerId, kind, offset = 0) {
-    if (kind !== "free" && kind !== "bonus") throw new GameError(400, "bad_kind", "沒有這種抽法");
+    if (!isKind(kind)) throw new GameError(400, "bad_kind", "沒有這種抽法");
     const day = dayOf(offset);
     return db.tx(async (q) => {
       await q.query("SELECT id FROM players WHERE id = $1 FOR UPDATE", [playerId]);
@@ -332,9 +333,10 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
         [playerId, day, kind],
       );
       if (done.length) return { card: done[0].data, repeated: true };
-      if (kind === "bonus") {
+      if (kind !== "free") {
         const { rows } = await q.query("SELECT stars FROM fights WHERE player_id = $1 AND day = $2", [playerId, day]);
-        if (!rows.length || rows[0].stars < 1) throw new GameError(403, "not_won", "打贏今天的 BOSS 才有獎勵抽");
+        if (!rows.length) throw new GameError(403, "not_won", "先打今天的 BOSS 才有獎勵抽");
+        if (BONUS_KINDS.indexOf(kind) >= bonusAllowed(rows[0].stars)) throw new GameError(403, "bonus_used", "今天的獎勵樹已經搖完了");
       }
       const picked = await pickUnowned(q, playerId);
       await q.query("INSERT INTO owned (player_id, card_id) VALUES ($1, $2)", [playerId, picked.id]);
@@ -384,7 +386,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
 
   // 只有當天抽到的牌能分享，一次抽卡只有一條連結；領取只是複製，分享的人不會失去牠
   async function share(playerId, kind, offset = 0) {
-    if (kind !== "free" && kind !== "bonus") throw new GameError(400, "bad_kind", "沒有這種抽法");
+    if (!isKind(kind)) throw new GameError(400, "bad_kind", "沒有這種抽法");
     const day = dayOf(offset);
     const { rows: [drawn] } = await db.query(
       "SELECT d.card_id, c.rarity FROM draws d JOIN cards c ON c.id = d.card_id WHERE d.player_id = $1 AND d.day = $2 AND d.kind = $3",

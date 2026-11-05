@@ -4,6 +4,9 @@
   // 分享連結：越稀有，能領的人越少。連結開放 3 天（含抽到當天），每人每天最多領 5 隻
   const SHARE_CAPS = { N: 10, R: 5, SR: 3, SSR: 2, UR: 1 };
   const SHARE_DAYS = 3;
+  // 打 BOSS 的獎勵樹：有打就有 1 棵，每顆星再多 1 棵。每一棵是一種抽法，同一棵重送會拿回同一隻鳥
+  const BONUS_KINDS = ["bonus", "bonus2", "bonus3", "bonus4"];
+  const bonusAllowed = (stars) => Math.min(BONUS_KINDS.length, 1 + Math.max(0, stars | 0));
   const CLAIMS_PER_DAY = 5;
   const BOSSES = [
   { id: "passer", name: "麻雀", type: "plant", atkShape: 0.19, defShape: 0.2, img: "stickers/passer.webp" },
@@ -52,7 +55,7 @@
     return out;
   }
 
-  const api = { RATES, BOSSES, SHARE_CAPS, SHARE_DAYS, CLAIMS_PER_DAY, PITY, CATCH_UP, TIERS, catchUp, oddsFor, redistribute };
+  const api = { RATES, BOSSES, SHARE_CAPS, SHARE_DAYS, BONUS_KINDS, bonusAllowed, CLAIMS_PER_DAY, PITY, CATCH_UP, TIERS, catchUp, oddsFor, redistribute };
   if (typeof module !== "undefined") module.exports = api;
   else root.GachaData = api;
 })(typeof window !== "undefined" ? window : globalThis);

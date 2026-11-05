@@ -347,5 +347,17 @@
     return `<div class="gc-cutin-fx" aria-hidden="true">${leaves}</div>`;
   }
 
-  window.Scenery = { cutinLeaves, backdrop, fallingLeaves, burst, shakeTree, birdSvg, BIRD_URL, forestPage, forestWide, HAND, LEAF, rarityFx };
+  // 首頁「今天帶上的三隻」角落的稻草人頭：這裡是笑臉，點了去換鳥
+  const SCARECROW_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><g stroke="#2b2316" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M14 46 l-8 4 M14 50 l-7 8 M50 46 l8 4 M50 50 l7 8" stroke="#d9b24a" stroke-width="2.5"/>
+    <circle cx="32" cy="38" r="17" fill="#d8bf8a"/>
+    <path d="M24 34 q3 -3 6 0 M34 34 q3 -3 6 0" fill="none"/>
+    <path d="M23 42 q9 9 18 0" fill="none"/><path d="M27 44 v3 M32 45.5 v3 M37 44 v3" stroke-width="1.6"/>
+    <ellipse cx="22" cy="41" rx="3" ry="2" fill="#e8a08a" stroke="none"/><ellipse cx="42" cy="41" rx="3" ry="2" fill="#e8a08a" stroke="none"/>
+    <ellipse cx="32" cy="23" rx="27" ry="5" fill="#d9b25a"/>
+    <path d="M18 22 C18 10 22 7 32 7 C42 7 46 10 46 22 Z" fill="#d9b25a"/>
+    <path d="M18.5 17 L45.5 17 L46 21 L18 21 Z" fill="#8d3a26" stroke-width="1.8"/>
+  </g></svg>`;
+
+  window.Scenery = { cutinLeaves, backdrop, fallingLeaves, burst, shakeTree, birdSvg, BIRD_URL, forestPage, forestWide, HAND, SCARECROW_FACE, LEAF, rarityFx };
 })();

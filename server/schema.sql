@@ -25,7 +25,7 @@ CREATE INDEX IF NOT EXISTS owned_order ON owned (player_id, seq DESC);
 CREATE TABLE IF NOT EXISTS draws (
   player_id BIGINT NOT NULL REFERENCES players (id),
   day DATE NOT NULL,
-  kind TEXT NOT NULL CHECK (kind IN ('free', 'bonus')),
+  kind TEXT NOT NULL CHECK (kind IN ('free', 'bonus', 'bonus2', 'bonus3', 'bonus4')),
   card_id TEXT NOT NULL REFERENCES cards (id),
   PRIMARY KEY (player_id, day, kind)
 );
@@ -107,3 +107,7 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- 2026-11-05 獎勵樹改成有打就有、每顆星多一棵：舊資料庫的 kind 限制要放寬。可重跑
+ALTER TABLE draws DROP CONSTRAINT IF EXISTS draws_kind_check;
+ALTER TABLE draws ADD CONSTRAINT draws_kind_check CHECK (kind IN ('free', 'bonus', 'bonus2', 'bonus3', 'bonus4'));

@@ -117,7 +117,7 @@
 
   // 無障礙：畫面每次整個重畫，焦點會掉回 body。記住最後聚焦的按鈕，重畫後找回同一顆；
   // 彈窗打開時把焦點移進去、背景設成 inert，關掉後回到打開它的那顆按鈕
-  const FOCUS_KEYS = ["do", "go", "draw", "play", "open", "openHand", "share", "take", "release", "replace", "page"];
+  const FOCUS_KEYS = ["do", "go", "draw", "play", "open", "openHand", "share", "take", "release", "replace", "page", "filter"];
   const keyOf = (el) => {
     if (!app.contains(el) || el === app) return null;
     if (el.id) return `#${CSS.escape(el.id)}`;
@@ -155,7 +155,9 @@
     const scope = stage || app;
     const want = closed ? dialogReturn : focusKey;
     const usable = (el) => el && !el.disabled && !el.closest("[inert]");
-    let target = opened ? null : want && scope.querySelector(want);
+    // 同一顆按鈕可能手機、桌機各有一份，只有一份看得到：挑看得到的那個
+    const pick = (sel) => [...scope.querySelectorAll(sel)].find((el) => el.getClientRects().length) || scope.querySelector(sel);
+    let target = opened ? null : want && pick(want);
     if (!usable(target)) target = scope.querySelector("[data-play]:not([disabled])");
     if (!usable(target)) target = scope;
     if (target === stage) stage.tabIndex = -1;
@@ -243,12 +245,18 @@
         ? `<button class="gc-plank hot" data-do="start">${t("home.challenge")}</button>`
         : `<button class="gc-plank" data-go="hand">${t("home.needThree")}</button>`;
     // 今天能做的都做完了：搖樹、打 BOSS、獎勵樹收成一行小字，把位置讓給明天的預告和分享
-    const allDone = result && (draws.free || complete) && (draws.bonus || !(result.stars > 0) || complete);
+    // 打過 BOSS 就有獎勵樹：有打 1 棵，每顆星再多 1 棵，一次搖一棵
+    const bonusLeft = result && !complete ? Math.max(0, draws.bonusAllowed - draws.bonus) : 0;
+    const bonusNote = result ? t(result.stars > 0 ? "draw.bonusNoteWin" : "draw.bonusNoteLose", { stars: result.stars, n: draws.bonusAllowed }) : "";
+    const bonusBtn = result && !complete
+      ? shake(D.BONUS_KINDS[draws.bonus] || "bonus", bonusLeft ? t("draw.bonusLeft", { n: bonusLeft }) : t("draw.bonusDone"), bonusNote, !bonusLeft)
+      : "";
+    const allDone = result && (draws.free || complete) && !bonusLeft;
     const todo = allDone
       ? `<div class="gc-scrap gc-done">${miniTree}<p><b>${t("home.allDone")}</b><small>${t(result.stars > 0 ? "home.allDoneWin" : "home.allDoneLose", { n: result.stars })}</small></p></div>`
       : `<div class="gc-trees">
         ${shake("free", complete ? t("draw.complete") : draws.free ? t("draw.done") : t("draw.free"), t("draw.freeNote"), draws.free || complete)}
-        ${result?.stars > 0 && !complete ? shake("bonus", draws.bonus ? t("draw.bonusDone") : t("draw.bonus"), t("draw.bonusNote"), draws.bonus) : ""}
+        ${bonusBtn}
       </div>
       <div style="margin-top:12px">${fightBtn}</div>`;
     return `${nav()}
@@ -281,7 +289,7 @@
   function handCard() {
     const rows = hand.map((c, i) => `<button class="gc-mini-row" data-open-hand="${i}">${pic(sticker(c))}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}<small>${t("hand.today", { text: matchup(c, S.fight) })}</small></span></button>`).join("");
     const body = rows ? `<div class="gc-mini-list">${rows}</div>` : `<div class="gc-empty">${window.Scenery.birdSvg()}<p class="gc-sub">${t("home.handEmpty")}</p></div>`;
-    return `<div class="gc-scrap gc-desk-only gc-hand-card"><p class="gc-h">${t("home.handTitle")}</p>${body}<button class="gc-text-btn" data-go="hand">${t("home.handEdit")}</button></div>`;
+    return `<div class="gc-scrap gc-desk-only gc-hand-card"><button type="button" class="gc-scarecrow-btn" data-go="hand" title="${esc(t("home.handEdit"))}" aria-label="${esc(t("home.handEdit"))}">${window.Scenery.SCARECROW_FACE}</button><p class="gc-h">${t("home.handTitle")}</p>${body}<button class="gc-text-btn" data-go="hand">${t("home.handEdit")}</button></div>`;
   }
 
   function todayDraws() {
@@ -500,6 +508,16 @@
     </article></div>`;
   }
 
+  // 依食性篩選：不符合的鳥變暗，符合的微微發光。只是視覺，不改分頁，換頁、換分頁籤都保留
+  let typeFilter = "";
+  function filterBar(cards) {
+    const counts = { meat: 0, plant: 0, mixed: 0 };
+    cards.forEach((c) => { counts[c.type] += 1; });
+    const chip = (type, label, n) => `<button type="button" class="gc-chip ${type ? `type-${type}` : ""}" data-filter="${type}" aria-pressed="${typeFilter === type}">${label}${type ? ` <b>${n}</b>` : ""}</button>`;
+    return `<div class="gc-filter" role="group" aria-label="${esc(t("forest.filter"))}">${chip("", t("forest.filterAll"))}${["meat", "plant", "mixed"].map((type) => chip(type, t(`type.${type}`), counts[type])).join("")}</div>`;
+  }
+  const filterClass = (c) => (!typeFilter ? "" : c.type === typeFilter ? "match" : "dim");
+
   function forestScreen() {
     const f = view.collection;
     if (!f) return `${nav()}${errorBox()}<div class="gc-center">${view.error ? "" : loadingBox()}</div>`;
@@ -511,13 +529,14 @@
     const birds = f.cards.map((c, i) => {
       const p = scene.perches[i], q = wide.perches[i];
       const pos = `--l:${pct(p.left)};--t:${pct(p.top)};--w:${pct(p.size)};--lw:${pct(q.left)};--tw:${pct(q.top)};--ww:${pct(q.size)}`;
-      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}">${pic(sticker(c))}</button>`;
+      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${i % 3 === 1 ? "flip" : ""} ${filterClass(c)}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}">${pic(sticker(c))}</button>`;
     }).join("");
     // 桌機的側欄多一份名單：鳥多了以後，用名字找比在樹上找快
     const roster = f.cards.length ? `<div class="gc-scrap gc-desk-only"><p class="gc-h">${t("forest.list")}</p><div class="gc-roster">${f.cards.map((c) =>
-      `<button data-open="${esc(c.id)}">${pic(sticker(c), "", 'loading="lazy"')}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}${inHand.has(c.id) ? ` <span class="gc-stamp-mini">${t("forest.inHand")}</span>` : ""}</span><small>${t("hand.stats", c)}</small></button>`).join("")}</div></div>` : "";
+      `<button class="${filterClass(c)}" data-open="${esc(c.id)}">${pic(sticker(c), "", 'loading="lazy"')}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}${inHand.has(c.id) ? ` <span class="gc-stamp-mini">${t("forest.inHand")}</span>` : ""}</span><small>${t("hand.stats", c)}</small></button>`).join("")}</div></div>` : "";
     return `${nav()}
       <div class="gc-columns"><div class="gc-col-main">
+      ${f.cards.length ? `<div class="gc-mob-only">${filterBar(f.cards)}</div>` : ""}
       <div class="gc-forest">${scene.svg}${wide.svg}${birds}</div>
       </div><div class="gc-col-side">
       <div class="gc-scrap tilt"><h1 class="gc-title">${t("nav.forest")}</h1><p class="gc-sub">${t("forest.note", { here: f.cards.length, owned: f.owned, left: I18n.number(S.total - f.owned) })}</p>${f.lineage ? `<p class="gc-sub">${t("forest.lineage", { families: f.lineage.families.owned, orders: f.lineage.orders.owned, familiesTotal: f.lineage.families.total, ordersTotal: f.lineage.orders.total })}</p>` : ""}</div>
@@ -527,6 +546,7 @@
         <span class="gc-scrap" style="white-space:nowrap;padding:4px 10px">${t("forest.page", { page: f.page + 1, pages: f.pages })}</span>
         <button class="gc-plank" data-page="${f.page + 1}" ${f.page + 1 >= f.pages ? "disabled" : ""}>${t("forest.next")}</button>
       </div>
+      ${f.cards.length ? `<div class="gc-desk-only">${filterBar(f.cards)}</div>` : ""}
       ${roster}
       </div></div>${cardStage()}`;
   }
@@ -656,7 +676,7 @@
         <p class="gc-tip">${t("result.tip", { score: Math.round(r.score), best: Math.round(r.best), pct, a: E.STAR_CUTS[0] * 100, b: E.STAR_CUTS[1] * 100, c: E.STAR_CUTS[2] * 100 })}</p>
       </div>
       ${report ? `<div class="gc-scrap gc-report tilt-r"><p class="gc-h">${t("report.title")}</p><pre>${esc(report)}</pre><p class="gc-legend">${t("report.legend")}</p><button class="gc-plank" data-do="copy-report">${view.reportCopied ? t("copied") : t(navigator.share ? "report.share" : "report.copy")}</button></div>` : ""}
-      <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">${t(r.stars > 0 ? "result.homeMore" : "result.home")}</button></div>`;
+      <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">${t(S.owned >= S.total ? "result.home" : "result.homeMore", { n: D.bonusAllowed(r.stars) })}</button></div>`;
   }
 
   function render() {
@@ -857,6 +877,7 @@
     if (d.share) return shareDraw(d.share);
     if (d.draw) return draw(d.draw);
     if (d.page !== undefined) return openForest(+d.page);
+    if (d.filter !== undefined) { typeFilter = typeFilter === d.filter ? "" : d.filter; return render(); }
     if (d.open) return set({ card: view.collection.cards.find((c) => c.id === d.open), drew: false, swapping: false });
     if (d.openHand !== undefined) return set({ card: hand[+d.openHand], drew: false, swapping: false });
     if (d.play !== undefined) return play(+d.play);
