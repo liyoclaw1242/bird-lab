@@ -1,5 +1,7 @@
 # 一鳥在手（A Bird in the Hand）
 
+[English](README.en.md) · 繁體中文
+
 百鳥在林，不如一鳥在手。每天搖一棵樹，遇見一隻真實世界的鳥，再帶三隻去打看起來超正經的 BOSS。
 
 這是我做給小姪子的小程式，讓他每天玩一點、順便認識世界上的鳥。所以每隻鳥都用真實照片，名字、體重、吃什麼、住在哪裡都取自鳥類學的公開資料，想深入的話，牌上也有連到 eBird、xeno-canto、維基百科的路。
@@ -62,7 +64,6 @@ npm test
 
 目前還沒翻譯的內容：
 
-- 卡片的人工趣聞（約 1,400 隻鳥有）。英文版先不顯示，其他解說由模板翻譯。
 - 首頁的社群預覽（OG）和 PWA 名稱：靜態檔無法依語言切換，目前是中文。分享連結的預覽則跟著分享者的語言（英文介面分享的連結帶 `?lang=en`）。
 
 隱私說明和資料來源與授權各有一份英文版（`privacy-en.html`、`credits-en.html`），改動時兩份要一起改，授權內容要一致。
@@ -83,7 +84,7 @@ npm test
 
 - 鳥的圖片是真實照片（`tools/build-photos.py`）：先用 Wikidata 代表圖（Wikimedia Commons），沒有合用的再用 iNaturalist 研究級觀察裡 CC BY／CC0 的照片。照片只縮圖、加紙框，不裁切不翻轉。找不到照片的鳥凍結：抽不到、不算收集總數，已有的顯示剪影。
 - 照片放在照片站 `stickers/dist/photos/`；換照片後部署照片站，並把 `public/game.js` 的 `STICKER_VERSION` 加一。再跑 `tools/gacha-photo-json.py` 更新 `server/data/photos.json`：伺服器靠這個檔決定誰有照片、誰凍結，不必改正式資料庫。
-- 卡池固定在建立時的鳥種和數值，不要重跑 `tools/gacha-build-pool.py`（會讓玩家手上的鳥消失或變數值）。鳥名、目科和解說由 `tools/gacha-primary-text.py` 從 IOC 15.2 多語版、AVONET、AviList v2025 重建，輸出 `server/data/cardtext.json`，伺服器回傳牌時覆蓋資料庫裡的舊文字。
+- 卡池固定在建立時的鳥種和數值（`server/data/cards.json.gz`），重建會讓玩家手上的鳥消失或變數值，所以只更新文字和照片。鳥名、目科和解說由 `tools/gacha-primary-text.py` 從 IOC 15.2 多語版、AVONET、AviList v2025 重建，輸出 `server/data/cardtext.json`，伺服器回傳牌時覆蓋資料庫裡的舊文字。
 - 商業化前要先處理 IUCN 資料的授權，Vercel Hobby 方案也限非商業使用。
 
 開發脈絡和已知問題見 [docs/gacha-research/HANDOFF.md](docs/gacha-research/HANDOFF.md)。
