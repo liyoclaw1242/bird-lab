@@ -1,0 +1,14 @@
+# 每天打一次健康檢查：確認線上服務還活著，也讓 Supabase 免費方案不會因為一週沒有活動而暫停。
+# 不碰資料庫內容，也不產生任何附件。需要的 Secret：SITE_URL。
+name: daily-health
+on:
+  schedule:
+    - cron: "20 18 * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 檢查線上服務
+        run: curl --fail --silent --show-error --retry 3 --retry-delay 20 "${{ secrets.SITE_URL }}/api/gacha?op=health"

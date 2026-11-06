@@ -19,7 +19,7 @@
 | API（單一函式，`?op=` 分路由） | `api/gacha.js`、`server/` | Vercel Functions |
 | 資料庫 | `server/schema.sql` | Supabase Postgres（東京） |
 | 鳥照片 | `stickers/`（資料夾沿用舊名） | Cloudflare Workers 靜態資產 |
-| 每日備份 | `.github/workflows/backup.yml` | GitHub Actions |
+| 每日健康檢查 | `.github/workflows/health.yml` | GitHub Actions |
 
 遊戲規則和機率放在 `public/engine.js`、`public/data.js`，前後端共用。抽卡和戰鬥結算一律由伺服器決定。
 
@@ -47,15 +47,9 @@ npm test
 
 資料庫結構有變動時，要另外把 `DATABASE_URL` 和 `DATABASE_CA` 設好再跑 `npm run seed`。它可以重複執行，會建表並更新卡池。
 
-## 備份與還原
+## 備份
 
-每天台灣時間 02:20 備份玩家資料，檔案保留 30 天。卡片可以重新匯入，所以不備份。
-
-一般的 `pg_restore` 會因外鍵失敗，要用腳本還原到全新的資料庫。目標已有玩家時，腳本會直接停止：
-
-```sh
-tools/restore-backup.sh backup.dump 'postgresql://...'
-```
+不備份資料庫。卡池可以用 `npm run seed` 重新匯入；玩家資料只存在 Supabase，資料庫出事就找不回來。
 
 ## 多語系
 
@@ -79,7 +73,6 @@ tools/restore-backup.sh backup.dump 'postgresql://...'
 - 資料表全部開啟 RLS 且不設政策，遊戲只透過伺服器連線存取，不使用 Supabase Data API。
 - 安全標頭和 CSP 設定在 `vercel.json`。新增外部資源時要同步更新。
 - 伺服器只存登入憑證的雜湊值，Google 帳號只存編號。
-- repo 要保持私有，備份檔內含玩家的憑證雜湊和遊戲紀錄。
 
 ## 授權與素材
 
