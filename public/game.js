@@ -461,6 +461,25 @@
     return cls ? `<p class="gc-credit ${cls}">${text}</p>` : text;
   }
 
+  // 「想多認識牠」：依問題分組，連到各領域公認、免費的外部資料。連結資料來自 AviList（eBird 代碼、BirdLife 編號）和 Wikidata（維基條目）
+  function moreLinks(c) {
+    const L = c.links || {};
+    const sci = String(c.sci || "");
+    const a = (href, text) => `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>`;
+    const wikiZh = L.wiki?.zh && a(`https://zh.wikipedia.org/zh-tw/${encodeURIComponent(L.wiki.zh.replace(/ /g, "_"))}`, t("more.wikiZh"));
+    const wikiEn = L.wiki?.en && a(`https://en.wikipedia.org/wiki/${encodeURIComponent(L.wiki.en.replace(/ /g, "_"))}`, t("more.wikiEn"));
+    const rows = [
+      ["more.where", [L.ebird && a(`https://ebird.org/species/${L.ebird}`, t("more.ebirdMap")), L.birdlife && a(`https://datazone.birdlife.org/species/factsheet/${L.birdlife}`, t("more.birdlife"))]],
+      ["more.voice", [sci && a(`https://xeno-canto.org/species/${sci.replace(/ /g, "-")}`, t("more.xenocanto")), L.ebird && a(`https://media.ebird.org/catalog?taxonCode=${L.ebird}&mediaType=audio`, t("more.ebirdAudio"))]],
+      ["more.photos", [L.ebird && a(`https://media.ebird.org/catalog?taxonCode=${L.ebird}&mediaType=photo`, t("more.ebirdPhotos")), sci && a(`https://www.inaturalist.org/taxa/search?q=${encodeURIComponent(sci)}`, t("more.inat"))]],
+      ["more.life", I18n.lang === "en" ? [wikiEn, wikiZh] : [wikiZh, wikiEn]],
+    ].map(([key, links]) => [key, links.filter(Boolean)]).filter(([, links]) => links.length);
+    if (!rows.length) return "";
+    return `<details class="gc-why gc-more"><summary>${t("more.title")}</summary>
+      <ul>${rows.map(([key, links]) => `<li><b>${t(key)}</b>${links.join(" · ")}</li>`).join("")}</ul>
+      <p class="gc-why-src">${t("more.note")}</p></details>`;
+  }
+
   function cardStage() {
     if (!view.card) return "";
     const c = view.card;
@@ -497,7 +516,7 @@
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
       <ol class="gc-facts">${facts}${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}</li>` : ""}</ol>
-      ${why}
+      ${moreLinks(c)}${why}
       ${swap}${view.swapping ? "" : action}
     </article></div>`;
   }

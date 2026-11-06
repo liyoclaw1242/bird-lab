@@ -4,7 +4,8 @@
 # 來源（都可公開下載）：
 #   鳥名、目、科：IOC World Bird List v15.2 多語版（worldbirdnames.org，CC BY 3.0）
 #   體重、嘴長、跗蹠、棲地、遷徙、食性：AVONET（Tobias et al. 2022，figshare 16586228，CC BY 4.0），依序比對 eBird、BirdLife、BirdTree 三種分類的學名
-#   保育等級：AviList v2025（CRAN 套件 avilistr 內附，CC BY 4.0）
+#   保育等級、eBird 物種代碼、BirdLife 物種頁：AviList v2025（CRAN 套件 avilistr 內附，CC BY 4.0）
+#   維基百科條目（中文、英文）：Wikidata 的 sitelinks（CC0），先用學名找到物種條目，只連有條目的語言
 # 卡的 id、稀有度、攻防、食性屬性不動（那是遊戲數值）；只換名字、目科和模板解說。
 # 輸出：更新 server/data/cards.json.gz，並寫 server/data/cardtext.json 給伺服器在回傳牌時覆蓋資料庫裡的舊文字，不必改正式資料庫。
 # 原始資料裡對不到 AVONET 的鳥沒有可靠的數字，列進 unsourced，由伺服器凍結。
@@ -14,6 +15,10 @@ from pathlib import Path
 import openpyxl, pyreadr
 
 from opencc import OpenCC
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from importlib import import_module
+photos_tool = import_module("build-photos")
 
 NICHE_ZH = {"Vertivore": "獵捕其他脊椎動物", "Aquatic predator": "在水裡或水邊捕食動物", "Scavenger": "吃腐肉", "Invertivore": "吃昆蟲這類無脊椎動物", "Omnivore": "食性很雜",
             "Granivore": "吃種子", "Frugivore": "吃果實", "Nectarivore": "吸花蜜", "Herbivore aquatic": "吃水生植物", "Herbivore terrestrial": "吃陸上的植物"}
@@ -60,6 +65,29 @@ def num(v):
         return None
 
 
+def wiki_titles(names):
+    # 學名 → Wikidata 物種條目 → 中文、英文維基的條目名稱。查過的存在 stickers/.cache/sitelinks.json
+    items = photos_tool.wikidata_items(names)
+    store = photos_tool.cached("sitelinks.json", dict)
+    todo = sorted({q for n in names for q in items.get(n, [])} - set(store))
+    for i in range(0, len(todo), 50):
+        d = photos_tool.api("https://www.wikidata.org/w/api.php", {"action": "wbgetentities", "ids": "|".join(todo[i:i + 50]), "props": "sitelinks", "sitefilter": "zhwiki|enwiki"})
+        for qid, e in d.get("entities", {}).items():
+            links = e.get("sitelinks", {})
+            store[qid] = {k[:2]: v["title"] for k, v in links.items() if k in ("zhwiki", "enwiki")}
+        if i % 1000 == 0:
+            (photos_tool.CACHE / "sitelinks.json").write_text(json.dumps(store, ensure_ascii=False), "utf8")
+    (photos_tool.CACHE / "sitelinks.json").write_text(json.dumps(store, ensure_ascii=False), "utf8")
+    out = {}
+    for n in names:
+        merged = {}
+        for q in items.get(n, []):
+            for lang, title in store.get(q, {}).items():
+                merged.setdefault(lang, title)
+        out[n] = merged
+    return out
+
+
 def main():
     ml_path, avonet_path, avilist_path = sys.argv[1:4]
     ioc = {r["IOC_15.2"].strip(): r for r in rows(openpyxl.load_workbook(ml_path, read_only=True)["List"]) if r.get("IOC_15.2")}
@@ -68,9 +96,14 @@ def main():
     for sheet, key in (("AVONET2_eBird", "Species2"), ("AVONET1_BirdLife", "Species1"), ("AVONET3_BirdTree", "Species3")):
         avonet.append({r[key].strip(): r for r in rows(wb[sheet]) if r.get(key)})
     al = list(pyreadr.read_r(avilist_path).values())[0]
-    iucn = {r.Scientific_name: r.IUCN_Red_List_Category for r in al[al.Taxon_rank == "species"].itertuples() if isinstance(r.IUCN_Red_List_Category, str)}
+    species_rows = list(al[al.Taxon_rank == "species"].itertuples())
+    iucn = {r.Scientific_name: r.IUCN_Red_List_Category for r in species_rows if isinstance(r.IUCN_Red_List_Category, str)}
+    # 「想知道更多」的外部連結：eBird 代碼和 BirdLife 物種頁網址都是 AviList 的欄位
+    ebird = {r.Scientific_name: r.Species_code_Cornell_Lab for r in species_rows if isinstance(r.Species_code_Cornell_Lab, str)}
+    birdlife = {r.Scientific_name: r.BirdLife_DataZone_URL for r in species_rows if isinstance(r.BirdLife_DataZone_URL, str)}
 
     cards = json.loads(gzip.decompress(CARDS.read_bytes()).decode("utf8"))
+    wiki = wiki_titles([c["sci"] for c in cards])
     traits = {}
     for c in cards:
         a = next((m[c["sci"]] for m in avonet if c["sci"] in m), None)
@@ -117,6 +150,10 @@ def main():
         entry["iucn"] = m.group(0) if m else None
         if entry["iucn"] in IUCN_ZH:
             entry["facts"].append({"t": "保育狀況", "d": f"IUCN 紅色名錄列為「{IUCN_ZH[entry['iucn']]}」，資料可能落後最新評估。"})
+        # BirdLife 只存網址最後的編號，前端再接回 https://datazone.birdlife.org/species/factsheet/
+        bl = re.search(r"/factsheet/(\d+)", birdlife.get(c["sci"], ""))
+        links = {"ebird": ebird.get(c["sci"]), "birdlife": bl.group(1) if bl else None, "wiki": wiki.get(c["sci"]) or None}
+        entry["links"] = {k: v for k, v in links.items() if v}
         text[c["id"]] = entry
         c.update(entry)
     with gzip.open(CARDS, "wt", encoding="utf8") as f:

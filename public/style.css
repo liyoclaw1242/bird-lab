@@ -566,6 +566,10 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-why summary { cursor: pointer; min-height: 28px; font-weight: 700; font-size: 15px; }
 .gc-why p { margin: 6px 0 0; }
 .gc-why .gc-why-src { color: var(--muted); font-size: 13px; }
+.gc-more ul { margin: 6px 0 0; padding: 0; list-style: none; }
+.gc-more li { margin: 4px 0 0; }
+.gc-more li b { display: block; font-size: 14px; }
+.gc-more a { color: #2a6f8f; }
 @media (min-width: 1024px) {
   .gc-taxon { font-size: 15px; }
   .gc-why { font-size: 15px; }
