@@ -23,12 +23,12 @@ test("每張牌都有中英文的分類、手感和主食", () => {
   }
 });
 
-test("家麻雀的比例由體重算出", () => {
+test("麻雀（樹麻雀）的比例由體重算出", () => {
   const card = (massG) => ({ id: "x", massG, file: "stickers/Passeriformes/Passeridae/x.webp", facts: [] });
-  assert.match(en.hand(card(26.5 * 223)), /as heavy as 220 house sparrows/);
-  assert.match(en.hand(card(26.5 * 3)), /as heavy as 3 house sparrows/);
-  assert.match(en.hand(card(30)), /one house sparrow/);
-  assert.match(en.hand(card(2.6)), /about 10 of these/);
+  assert.match(en.hand(card(21.4 * 223)), /as heavy as 220 tree sparrows/);
+  assert.match(en.hand(card(21.4 * 3)), /as heavy as 3 tree sparrows/);
+  assert.match(en.hand(card(25)), /one tree sparrow/);
+  assert.match(en.hand(card(2.14)), /about 10 of these/);
   assert.match(en.hand(cards.find((c) => c.id === BirdNotes.SPARROW.id)), /weighed against this one/);
   assert.strictEqual(cards.find((c) => c.id === BirdNotes.SPARROW.id).massG, BirdNotes.SPARROW.g);
 });

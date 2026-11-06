@@ -6,6 +6,7 @@
 #   體重、嘴長、跗蹠、棲地、遷徙、食性：AVONET（Tobias et al. 2022，figshare 16586228，CC BY 4.0），依序比對 eBird、BirdLife、BirdTree 三種分類的學名
 #   保育等級、eBird 物種代碼、BirdLife 物種頁：AviList v2025（CRAN 套件 avilistr 內附，CC BY 4.0）
 #   維基百科條目（中文、英文）：Wikidata 的 sitelinks（CC0），先用學名找到物種條目，只連有條目的語言
+#   科的中文名：Wikidata 科級條目的中文標籤（CC0），優先臺灣正體，沒有再由簡體轉換
 # 卡的 id、稀有度、攻防、食性屬性不動（那是遊戲數值）；只換名字、目科和模板解說。
 # 輸出：更新 server/data/cards.json.gz，並寫 server/data/cardtext.json 給伺服器在回傳牌時覆蓋資料庫裡的舊文字，不必改正式資料庫。
 # 原始資料裡對不到 AVONET 的鳥沒有可靠的數字，列進 unsourced，由伺服器凍結。
@@ -25,7 +26,8 @@ NICHE_ZH = {"Vertivore": "獵捕其他脊椎動物", "Aquatic predator": "在水
 HABITAT_ZH = {"Forest": "森林", "Shrubland": "灌叢", "Woodland": "疏林", "Grassland": "草原", "Wetland": "濕地", "Marine": "海上", "Rock": "岩石地帶",
               "Human Modified": "人類活動的環境", "Coastal": "海岸", "Riverine": "河邊", "Desert": "沙漠"}
 MIGRATION_ZH = {"sedentary": "一年到頭大多待在同一區", "partially migratory": "有些族群會遷徙", "migratory": "會長途遷徙"}
-IUCN_ZH = {"NT": "接近受脅", "VU": "易危", "EN": "瀕危", "CR": "極危", "EW": "野外滅絕", "EX": "已滅絕"}
+# 無危和資料缺乏也要寫出來：只標受威脅的鳥，孩子會以為沒寫的就沒事，或以為「稀有」才值得注意
+IUCN_ZH = {"LC": "無危", "DD": "資料缺乏", "NT": "接近受脅", "VU": "易危", "EN": "瀕危", "CR": "極危", "EW": "野外滅絕", "EX": "已滅絕"}
 to_hant = OpenCC("s2twp").convert
 
 
@@ -63,6 +65,32 @@ def num(v):
         return float(v)
     except (TypeError, ValueError):
         return None
+
+
+def family_names_zh(families):
+    # 科的學名 → Wikidata 的科級條目（P105 = 科）→ 中文標籤。存在 stickers/.cache/families-zh.json
+    store = photos_tool.cached("families-zh.json", dict)
+    todo = [f for f in dict.fromkeys(families) if f not in store]
+    if todo:
+        values = " ".join(json.dumps(f) for f in todo)
+        query = ("SELECT ?name ?label (LANG(?label) AS ?lang) WHERE { VALUES ?name { " + values + " } "
+                 "?item wdt:P225 ?name; wdt:P105 wd:Q35409; rdfs:label ?label. "
+                 "FILTER(LANG(?label) IN (\"zh-tw\", \"zh-hant\", \"zh-hk\", \"zh\", \"zh-hans\", \"zh-cn\")) }")
+        import urllib.parse
+        d = json.loads(photos_tool.get("https://query.wikidata.org/sparql?" + urllib.parse.urlencode({"query": query, "format": "json"})))
+        found = {}
+        for b in d["results"]["bindings"]:
+            found.setdefault(b["name"]["value"], {})[b["lang"]["value"]] = b["label"]["value"]
+        rank = ("zh-tw", "zh-hant", "zh-hk", "zh", "zh-hans", "zh-cn")
+        for f in todo:
+            labels = found.get(f, {})
+            lang = next((l for l in rank if l in labels), None)
+            name = labels[lang] if lang else None
+            if name and lang not in ("zh-tw", "zh-hant", "zh-hk"):
+                name = to_hant(name)
+            store[f] = name if name and name.endswith("科") else None
+        (photos_tool.CACHE / "families-zh.json").write_text(json.dumps(store, ensure_ascii=False), "utf8")
+    return store
 
 
 def wiki_titles(names):
@@ -104,6 +132,7 @@ def main():
 
     cards = json.loads(gzip.decompress(CARDS.read_bytes()).decode("utf8"))
     wiki = wiki_titles([c["sci"] for c in cards])
+    families_zh = family_names_zh(sorted({ioc[c["sci"]]["Family"] for c in cards}))
     traits = {}
     for c in cards:
         a = next((m[c["sci"]] for m in avonet if c["sci"] in m), None)
@@ -120,7 +149,7 @@ def main():
         r = ioc[c["sci"]]
         zh_t, zh_s = (r.get("Chinese (Traditional)") or "").strip(), (r.get("Chinese") or "").strip()
         zh = fix_zh(zh_t.split("〔")[0]) if zh_t else fix_zh(to_hant(zh_s)) if zh_s else r["English"]
-        entry = {"zh": zh, "en": r["English"], "order": r["Order"].capitalize(), "family": r["Family"]}
+        entry = {"zh": zh, "en": r["English"], "order": r["Order"].capitalize(), "family": r["Family"], "familyZh": families_zh.get(r["Family"])}
         a = traits.get(c["id"])
         if not a:
             unsourced.append(c["id"])

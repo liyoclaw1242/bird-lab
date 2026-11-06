@@ -1,4 +1,4 @@
-// 牌上的小知識：分類、手感（用家麻雀當秤砣）、數值怎麼來。只用卡池裡已有的資料推算，不另外加說法。
+// 牌上的小知識：分類、手感（用麻雀當秤砣）、數值怎麼來。只用卡池裡已有的資料推算，不另外加說法。
 // 瀏覽器和測試共用，要在 i18n.js 之後載入。
 (function (root) {
   const { DIETS } = typeof module !== "undefined" ? require("./i18n.js") : root.I18n;
@@ -50,8 +50,8 @@
     Opisthocomiformes: ["麝雉目", null, "hoatzin"],
     Leptosomiformes: ["鵑鴗目", null, "cuckoo-roller"],
   };
-  // 家麻雀（Passer domesticus）在卡池裡的平均體重，來自同一份 AVONET 量測
-  const SPARROW = { id: "Passer_domesticus", g: 26.5 };
+  // 臺灣街頭常見的「麻雀」是樹麻雀（Passer montanus），不是家麻雀；體重取同一份 AVONET 量測
+  const SPARROW = { id: "Passer_montanus", g: 21.4 };
 
   const taxonomy = (card) => {
     // 新資料直接帶 order、family（取自 IOC）；舊牌從檔案路徑「stickers/目/科/學名」拆
@@ -76,10 +76,12 @@
       const o = ORDERS[order];
       if (!o || !/^[A-Z][a-z]+idae$/.test(family || "")) return null;
       const name = english ? `${order} (${o[2]})` : `${o[0]}${o[1] ? `（${o[1]}）` : ""}`;
-      return i18n.t("notes.taxon", { order: name, family });
+      // 科有中文名（取自 Wikidata）就寫中文，學名放括號；沒有才只寫學名
+      const fam = english ? family : card.familyZh ? `${card.familyZh}（${family}）` : `${family} 科`;
+      return i18n.t("notes.taxon", { order: name, family: fam });
     }
 
-    // 以家麻雀為單位講體重：比公克數好想像，數字都由卡池的量測算出
+    // 以麻雀為單位講體重：比公克數好想像，數字都由卡池的量測算出
     function hand(card) {
       const g = Number(card.massG);
       if (!(g > 0)) return null;

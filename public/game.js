@@ -4,7 +4,7 @@
   // 本機開發時由 server/dev.js 從 stickers/dist 供圖（還沒部署的照片也看得到），沒有的檔案會轉回正式的貼紙站
   const STICKER_BASE = location.hostname === "localhost" ? "/_stickers/" : "https://yi-niao-stickers.yi-niao.workers.dev/";
   // 照片站設了一年的不可變快取，換照片（重跑 tools/build-photos.py）時加一，瀏覽器才會抓新圖
-  const STICKER_VERSION = 2;
+  const STICKER_VERSION = 3;
   const TOKEN_KEY = "gacha-token";
   const OFFSET_KEY = "gacha-dev-offset";
   const FIGHT_KEY = "gacha-fight";
@@ -454,10 +454,12 @@
   }
 
   // 照片的攝影者和授權，牌面和 BOSS 都要標
-  function photoCredit(p, cls = "") {
+  // short：戰鬥畫面的大照片下方只放「© 攝影者 · 授權」，完整說明在鳥卡上
+  function photoCredit(p, cls = "", short = false) {
     if (!p) return "";
     const link = (url, text) => (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
-    const text = `${t("card.photoBy")}${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}${t("card.photoVia", { site: p.source === "inaturalist" ? "iNaturalist" : "Wikimedia Commons" })}`;
+    const text = short ? `© ${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}`
+      : `${t("card.photoBy")}${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}${t("card.photoVia", { site: p.source === "inaturalist" ? "iNaturalist" : "Wikimedia Commons" })}`;
     return cls ? `<p class="gc-credit ${cls}">${text}</p>` : text;
   }
 
@@ -546,7 +548,7 @@
     }).join("");
     // 桌機的側欄多一份名單：鳥多了以後，用名字找比在樹上找快
     const roster = f.cards.length ? `<div class="gc-scrap gc-desk-only"><p class="gc-h">${t("forest.list")}</p><div class="gc-roster">${f.cards.map((c) =>
-      `<button class="${filterClass(c)}" data-open="${esc(c.id)}">${pic(sticker(c), "", 'loading="lazy"')}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}${inHand.has(c.id) ? ` <span class="gc-stamp-mini">${t("forest.inHand")}</span>` : ""}</span><small>${t("hand.stats", c)}</small></button>`).join("")}</div></div>` : "";
+      `<button class="${filterClass(c)}" data-open="${esc(c.id)}">${pic(sticker(c), "", 'loading="lazy"')}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}${inHand.has(c.id) ? ` <span class="gc-stamp-mini">${t("forest.inHand")}</span>` : ""}${c.photo ? "" : ` <span class="gc-stamp-mini">${t("forest.noPhoto")}</span>`}</span><small>${t("hand.stats", c)}</small></button>`).join("")}</div></div>` : "";
     return `${nav()}
       <div class="gc-columns"><div class="gc-col-main">
       ${f.cards.length ? `<div class="gc-mob-only">${filterBar(f.cards)}</div>` : ""}
@@ -653,8 +655,8 @@
         <div class="gc-bar-side right"><span class="gc-bar-name">${esc(bossSelf(fight.boss))}</span><div class="gc-bar boss" role="img" aria-label="${t("fight.bossHp", { n: bossPct })}"><i style="width:${bossPct}%"></i>${ticks}</div></div>
       </div>
       <div class="gc-arena">${float}
-        <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(birdName(shown))}</span>${pic(sticker(shown), birdName(shown))}</div>
-        <div class="gc-fighter right ${bossFlip} ${theirs}"><img src="${fight.boss.img}" alt="${esc(bossName(fight.boss))}"></div>
+        <div class="gc-fighter left aura-${shown.rarity} ${myFlip} ${mine}"><span class="gc-fighter-tag">${rarityTag(shown.rarity)} ${esc(birdName(shown))}</span>${pic(sticker(shown), birdName(shown))}${photoCredit(shown.photo, "gc-fighter-credit", true)}</div>
+        <div class="gc-fighter right ${bossFlip} ${theirs}"><img src="${fight.boss.img}" alt="${esc(bossName(fight.boss))}">${photoCredit(fight.boss.photo, "gc-fighter-credit", true)}</div>
       </div>
       </div><div class="gc-col-side">
       <div class="gc-scrap" style="padding:6px 8px">${moveLeaves(fight, round)}</div>

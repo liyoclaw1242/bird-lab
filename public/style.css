@@ -111,7 +111,7 @@ img { display: block; }
 .gc-note-card::before { content: ""; position: absolute; top: -13px; left: 50%; width: 92px; height: 25px; margin-left: -46px; background: rgba(226, 200, 130, .86); border: 1px solid rgba(90, 70, 30, .35); transform: rotate(-2.5deg); }
 .gc-note-card.dropping { animation: gc-drop .5s cubic-bezier(.3, 1.5, .5, 1); }
 @keyframes gc-drop { from { transform: translateY(-60px) rotate(-7deg); opacity: 0; } }
-.gc-card-bird { width: 100%; max-height: 250px; object-fit: contain; background: linear-gradient(180deg, #cfdcb0, #a9b57a 75%, #7c6a3d); border: 2.5px solid var(--ink); border-radius: var(--wiggle-2); padding: 8px; }
+.gc-card-bird { width: 100%; max-height: 340px; object-fit: contain; background: linear-gradient(180deg, #cfdcb0, #a9b57a 75%, #7c6a3d); border: 2.5px solid var(--ink); border-radius: var(--wiggle-2); padding: 8px; }
 .gc-stamp { position: absolute; top: 18px; right: 18px; z-index: 1; padding: 0 8px; font-size: 16px; color: #fff; background: var(--ink); border-radius: 6px 8px 5px 9px; transform: rotate(5deg); }
 .gc-stamp.UR { background: linear-gradient(120deg, #d9352c, #d99a1c, #2a8f6f); }
 .gc-stamp.SSR { background: var(--gold); color: var(--ink); }
@@ -172,6 +172,9 @@ img { display: block; }
 .gc-round { display: grid; place-items: center; height: 44px; font-size: 16px; line-height: 1; color: var(--ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 50% 45% 55% 42%; transform: rotate(-4deg); }
 .gc-arena { position: relative; height: clamp(190px, 33vh, 300px); margin-top: 2px; }
 .gc-fighter { position: absolute; bottom: 6px; width: 46%; height: 90%; }
+/* 戰鬥畫面的照片放得很大，署名要跟在照片旁邊 */
+.gc-fighter-credit { position: absolute; left: 0; right: 0; bottom: -18px; z-index: 2; margin: 0; overflow: hidden; font-size: 11px; line-height: 1.3; text-align: center; white-space: nowrap; text-overflow: ellipsis; color: rgba(255, 250, 235, .9); text-shadow: 0 1px 2px rgba(0, 0, 0, .7); }
+.gc-fighter-credit a { color: inherit; }
 .gc-fighter img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 7px 2px rgba(20, 14, 5, .55)); }
 .gc-fighter.left { left: 0; }
 .gc-fighter.right { right: 0; }
@@ -195,7 +198,9 @@ img { display: block; }
 .gc-act:nth-child(1) { transform: rotate(-.8deg); }
 .gc-act:nth-child(3) { transform: rotate(.9deg); }
 .gc-act:disabled { background: #c9bd9a; opacity: .75; box-shadow: none; }
-.gc-act.down { filter: grayscale(1); }
+.gc-act.down { opacity: .6; }
+.gc-act.down .gc-pic { scale: .85; }
+.gc-act.down .gc-act-name::after { content: " 💤"; }
 .gc-act img { width: 100%; height: 66px; object-fit: contain; }
 .gc-act-name { display: block; font-size: 14px; line-height: 1.15; min-height: 2.3em; overflow: hidden; }
 .gc-hp { height: 9px; margin: 3px 0; background: #2b2316; border: 1.5px solid var(--ink); border-radius: 5px 3px 5px 3px; overflow: hidden; }
@@ -360,6 +365,9 @@ img { display: block; }
 .gc-odds { margin-top: 12px; padding: 10px 14px; font-size: 15px; font-weight: 400; } .gc-odds summary { cursor: pointer; font-weight: 700; } .gc-odds ul { list-style: none; margin: 8px 0; padding: 0; } .gc-odds li { display: flex; align-items: center; gap: 8px; padding: 2px 0; } .gc-odds li b { margin-left: auto; } .gc-odds li span { color: var(--muted); } .gc-odds p { margin: 6px 0 0; font-size: 14px; line-height: 1.5; }
 .gc-bgm { right: calc(64px + env(safe-area-inset-right)); opacity: .55; }
 .gc-bgm.on { opacity: 1; background: #e6b84a; }
+/* 手機上兩顆圓鈕會蓋住頁面最下面的內容：底部留出它們的高度；看鳥卡、搖樹時先藏起來，免得壓在卡片上 */
+@media (max-width: 1023px) { #gc-app { padding-bottom: calc(64px + env(safe-area-inset-bottom)); } }
+body:has(.gc-stage, .gc-shaking) .gc-mute { display: none; }
 
 /* 內容不滿一頁時，頁尾貼在畫面底部 */
 body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
@@ -390,7 +398,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-chip[aria-pressed="true"] b { color: inherit; opacity: .85; }
 .gc-perched-bird { transition: opacity .3s, filter .3s; }
 .gc-perched-bird.peek img { filter: drop-shadow(0 0 10px rgba(255, 236, 150, .95)) drop-shadow(0 3px 1px rgba(20, 14, 5, .5)); }
-.gc-perched-bird.dim { opacity: .45; filter: grayscale(.85) brightness(.75); }
+.gc-perched-bird.dim { opacity: .4; filter: brightness(.7); }
 .gc-perched-bird.match img { animation: gc-glow 2.6s ease-in-out infinite; }
 @keyframes gc-glow {
   0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 240, 170, .55)) drop-shadow(0 3px 1px rgba(20, 14, 5, .5)); }
@@ -502,7 +510,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 
   /* 抽到或點開的卡片 */
   .gc-note-card { width: min(540px, 100%); padding: 16px; }
-  .gc-card-bird { max-height: min(320px, 34vh); }
+  .gc-card-bird { max-height: min(460px, 48vh); }
   .gc-stamp { top: 22px; right: 22px; font-size: 18px; }
   .gc-name { font-size: 28px; }
   .gc-sci { font-size: 15px; }

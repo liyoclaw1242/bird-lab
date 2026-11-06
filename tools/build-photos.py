@@ -27,7 +27,31 @@ NOT_PHOTO = re.compile(
     # 畫家名後面接 's 或 ian 是鳥名（Gould's Sunbird、Gouldian Finch、Audubon's Shearwater），不算
     r"|(?:gould|audubon)(?![a-z'’])"
     # 短字要整個字相符，不然 orange 會被當成 range、honest 被當成 nest
-    r"|\b(?:plates?|mounted|skins?|eggs?|nests?|maps?|range map|distribution map|stamps?|statue|art)\b", re.I)
+    r"|\b(?:plates?|mounted|skins?|eggs?|nests?|maps?|range map|distribution map|stamps?|statue|art)\b"
+    # 舊版畫、出版品與歷史照片（Iconographia Zoologica、George Edward Lodge、Bowdler Sharpe、KITLV 典藏）
+    r"|iconographia|chromolitho|woodcut|george edward lodge|bowdler sharpe|kitlv|trustees of the natural history|\bprints?\b"
+    # 籠養個體：野鳥圖鑑不收動物園、鳥園、繁殖計畫裡的鳥（Zoothera 是鶇的屬名，所以 zoo 要整個字）
+    r"|\bzoos?\b|zoological garden|captiv|aviary|aviaries|vogelpark|tierpark|dierenpark|bird ?park|breeding (?:program|centre|center)"
+    # 雛鳥、幼鳥、死鳥不當物種代表圖：辨識特徵和成鳥不同，巢邊照也有生態倫理疑慮
+    r"|\b(?:chicks?|nestlings?|fledglings?|juveniles?|juv|immatures?|dead|carcass|roadkill|road kill|killed)\b", re.I)
+
+
+def clean_artist(name):
+    # Commons 的作者欄常夾著網址、討論頁簽名、時間戳或「derivative work」說明，只留真正的作者名
+    name = re.sub(r"\(\s*https?://[^)]*\)", "", name)
+    name = re.sub(r"https?://\S+", "", name)
+    name_full = name
+    if "derivative work" in name:
+        before = name.split("derivative work")[0]
+        name = before.split(" : ")[-1] if " : " in before else before
+        if not name.strip(" :,"):
+            # 「derivative work: 修圖者 ( talk ) 原檔.jpg : 原作者」：原作者在最後
+            name = name_full.split(" : ")[-1] if " : " in name_full else ""
+    name = re.split(r",\s*who releases", name)[0]
+    name = re.sub(r"\(\s*talk\s*\)", "", name)
+    name = re.sub(r"\d{1,2}:\d{2},?\s*\d{1,2}\s+\w+\s+\d{4}\s*\(UTC\)", "", name)
+    name = re.sub(r"\s+", " ", name).strip(" ,;:-")
+    return name
 
 
 def get(url, tries=4):
@@ -136,11 +160,14 @@ def judge(title, entry, sci):
     license = plain(meta.get("LicenseShortName", {}).get("value"))
     if not re.match(r"(CC BY|CC0|Public domain|PD)", license, re.I) or re.search(r"NC|ND", license):
         return None, "license"
-    artist = plain(meta.get("Artist", {}).get("value")) or plain(meta.get("Credit", {}).get("value")) or "Unknown"
+    artist = clean_artist(plain(meta.get("Artist", {}).get("value")) or plain(meta.get("Credit", {}).get("value")) or "")
     # 有些作者欄只放了 Flickr 個人頁的網址
     flickr = re.match(r"https?://(?:www\.)?flickr\.com/(?:photos|people)/([^/\s]+)", artist)
     if flickr:
         artist = f"{flickr.group(1)} (Flickr)"
+    # 找不到攝影者的不收：CC BY 要署名，攝影者也該被看見
+    if not artist or artist.lower() in ("unknown", "unknown author", "anonymous"):
+        return None, "no_author"
     # 分類或檔名裡有這隻鳥的學名，代表 Commons 上有人把照片歸到這個物種，比較可信
     genus_species = sci.lower()
     matched = any(c.lower().startswith(genus_species) for c in entry["cats"]) or genus_species in title.lower().replace("_", " ")
@@ -157,7 +184,23 @@ def framed(img):
     return ImageOps.expand(img, border=(side, side, side, round(side * 2.6)), fill=PAPER)
 
 
-INAT_LICENSE = {"cc-by": ("CC BY", "https://creativecommons.org/licenses/by/4.0/"), "cc0": ("CC0", "https://creativecommons.org/publicdomain/zero/1.0/")}
+# iNaturalist 的授權代碼對應 4.0 版（CC0 是 1.0）
+INAT_LICENSE = {"cc-by": ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"), "cc0": ("CC0 1.0", "https://creativecommons.org/publicdomain/zero/1.0/")}
+
+
+def inat_users(obs_ids):
+    # CC0 照片的 attribution 只有「no rights reserved」，沒有名字；從觀察紀錄補上觀察者
+    store = cached("inat-users.json", dict)
+    todo = [str(i) for i in dict.fromkeys(obs_ids) if str(i) not in store]
+    for i in range(0, len(todo), 100):
+        d = api("https://api.inaturalist.org/v1/observations", {"id": ",".join(todo[i:i + 100]), "per_page": 100})
+        for o in d.get("results", []):
+            u = o.get("user") or {}
+            store[str(o["id"])] = (u.get("name") or "").strip() or u.get("login")
+        time.sleep(1.1)
+    if todo:
+        (CACHE / "inat-users.json").write_text(json.dumps(store, ensure_ascii=False), "utf8")
+    return store
 
 
 def inat_candidates(taxa):
@@ -194,7 +237,7 @@ def inat_taxa(names):
     return store
 
 
-def judge_inat(observations, taxon):
+def judge_inat(observations, taxon, users=None):
     for o in observations:
         # 研究級但鑑定到亞種時 taxon 會不同；只收和這個物種同一個或其下的鑑定，這裡保守只收同一個
         if o["taxon"] != taxon:
@@ -206,9 +249,12 @@ def judge_inat(observations, taxon):
             if min(dims.get("width", 0), dims.get("height", 0)) < 360:
                 continue
             m = re.match(r"\(c\)\s*(.+?),\s*(?:some|no) rights", ph.get("attribution") or "") or re.match(r"(.+?),\s*no rights", ph.get("attribution") or "")
+            artist = m.group(1) if m else (users or {}).get(str(o["obs"]))
+            if not artist:
+                continue
             license, url = INAT_LICENSE[ph["license"]]
             return {"url": ph["url"].replace("/square.", "/large."), "page": f"https://www.inaturalist.org/photos/{ph['id']}",
-                    "artist": (m.group(1) if m else "iNaturalist user")[:120], "license": license, "licenseUrl": url,
+                    "artist": artist[:120], "license": license, "licenseUrl": url,
                     "taxonMatch": True, "source": "inaturalist"}
     return None
 
@@ -265,6 +311,7 @@ def main():
     by_name = inat_taxa([c["sci"] for c in targets if c["id"] not in picks])
     taxon_of = {c["id"]: by_name.get(c["sci"]) for c in targets}
     inat = inat_candidates([taxon_of[c["id"]] for c in targets if c["id"] not in picks and taxon_of[c["id"]]])
+    users = inat_users([o["obs"] for obs in inat.values() for o in obs if any(ph.get("license") == "cc0" for ph in o["photos"])])
 
     stats, rejects = {}, []
     by_id = {c["id"]: c for c in cards}
@@ -273,7 +320,7 @@ def main():
         if not chosen:
             reasons = [judge(t, info.get(t, {"cats": []}), c["sci"])[1] for t in titles[c["id"]]]
             taxon = taxon_of[c["id"]]
-            chosen = taxon and judge_inat(inat.get(str(taxon), []), taxon)
+            chosen = taxon and judge_inat(inat.get(str(taxon), []), taxon, users)
         if not chosen:
             why = reasons[0] if reasons else "no_image"
             stats[why] = stats.get(why, 0) + 1

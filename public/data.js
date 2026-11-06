@@ -14,7 +14,7 @@
   { id: "urocissa", name: "臺灣藍鵲", type: "mixed", atkShape: 0.5, defShape: 0.44, img: "stickers/urocissa-photo.webp", photo: {"artist": "Charles J. Sharp", "license": "CC BY-SA 4.0", "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0", "page": "https://commons.wikimedia.org/wiki/File:Taiwan_blue_magpie_(Urocissa_caerulea)_Xindian.jpg"} },
   { id: "platalea", name: "黑面琵鷺", type: "meat", atkShape: 0.78, defShape: 0.6, img: "stickers/platalea-photo.webp", photo: {"artist": "spaceaero2", "license": "CC BY 3.0", "licenseUrl": "https://creativecommons.org/licenses/by/3.0", "page": "https://commons.wikimedia.org/wiki/File:Platalea_minor_okinawa.jpg"} },
   { id: "syrmaticus", name: "帝雉", type: "mixed", atkShape: 0.55, defShape: 0.56, img: "stickers/syrmaticus-photo.webp", photo: {"artist": "Snowyowls (photographer) / Jako (uploader)", "license": "CC BY-SA 3.0", "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/", "page": "https://commons.wikimedia.org/wiki/File:Mikado_Pheasant_398.jpg"} },
-  { id: "balaeniceps", name: "鯨頭鸛", type: "meat", atkShape: 0.9, defShape: 0.75, img: "stickers/balaeniceps-photo.webp", photo: {"artist": "zeroexposure (Flickr)", "license": "CC BY 2.0", "licenseUrl": "https://creativecommons.org/licenses/by/2.0", "page": "https://commons.wikimedia.org/wiki/File:Entebbe_Shoe_Bill_Stork.jpg"} },
+  { id: "balaeniceps", name: "鯨頭鸛", type: "meat", atkShape: 0.9, defShape: 0.75, img: "stickers/balaeniceps-photo.webp", photo: {"artist": "Johannes Bahrdt", "license": "CC BY-SA 4.0", "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0", "page": "https://commons.wikimedia.org/wiki/File:Schoebill-Lake-Albert.jpg"} },
 ];
 
   // 保底：連續沒抽到時機率線性上升，到 hard 那一抽必中。一天最多兩抽，門檻依「幾週一隻」訂，不是照搬付費遊戲的 90 抽
