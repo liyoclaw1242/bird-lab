@@ -12,11 +12,11 @@
 - `server/game.js` 權威邏輯、`api.js` 路由、`share-page.js` 分享連結給爬蟲看的頁面、`db.js` 連線、`setup.js` 建表與匯入（不進線上函式）。
 - `api/gacha.js` Vercel 入口；`/s/:code` 由 `vercel.json` 改寫到它。
 - 品牌：`public/logo.svg`，圖示和 OG 圖由 `tools/brand/build.js` 從它和 `tools/brand/og.html` 產生（要 `PLAYWRIGHT_PATH` 或裝 playwright）。
-- 卡池：`tools/gacha-build-pool.py <species.json> <field-guide.zh-Hans.json>` 產生 `server/data/cards.json.gz`，10,572 隻。
+- 卡池：`server/data/cards.json.gz`，10,572 隻，id、稀有度、攻防固定不動。鳥名和解說由 `tools/gacha-primary-text.py` 從 IOC、AVONET、AviList 重建（`server/data/cardtext.json`），照片由 `tools/build-photos.py` 產生（`server/data/photos.json`），伺服器回傳牌時套用這兩個檔。
 
 ### 使用者已決定
 
-遊戲當主要應用、舊站移除；名稱「一鳥在手」；免費方案部署：Vercel Hobby（頁面＋API）、Supabase（資料庫）、Cloudflare Workers 靜態資源（貼紙）、GitHub Actions（備份與監控）。獨立頁面、每回合出一張牌、相剋＋星數、只手繪招牌動作、完全免費。
+遊戲當主要應用、舊站移除；名稱「一鳥在手」；免費方案部署：Vercel Hobby（頁面＋API）、Supabase（資料庫）、Cloudflare Workers 靜態資源（鳥照片）、GitHub Actions（備份與監控）。獨立頁面、每回合出一張牌、相剋＋星數、只手繪招牌動作、完全免費。
 
 ### 分享規則（數值是我定的，可調，在 `public/data.js`）
 
@@ -26,7 +26,7 @@
 
 ### Google 登入、PWA、稀有度特效
 
-- 「RWA」當成 PWA 處理（使用者原話是 RWA，還沒確認）。`public/sw.js` 網路優先，只快取同網域的網頁檔；API 和跨網域貼紙不經手。
+- 「RWA」當成 PWA 處理（使用者原話是 RWA，還沒確認）。`public/sw.js` 網路優先，只快取同網域的網頁檔；API 不經手；照片站的圖另外快取優先（同網址內容不變）。
 - Google 登入用整頁跳轉（`ux_mode: "redirect"`，因為有瀏覽器開不了彈出視窗）：Google POST 到 `/auth/google`，比對 `g_csrf_token` 後把憑證暫放 sessionStorage，回首頁由 `boot` 走原本的 `POST login`。Google Console 要登記 redirect URI。
 - Google 用 Google Identity Services 的 ID token，伺服器驗證（`server/google.js`），只存 `sub`。沒設 `GOOGLE_CLIENT_ID` 時按鈕不會出現。本機可用 `GACHA_FAKE_GOOGLE=1 GOOGLE_CLIENT_ID=x` 測流程，但瀏覽器要自己替換 Google 的腳本，**真實 Google 登入還沒測過，iOS 桌面版尤其要實測**。
 - 憑證移到 `sessions`，一個帳號可多裝置登入。兩片林子不合併，避免用匿名分身養大 Google 帳號；裝置上有進度時，切換前會問。
@@ -41,7 +41,7 @@
 
 ## 部署現況（2026-11-01）
 
-- Supabase 已建表並匯入 10,572 張牌；貼紙已在 `https://yi-niao-stickers.yi-niao.workers.dev/`，`STICKER_BASE` 已換；Vercel 的 Preview 和 Production 都設好變數，`e378195` 已上正式站 `bird-lab-three.vercel.app`。**備份的 GitHub Secrets 還沒設，排程會失敗；真實 Google 登入還沒測。**
+- Supabase 已建表並匯入 10,572 張牌；鳥照片在 `https://yi-niao-stickers.yi-niao.workers.dev/photos/`，`STICKER_BASE` 已換；Vercel 的 Preview 和 Production 都設好變數，`e378195` 已上正式站 `bird-lab-three.vercel.app`。**備份的 GitHub Secrets 還沒設，排程會失敗；真實 Google 登入還沒測。**
 - 預覽和正式站共用同一個資料庫。
 - Vercel CLI 50.33 不讀 `VERCEL_TOKEN`，要傳 `--token`，並設 `VERCEL_PROJECT_ID`、`VERCEL_ORG_ID` 跳過 `vercel link`（否則卡在等登入）。預覽受 Vercel 登入保護，指令列要用 `vercel curl`。
 - 音效在 `public/sound.js`，全部即時合成，右下角有靜音鍵。自動化只驗證有觸發、不爆音不無聲，音色好不好聽要人聽。
@@ -49,21 +49,21 @@
 ## 抽卡與授權（2026-11-01）
 
 - 保底和補運在 `public/data.js`，設計依據在 `docs/gacha-research/ODDS.md`，模擬用 `node tools/gacha-odds-sim.js`。改參數要同步更新面板上的長期平均。
-- 授權總表在 `public/credits.html`。2026-11-06 起鳥的圖片全部改成真實照片（`tools/build-photos.py`），不再使用 AI 貼紙，見 README「授權與素材」。
+- 授權總表在 `public/credits.html`。2026-11-06 起鳥的圖片全部改成真實照片（`tools/build-photos.py`），見 README「授權與素材」。
 - 背景音：`public/audio/countryside.mp3`（CC0，`tools/build-bgm.sh` 產生），🎵 開關，`?bgm=1` 給 Windows Lively 桌布用；Lively 上的自動播放還沒實測。
 - 刪除資料目前靠信箱人工處理，沒有自助功能。
-- 商業化前要處理：IUCN 資料、參考照片（約 6,300 張的參考照是 NC／ND 或保留所有權利）。原作者接受撤圖，但我們鎖定固定版本，撤圖不會自動同步。
+- 商業化前要處理：IUCN 資料的授權。照片都是 CC BY、CC BY-SA、CC0 或公有領域，每張牌都標了攝影者。
 
 ## 上線步驟（第 1 步已做完，下面都還沒做）
 
 使用者把 token 填進 `.env.local`（取得步驟在 `.env.example`），用 `npm run check-env` 驗證；`wrangler` 改用 `CLOUDFLARE_API_TOKEN`，不用 `wrangler login`。檔內的 `SUPABASE_*` 要組成 `DATABASE_URL` 才傳給 seed 或 Vercel，不要讓 `DATABASE_URL` 留在本機環境。備份用 Session pooler（5432），不是直連。
 
 1. 使用者建 Supabase 專案（東京區，對應 `vercel.json` 的 `hnd1`）；`DATABASE_URL` 用連線池字串，`DATABASE_CA` 放 Supabase 的 CA 憑證。`DATABASE_URL=... DATABASE_CA=... npm run seed`。**還沒連過 Supabase**，併發測試跑在本機 Postgres 18。
-2. 使用者執行 `wrangler login`。`node tools/build-stickers.js`（約 686 MB，目前 `stickers/dist` 只有 20 張測試），到 `stickers/` 執行 `npx wrangler deploy`。把 `public/game.js` 的 `STICKER_BASE` 換成部署後的網址（現在還是 jsDelivr），並確認線稿描得出來。
+2. 照片站：跑 `tools/build-photos.py`，到 `stickers/` 執行 `npx wrangler deploy`（已完成）。
 3. 使用者在 Google Cloud 建 OAuth 網頁用戶端 ID，把預覽和正式網址加進「已授權的 JavaScript 來源」，設 Vercel 的 `GOOGLE_CLIENT_ID`。設其他 Vercel 環境變數，開**預覽部署**跑完整流程。`vercel.json` 和 `.vercelignore` 還沒在 Vercel 上實際部署過。
 4. 設 GitHub Secrets（`BACKUP_DATABASE_URL`、`SITE_URL`），手動跑一次 `.github/workflows/backup.yml` 並演練還原。工作流程也還沒跑過，repo 要保持私有。
 5. 確定正式網址後，更新 `public/index.html` 的 `og:url`、`og:image`（現在寫 `bird-lab-three.vercel.app`）。
-6. 朋友內測約兩週，看留存和用量。公開前先問貼紙原作者。問過使用者才能 push 到 `main`。
+6. 朋友內測約兩週，看留存和用量。問過使用者才能 push 到 `main`。
 
 ## 已知問題
 
@@ -72,27 +72,9 @@
 - Vercel 超量最多要等 30 天，到 50% 就要處理。Hobby 限非商業使用。
 - 分身可以繞過每人每日領取上限（換瀏覽器就是新玩家），靠 IP 限制減緩，沒有根治。
 - 分享頁 OG 用同一張通用圖，CDN 快取一小時，剩餘份數可能落後。
-- 解說沒逐條查證，簡轉繁是機器轉換，鳥名沒人工看。線稿是自動描的，飛行姿態的鳥比較怪。BOSS 只有 5 隻。
+- 解說是從量測值套模板產生的，簡轉繁是機器轉換，鳥名沒人工看。照片只抽看了幾十張，認錯的鳥要靠玩家回報。BOSS 只有 5 隻。
 
 ## 早期研究（109 張、卡面、怪度、動作圖的段落已過時，資料來源和授權仍有效）
-
-## 資料來源：[removed]
-
-> **2026-11-05 更新**：原作者 2.2.0 起貼紙改為 CC BY 4.0，下表的 PolyForm Shield 和「授權紅線」已不適用；照片去背貼紙也全部重畫成 AI 插畫。我們換成 2.2.3 版的貼紙，卡池（id、稀有度、攻防）不動，見 README「授權與素材」。新版中文解說的改動只是在臺灣、香港前加「中國」並刪掉兩條臺灣趣聞，沒有採用。
-
-[removed] ，11,064 種鳥的擬真 AI 貼紙與結構化資料。
-
-| 內容 | 授權 | 要做的事 |
-|---|---|---|
-| AI 貼紙 | PolyForm Shield 1.0.0 | 授權文字明列遊戲可用，要附 `Required Notice: Copyright (c) 2026 [removed] ([removed]), [removed] |
-| 照片去背貼紙（`kind: photo-cutout`） | 各照片自己的 CC 授權 | 逐張標作者與授權，見 `bosses.json`；BY-SA 的衍生要留意 |
-| 量測、生態（AVONET） | CC BY 4.0 | 標示 Tobias et al. 2022 |
-| 鳥名（IOC 15.2） | CC BY 3.0 | 標示 |
-| 彙整資料 | MIT | 附授權 |
-
-- **授權紅線**：貼紙不能用於和「[removed]」競爭的產品（觀鳥、識鳥、圖鑑類）。遊戲沒問題，但**不要把 BOSS 貼紙做成可查詢的鳥類圖鑑**。主站的圖鑑分頁也不要用這些貼紙。這是我對授權的閱讀，不是法律意見。
-- **不要把 `species.json`（32MB）放進專案**。寫腳本抽出需要的欄位，輸出小檔。
-- 貼紙約 1000px、每張約 60KB。建議縮到 512px；50 張預估 1～2MB（未實測）。
 
 ## 規則提案與驗證結果
 
@@ -110,7 +92,7 @@
 
 ### 攻防（已驗證）
 
-體重、嘴長、嘴高、跗蹠等取 log 正規化，大小鳥才不會差幾萬倍。完整公式在 `stats-proto.js`。
+體重、嘴長、嘴高、跗蹠等取 log 正規化，大小鳥才不會差幾萬倍。
 
 - 攻擊：體重 40%、嘴長 25%、嘴高 20%、腳長 15%，再依食性加分（吃脊椎動物 +14、水中掠食 +10⋯）
 - 防禦：體重 60%、腳長 15%、尾長 10%、翅形 15%
@@ -154,13 +136,10 @@
 
 用台北日期當亂數種子：同一天所有人遇到同一隻 BOSS。50 隻洗牌後輪完才重複。進度存 localStorage，沒有後端，所以改時間、改存檔都能作弊；只要沒有排行榜就不是問題。
 
-## 50 隻 BOSS（已確認全部通過貼紙品質線）
+## 50 隻 BOSS 候選
 
-城市常見、台灣與東亞（臺灣藍鵲、黑面琵鷺、帝雉、白頭翁、丹頂鶴、朱鹮）、猛禽、水鳥、熱帶明星都有，完整清單在 `bosses.json`。
+城市常見、台灣與東亞（臺灣藍鵲、黑面琵鷺、帝雉、白頭翁、丹頂鶴、朱鹮）、猛禽、水鳥、熱帶明星都有，完整清單在 `bosses.json`（給 `tools/gacha-sim.js` 模擬用）。目前上線的 5 隻用真實照片，署名在 `public/data.js`。
 
-- 很有名但**貼紙沒過品質線**，所以先排除：藍孔雀 q79、鴕鳥 q73、火雞 q73、鴯鶓 q74、鶴鴕 q70、虎皮鸚鵡 q76。若想收錄，先人工看圖。
-- 其中 10 張是照片去背（9 張要標作者的 CC BY／BY-SA，1 張 CC0），其餘是 AI 貼紙。
-- 我只親眼看過鯨頭鸛和麻雀兩張貼紙。其餘 48 張只看分數，**實作前要全部目視**。
 - IOC 繁中名有些很怪（鞭笞鵎鵼、吐綬雞、麻雀〔樹麻雀〕），`bosses.json` 的 `zh` 不能直接上，要人工改成俗名。
 
 ## 動作圖（已試作）
@@ -174,16 +153,13 @@
 
 ## 資料注意事項
 
-- **對應**：`stats-proto.js` 的 `ALIAS` 有 19 隻手動對應（家禽、只鑑定到屬、資料缺漏），數值是近似值。
-- **手填**：鴞鸚鵡和黃嘴鵰鴞沒有 AVONET 資料，`OVERRIDE` 裡的體重和 IUCN 是我憑一般知識填的，**沒查證**。
 - 雛鳥（鵜鶘雛鳥、國王企鵝雛鳥⋯）用成鳥數值，所以「沒穿衣服鳥」攻擊 101 偏高。可能要加幼鳥修正，或當笑點。
 - 群鳥也是用單隻數值。
-- IUCN 來自 Wikidata，可能落後。
+- IUCN 來自 AviList v2025，可能落後。
 - 既有 `notes` 大多沒逐條查證，舊的提醒仍適用。
 
 ## 專案的坑
 
-- `js/credits.js` 的 `PUBLIC_MODE = true`：線上 109 隻，3 隻海鷗迷因隱藏。卡池要沿用這個過濾（`stats-proto.js` 已做）。
 - `.vercelignore` 擋掉 `img/meme`、`img/ig`、`tools`、`docs`。新素材不要放到這些路徑。
 - 素材網址帶 `?v=6`。改了記得一起更新。
 - 改鳥資料後要跑 `sh wallpaper/sync.sh`，桌布才會同步。

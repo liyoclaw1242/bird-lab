@@ -1,4 +1,4 @@
-// 抽卡與戰鬥的權威邏輯。卡池不對外列舉：玩家只拿得到自己收藏裡的牌，這是貼紙授權不做成圖鑑的底線。
+// 抽卡與戰鬥的權威邏輯。卡池不對外列舉：玩家只拿得到自己收藏裡的牌。
 const crypto = require("crypto");
 const E = require("../public/engine.js");
 const { verifyGoogle: defaultVerifyGoogle } = require("./google.js");
@@ -48,7 +48,7 @@ const TEXT = process.env.GACHA_BUNDLED_PHOTOS === "off" ? null : require("./data
 const NOTES = new Set(["第一印象", "你可能不知道"]);
 const withPhoto = (data) => {
   if (!data) return data;
-  // source、credit 是舊資料留下的欄位（外部解說的來源、照片去背貼紙的作者），不再顯示
+  // source、credit、qualityOk 是舊資料庫留下的欄位，不再顯示
   const { source, credit, qualityOk, ...card } = data;
   card.facts = (data.facts || []).filter((f) => !NOTES.has(f.t));
   if (TEXT?.cards[data.id]) Object.assign(card, TEXT.cards[data.id]);
@@ -261,7 +261,7 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     };
   }
 
-  // 遇過幾個科、幾個目：貼紙路徑就是 目/科，不必另存欄位。只回數字，不列舉卡池。
+  // 遇過幾個科、幾個目：牌的 file 欄位是「stickers/目/科/學名」，不必另存欄位。只回數字，不列舉卡池。
   // 全卡池的總數每個程序算一次就夠，卡池在執行中不會變
   let lineageTotals = null;
   async function lineage(q, playerId) {

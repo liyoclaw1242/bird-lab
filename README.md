@@ -18,7 +18,7 @@
 | 前端（原生 JS，沒有建置步驟） | `public/` | Vercel 靜態檔 |
 | API（單一函式，`?op=` 分路由） | `api/gacha.js`、`server/` | Vercel Functions |
 | 資料庫 | `server/schema.sql` | Supabase Postgres（東京） |
-| 貼紙圖片 | `stickers/` | Cloudflare Workers 靜態資產 |
+| 鳥照片 | `stickers/`（資料夾沿用舊名） | Cloudflare Workers 靜態資產 |
 | 每日備份 | `.github/workflows/backup.yml` | GitHub Actions |
 
 遊戲規則和機率放在 `public/engine.js`、`public/data.js`，前後端共用。抽卡和戰鬥結算一律由伺服器決定。
@@ -83,10 +83,10 @@ tools/restore-backup.sh backup.dump 'postgresql://...'
 
 ## 授權與素材
 
-貼紙、鳥類資料和背景音各有不同授權，完整標示見 [public/credits.html](public/credits.html)。
+鳥照片、鳥類資料和背景音各有不同授權，完整標示見 [public/credits.html](public/credits.html)。
 
 - 鳥的圖片是真實照片（`tools/build-photos.py`）：先用 Wikidata 代表圖（Wikimedia Commons），沒有合用的再用 iNaturalist 研究級觀察裡 CC BY／CC0 的照片。照片只縮圖、加紙框，不裁切不翻轉。找不到照片的鳥凍結：抽不到、不算收集總數，已有的顯示剪影。
-- 照片放在貼紙站 `stickers/dist/photos/`；換照片後部署貼紙站，並把 `public/game.js` 的 `STICKER_VERSION` 加一。再跑 `tools/gacha-photo-json.py` 更新 `server/data/photos.json`：伺服器靠這個檔決定誰有照片、誰凍結，不必改正式資料庫。
+- 照片放在照片站 `stickers/dist/photos/`；換照片後部署照片站，並把 `public/game.js` 的 `STICKER_VERSION` 加一。再跑 `tools/gacha-photo-json.py` 更新 `server/data/photos.json`：伺服器靠這個檔決定誰有照片、誰凍結，不必改正式資料庫。
 - 卡池固定在建立時的鳥種和數值，不要重跑 `tools/gacha-build-pool.py`（會讓玩家手上的鳥消失或變數值）。鳥名、目科和解說由 `tools/gacha-primary-text.py` 從 IOC 15.2 多語版、AVONET、AviList v2025 重建，輸出 `server/data/cardtext.json`，伺服器回傳牌時覆蓋資料庫裡的舊文字。
 - 商業化前要先處理 IUCN 資料的授權，Vercel Hobby 方案也限非商業使用。
 

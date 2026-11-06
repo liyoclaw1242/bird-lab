@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# 幫卡池的鳥找真實照片，取代 AI 貼紙：build-photos.py <species.json>... [--ids ids.json] [--sample N | --fraction 0.5] [--all]
+# 幫卡池的鳥找真實照片：build-photos.py [--ids ids.json] [--sample N | --fraction 0.5] [--all]
 # 來源：先用 Wikidata 物種條目的代表圖（P18），都在 Wikimedia Commons，授權只有 CC BY、CC BY-SA、CC0、公有領域，可以用在遊戲裡。
 #       沒有合格的代表圖，再找 iNaturalist 研究級觀察（社群鑑定一致）裡授權 CC BY 或 CC0 的照片，票數多的優先。
 # 篩選：只收照片格式；檔名、說明、分類裡出現手繪、標本、蛋、地圖這類字眼的不收，找不到合格照片的鳥由遊戲凍結。
-# 輸出：照片縮成長邊 800px 的 WebP 放進 stickers/dist/photos/（和貼紙一起部署），
+# 輸出：照片縮成長邊 800px 的 WebP 放進 stickers/dist/photos/（部署到照片站），
 #       server/data/cards.json.gz 每張牌加上 photo（檔名、尺寸、作者、授權、原始頁面、分類是否對得上學名）。
 # 照片只縮圖、轉檔，不裁切不去背、不左右翻轉，避免改到辨識特徵；外面加一圈紙框（拍立得那樣下緣較寬），
-# 這樣在場景裡和貼紙一樣是一張圖，版面不用另外處理。可重跑，下載的原圖和查過的資料會從 stickers/.cache 讀。
+# 這樣在場景裡就是一張圖，版面不用另外處理。可重跑，下載的原圖和查過的資料會從 stickers/.cache 讀。
 # 依賴 Pillow。
 import gzip, html, io, json, random, re, sys, time, urllib.parse, urllib.request
 from pathlib import Path
@@ -53,6 +53,26 @@ def cached(name, fn):
     CACHE.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False), "utf8")
     return data
+
+
+def wikidata_items(names):
+    # 用學名找 Wikidata 的物種條目（taxon name P225、分類等級 P105 = 種）。同名的條目可能不只一個，全部留著
+    store = cached("qids.json", dict)
+    todo = [n for n in dict.fromkeys(names) if n not in store]
+    for i in range(0, len(todo), 250):
+        batch = todo[i:i + 250]
+        values = " ".join(json.dumps(n) for n in batch)
+        query = f"SELECT ?name ?item WHERE {{ VALUES ?name {{ {values} }} ?item wdt:P225 ?name; wdt:P105 wd:Q7432. }}"
+        d = json.loads(get("https://query.wikidata.org/sparql?" + urllib.parse.urlencode({"query": query, "format": "json"})))
+        found = {}
+        for b in d["results"]["bindings"]:
+            found.setdefault(b["name"]["value"], []).append(b["item"]["value"].rsplit("/", 1)[1])
+        for n in batch:
+            store[n] = sorted(found.get(n, []))
+        time.sleep(1)
+    if todo:
+        (CACHE / "qids.json").write_text(json.dumps(store, ensure_ascii=False), "utf8")
+    return store
 
 
 def wikidata_images(qids):
@@ -159,7 +179,7 @@ def inat_candidates(taxa):
 
 
 def inat_taxa(names):
-    # 原作者資料大多沒有 iNaturalist 編號，用學名完全相符的現行物種去查
+    # 用學名完全相符的現行物種找 iNaturalist 的分類編號
     store = cached("inat-taxa.json", dict)
     todo = [n for n in dict.fromkeys(names) if n not in store]
     for n, name in enumerate(todo):
@@ -217,14 +237,7 @@ def save_photo(card_id, url):
 
 def main():
     args = sys.argv[1:]
-    sources = [a for a in args if a.endswith(".json") and not a.startswith("--")]
     opt = {args[i]: args[i + 1] if i + 1 < len(args) else None for i in range(len(args)) if args[i].startswith("--")}
-    species = {}
-    for src in sources:
-        if src == opt.get("--ids"):
-            continue
-        for r in json.loads(Path(src).read_text("utf8"))["species"]:
-            species.setdefault(r["id"], r)
     cards = json.loads(gzip.decompress(CARDS.read_bytes()).decode("utf8"))
     if "--all" in opt:
         targets = cards
@@ -237,10 +250,8 @@ def main():
             want |= set(rng.sample(pool, min(len(pool), n)))
         targets = [c for c in cards if c["id"] in want]
 
-    qid_of = {}
-    for c in targets:
-        w = ((species.get(c["id"]) or {}).get("ids") or {}).get("wikidata")
-        qid_of[c["id"]] = w if isinstance(w, list) else [w] if w else []
+    items = wikidata_items([c["sci"] for c in targets])
+    qid_of = {c["id"]: items.get(c["sci"], []) for c in targets}
     p18 = wikidata_images(sorted({q for qs in qid_of.values() for q in qs}))
     titles = {c["id"]: [t for q in qid_of[c["id"]] for t in p18.get(q, [])] for c in targets}
     info = commons_info([t for ts in titles.values() for t in ts])
@@ -251,10 +262,8 @@ def main():
             if pick:
                 picks[c["id"]] = {**pick, "source": "commons"}
                 break
-    taxon_of = {c["id"]: ((species.get(c["id"]) or {}).get("ids") or {}).get("inaturalist") for c in targets}
-    by_name = inat_taxa([c["sci"] for c in targets if c["id"] not in picks and not taxon_of[c["id"]]])
-    for c in targets:
-        taxon_of[c["id"]] = taxon_of[c["id"]] or by_name.get(c["sci"])
+    by_name = inat_taxa([c["sci"] for c in targets if c["id"] not in picks])
+    taxon_of = {c["id"]: by_name.get(c["sci"]) for c in targets}
     inat = inat_candidates([taxon_of[c["id"]] for c in targets if c["id"] not in picks and taxon_of[c["id"]]])
 
     stats, rejects = {}, []

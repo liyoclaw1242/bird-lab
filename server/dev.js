@@ -56,7 +56,7 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
       res.writeHead(result.status, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify(result.body));
     }
-    // 貼紙和照片：先用本機 stickers/dist（還沒部署的照片也看得到），沒有的轉回正式貼紙站
+    // 照片：先用本機 stickers/dist（還沒部署的照片也看得到），沒有的轉回正式照片站
     if (url.pathname.startsWith("/_stickers/")) {
       const local = path.normalize(path.join(STICKERS, decodeURIComponent(url.pathname.slice("/_stickers/".length))));
       if (local.startsWith(STICKERS + path.sep) && fs.existsSync(local)) {

@@ -13,9 +13,24 @@ import gzip, json, re, sys
 from pathlib import Path
 import openpyxl, pyreadr
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from importlib import import_module
-pool = import_module("gacha-build-pool")
+from opencc import OpenCC
+
+NICHE_ZH = {"Vertivore": "獵捕其他脊椎動物", "Aquatic predator": "在水裡或水邊捕食動物", "Scavenger": "吃腐肉", "Invertivore": "吃昆蟲這類無脊椎動物", "Omnivore": "食性很雜",
+            "Granivore": "吃種子", "Frugivore": "吃果實", "Nectarivore": "吸花蜜", "Herbivore aquatic": "吃水生植物", "Herbivore terrestrial": "吃陸上的植物"}
+HABITAT_ZH = {"Forest": "森林", "Shrubland": "灌叢", "Woodland": "疏林", "Grassland": "草原", "Wetland": "濕地", "Marine": "海上", "Rock": "岩石地帶",
+              "Human Modified": "人類活動的環境", "Coastal": "海岸", "Riverine": "河邊", "Desert": "沙漠"}
+MIGRATION_ZH = {"sedentary": "一年到頭大多待在同一區", "partially migratory": "有些族群會遷徙", "migratory": "會長途遷徙"}
+IUCN_ZH = {"NT": "接近受脅", "VU": "易危", "EN": "瀕危", "CR": "極危", "EW": "野外滅絕", "EX": "已滅絕"}
+to_hant = OpenCC("s2twp").convert
+
+
+# IOC 簡體名裡打不出的字用「(共鳥)」代替，其實是「䳍」；少數名字帶了「滅絕?」或方括號註記
+def fix_zh(name):
+    # 尾巴黏著的私用區字元（U+E000–F8FF）是來源字型的殘留，畫面上會變方框
+    name = re.sub("[\ue000-\uf8ff]", "", name).strip()
+    name = name.replace("(共鳥)", "䳍")
+    name = re.sub(r"\s*滅絕\?$", "", name)
+    return re.sub(r"\[.*\]$", "", name)
 
 ROOT = Path(__file__).resolve().parent.parent
 CARDS = ROOT / "server/data/cards.json.gz"
@@ -71,7 +86,7 @@ def main():
     for c in cards:
         r = ioc[c["sci"]]
         zh_t, zh_s = (r.get("Chinese (Traditional)") or "").strip(), (r.get("Chinese") or "").strip()
-        zh = pool.fix_zh(zh_t.split("〔")[0]) if zh_t else pool.fix_zh(pool.to_hant(zh_s)) if zh_s else r["English"]
+        zh = fix_zh(zh_t.split("〔")[0]) if zh_t else fix_zh(to_hant(zh_s)) if zh_s else r["English"]
         entry = {"zh": zh, "en": r["English"], "order": r["Order"].capitalize(), "family": r["Family"]}
         a = traits.get(c["id"])
         if not a:
@@ -88,20 +103,20 @@ def main():
                 numbers += "部分數值是從近親推估的。"
             facts = [{"t": "牠的數字", "d": numbers}]
             life = []
-            if a.get("Habitat") in pool.HABITAT_ZH:
-                life.append(f"主要待在{pool.HABITAT_ZH[a['Habitat']]}")
-            if a.get("Trophic.Niche") in pool.NICHE_ZH:
-                life.append(pool.NICHE_ZH[a["Trophic.Niche"]])
+            if a.get("Habitat") in HABITAT_ZH:
+                life.append(f"主要待在{HABITAT_ZH[a['Habitat']]}")
+            if a.get("Trophic.Niche") in NICHE_ZH:
+                life.append(NICHE_ZH[a["Trophic.Niche"]])
             mig = MIGRATION.get(int(num(a.get("Migration")) or 0))
             if mig:
-                life.append(pool.MIGRATION_ZH[mig])
+                life.append(MIGRATION_ZH[mig])
             if life:
                 facts.append({"t": "牠怎麼過日子", "d": "，".join(life) + "。"})
             entry["facts"] = facts
         m = re.match(r"[A-Z]{2}", iucn.get(c["sci"], ""))
         entry["iucn"] = m.group(0) if m else None
-        if entry["iucn"] in pool.IUCN_ZH:
-            entry["facts"].append({"t": "保育狀況", "d": f"IUCN 紅色名錄列為「{pool.IUCN_ZH[entry['iucn']]}」，資料可能落後最新評估。"})
+        if entry["iucn"] in IUCN_ZH:
+            entry["facts"].append({"t": "保育狀況", "d": f"IUCN 紅色名錄列為「{IUCN_ZH[entry['iucn']]}」，資料可能落後最新評估。"})
         text[c["id"]] = entry
         c.update(entry)
     with gzip.open(CARDS, "wt", encoding="utf8") as f:

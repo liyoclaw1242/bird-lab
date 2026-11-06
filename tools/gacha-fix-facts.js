@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// 修正卡池裡的鳥名和模板解說，不必重抓 species.json：node tools/gacha-fix-facts.js
-// 規則和 tools/gacha-build-pool.py 同步，之後重建卡池會得到一樣的文字。可重跑，已修過的不會再變。
+// 修正卡池裡的鳥名和模板解說：node tools/gacha-fix-facts.js
+// 規則和 tools/gacha-primary-text.py 同步，重建卡面文字會得到一樣的結果。可重跑，已修過的不會再變。
 // 改完要重跑 seed（npm run seed），線上資料庫的牌面才會更新。
 const fs = require("fs");
 const path = require("path");
