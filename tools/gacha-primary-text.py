@@ -129,6 +129,14 @@ def main():
     # 「想知道更多」的外部連結：eBird 代碼和 BirdLife 物種頁網址都是 AviList 的欄位
     ebird = {r.Scientific_name: r.Species_code_Cornell_Lab for r in species_rows if isinstance(r.Species_code_Cornell_Lab, str)}
     birdlife = {r.Scientific_name: r.BirdLife_DataZone_URL for r in species_rows if isinstance(r.BirdLife_DataZone_URL, str)}
+    # 臺灣：AviList 的分布描述有寫到 Taiwan 就算看得到；除了 Taiwan 沒有其他地名的算特有種（結果 31 種，和臺灣特有種數量一致）
+    # 分布描述常只寫「東亞」，所以只標「看得到」，沒標的不代表臺灣沒有
+    ranges = {r.Scientific_name: r.Range for r in species_rows if isinstance(r.Range, str)}
+    def taiwan(sci):
+        rng = ranges.get(sci, "")
+        if not re.search(r"\bTaiwan\b", rng):
+            return None
+        return "endemic" if not set(re.findall(r"\b[A-Z][a-zA-Z]+", rng)) - {"Taiwan"} else "yes"
 
     cards = json.loads(gzip.decompress(CARDS.read_bytes()).decode("utf8"))
     wiki = wiki_titles([c["sci"] for c in cards])
@@ -183,6 +191,7 @@ def main():
         bl = re.search(r"/factsheet/(\d+)", birdlife.get(c["sci"], ""))
         links = {"ebird": ebird.get(c["sci"]), "birdlife": bl.group(1) if bl else None, "wiki": wiki.get(c["sci"]) or None}
         entry["links"] = {k: v for k, v in links.items() if v}
+        entry["taiwan"] = taiwan(c["sci"])
         text[c["id"]] = entry
         c.update(entry)
     with gzip.open(CARDS, "wt", encoding="utf8") as f:

@@ -10,8 +10,8 @@
 
   const TYPES = {
     meat: { label: "吃肉", beats: "mixed" },
-    mixed: { label: "雜食", beats: "plant" },
-    plant: { label: "吃素", beats: "meat" },
+    mixed: { label: "吃蟲雜食", beats: "plant" },
+    plant: { label: "吃植物", beats: "meat" },
   };
 
   const INTENTS = {

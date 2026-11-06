@@ -33,10 +33,23 @@ NOT_PHOTO = re.compile(
     # 籠養個體：野鳥圖鑑不收動物園、鳥園、繁殖計畫裡的鳥（Zoothera 是鶇的屬名，所以 zoo 要整個字）
     r"|\bzoos?\b|zoological garden|captiv|aviary|aviaries|vogelpark|tierpark|dierenpark|bird ?park|breeding (?:program|centre|center)"
     # 雛鳥、幼鳥、死鳥不當物種代表圖：辨識特徵和成鳥不同，巢邊照也有生態倫理疑慮
-    r"|\b(?:chicks?|nestlings?|fledglings?|juveniles?|juv|immatures?|dead|carcass|roadkill|road kill|killed)\b", re.I)
+    r"|\b(?:chicks?|nestlings?|fledglings?|juveniles?|juv|immatures?|dead|carcass|roadkill|road kill|killed)\b"
+    # 第二輪審查抓到的漏網：寵物、主題樂園和野生動物園、博物館與專著
+    r"|\bpets?\b|loro.?parque|xcaret|wildlife park|jurong|mus[eé]um|monograph|histoire naturelle|\bbeitrag", re.I)
+# 作者欄是古典鳥類畫家或博物館的，即使檔名看不出來也是畫或標本
+# Smit、Hart、Kramer、Huet 也是常見姓氏，只比對畫家的全名
+NOT_PHOTOGRAPHER = re.compile(r"keulemans|\bgould\b|william (?:matthew )?hart|hart, william|joseph smit|smit, joseph|sharpe|bevalet|nicolas huet|huet, nicolas|hartlaub|augustin kr[aä]mer|kr[aä]mer, augustin|\bwolf\b, joseph|joseph wolf|edward lear|"
+                              r"\blodge\b|naumann|audubon|trustees|museum|mus[eé]um|\bnhm\b|biodiversity heritage", re.I)
 
 
 def clean_artist(name):
+    name = re.sub(r"^\(c\)\s*(.+?),\s*(?:some|no|all) rights reserved.*$", r"\1", name.strip(), flags=re.I)
+    m = re.search(r"Original text:\s*([^)]+)\)", name)
+    if m:
+        return m.group(1).strip()
+    m = re.match(r"\s*Original:\s*([^;]+);", name)
+    if m:
+        return m.group(1).strip()
     # Commons 的作者欄常夾著網址、討論頁簽名、時間戳或「derivative work」說明，只留真正的作者名
     name = re.sub(r"\(\s*https?://[^)]*\)", "", name)
     name = re.sub(r"https?://\S+", "", name)
@@ -48,9 +61,22 @@ def clean_artist(name):
             # 「derivative work: 修圖者 ( talk ) 原檔.jpg : 原作者」：原作者在最後
             name = name_full.split(" : ")[-1] if " : " in name_full else ""
     name = re.split(r",\s*who releases", name)[0]
-    name = re.sub(r"\(\s*talk\s*\)", "", name)
+    name = re.sub(r"\(\s*talk\s*\)?", "", name)
     name = re.sub(r"\d{1,2}:\d{2},?\s*\d{1,2}\s+\w+\s+\d{4}\s*\(UTC\)", "", name)
-    name = re.sub(r"\s+", " ", name).strip(" ,;:-")
+    name = re.sub(r"^This (?:photo|image) was taken by\s+", "", name, flags=re.I)
+    name = re.split(r"\s*\.\s*Feel free|\s+Originally uploaded by|\s+The original uploader", name, flags=re.I)[0]
+    name = re.sub(r"\s+at [A-Za-z ]*Wikipedia.*$", "", name)
+    name = re.sub(r"^(?:User:|iNaturalist user:?\s*)", "", name, flags=re.I)
+    name = re.sub(r"\(\s*\w*:?User:[^)]*\)", "", name)
+    m = re.search(r"Original uploader:\s*(.+)$", name)
+    if m:
+        name = m.group(1)
+    # Flickr 顯示名常帶「from 城市, 州, 國家」；括號裡的 from（例如 with help from Mike）不算
+    name = re.sub(r"\s+from\s+[A-Z][^()]*(?:\([^)]*\)[^()]*)*$", "", name.strip())
+    name = re.sub(r"\s+", " ", name).strip(" ,;:-\"'")
+    # 不是人名的作者欄：等於沒有署名
+    if re.match(r"(?:taken by myself|own work|no machine-readable|unknown)", name, re.I):
+        return ""
     return name
 
 
@@ -158,6 +184,8 @@ def judge(title, entry, sci):
     if NOT_PHOTO.search(text):
         return None, "not_live_photo"
     license = plain(meta.get("LicenseShortName", {}).get("value"))
+    if license.upper() == "CC0":
+        license = "CC0 1.0"
     if not re.match(r"(CC BY|CC0|Public domain|PD)", license, re.I) or re.search(r"NC|ND", license):
         return None, "license"
     artist = clean_artist(plain(meta.get("Artist", {}).get("value")) or plain(meta.get("Credit", {}).get("value")) or "")
@@ -168,6 +196,8 @@ def judge(title, entry, sci):
     # 找不到攝影者的不收：CC BY 要署名，攝影者也該被看見
     if not artist or artist.lower() in ("unknown", "unknown author", "anonymous"):
         return None, "no_author"
+    if NOT_PHOTOGRAPHER.search(artist) or NOT_PHOTOGRAPHER.search(plain(meta.get("Credit", {}).get("value"))):
+        return None, "not_live_photo"
     # 分類或檔名裡有這隻鳥的學名，代表 Commons 上有人把照片歸到這個物種，比較可信
     genus_species = sci.lower()
     matched = any(c.lower().startswith(genus_species) for c in entry["cats"]) or genus_species in title.lower().replace("_", " ")

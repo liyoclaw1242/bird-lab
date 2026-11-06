@@ -4,7 +4,7 @@
   // 本機開發時由 server/dev.js 從 stickers/dist 供圖（還沒部署的照片也看得到），沒有的檔案會轉回正式的貼紙站
   const STICKER_BASE = location.hostname === "localhost" ? "/_stickers/" : "https://yi-niao-stickers.yi-niao.workers.dev/";
   // 照片站設了一年的不可變快取，換照片（重跑 tools/build-photos.py）時加一，瀏覽器才會抓新圖
-  const STICKER_VERSION = 3;
+  const STICKER_VERSION = 4;
   const TOKEN_KEY = "gacha-token";
   const OFFSET_KEY = "gacha-dev-offset";
   const FIGHT_KEY = "gacha-fight";
@@ -24,7 +24,9 @@
   const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   // 鳥一律用真實照片（已加紙框），還沒找到照片的鳥顯示剪影。照片不描線稿也不左右翻轉，翻轉會變成鏡像
   const sticker = (c) => (c.photo ? `${STICKER_BASE}${c.photo.file}?v=${STICKER_VERSION}` : "silhouette.svg");
-  const rarityTag = (r) => `<span class="gc-rar ${r}">${r}</span>`;
+  // 稀有度用星星表示，孩子不必懂 N／SR／UR 這些抽卡術語；代號留在 title 給大人對照機率說明
+  const STARS = { N: "★", R: "★★", SR: "★★★", SSR: "★★★★", UR: "★★★★★" };
+  const rarityTag = (r) => `<span class="gc-rar ${r}" title="${r}" aria-label="${esc(t("rarity.label", { stars: STARS[r].length }))}">${STARS[r]}</span>`;
   const typeTag = (type) => `<span class="gc-type ${type}">${t(`type.${type}`)}</span>`;
 
   // 貼紙從 Cloudflare 來，第一次看到要等一下：先站一隻紙底的潦草鳥，圖到了再淡入。
@@ -195,11 +197,14 @@
   function moveLeaves(fight, round) {
     return `<div class="gc-leaves">${fight.script.map((k, i) => {
       const state = round === undefined ? "" : i < round ? "past" : i === round ? "now" : "";
-      return `<div class="gc-move ${state}"><b>${t(`intent.${k}`)}</b>${typeTag(fight.forms[i])}</div>`;
+      // 標籤寫「派哪一型有利」，不寫 BOSS 自己這招的型：寫「吃肉」會讓人以為麻雀吃肉
+      const counter = Object.keys(E.TYPES).find((type) => E.TYPES[type].beats === fight.forms[i]);
+      return `<div class="gc-move ${state}"><b>${t(`intent.${k}`)}</b><small>${t("move.send")}</small>${typeTag(counter)}</div>`;
     }).join("")}</div>`;
   }
 
-  const chain = `<p class="gc-chain">${t("chain", { meat: typeTag("meat"), mixed: typeTag("mixed"), plant: typeTag("plant") })}</p>`;
+  // 相剋畫成一圈箭頭，倍數換成白話
+  const chain = `<p class="gc-chain"><span class="gc-ring">${typeTag("meat")}<i aria-hidden="true">➜</i>${typeTag("mixed")}<i aria-hidden="true">➜</i>${typeTag("plant")}<i aria-hidden="true">➜</i>${typeTag("meat")}</span>${t("chain")}</p>`;
 
   const brand = `<a class="gc-brand" href="/" aria-label="${t("app.name")}"><img src="logo.svg" alt="" width="46" height="46"><span>${t("app.name")}</span></a>`;
   const nav = () => `<header class="gc-header">${brand}<nav class="gc-nav" aria-label="${t("nav.label")}">${["home", "forest", "hand"].map((id) =>
@@ -510,14 +515,14 @@
         ? `<div class="gc-row"><button class="gc-plank" data-release="${esc(c.id)}">${t("card.release")}</button><button class="gc-plank hot" data-do="close-card">${t("close")}</button></div>`
         : `<div class="gc-row"><button class="gc-plank hot" data-take="${esc(c.id)}">${t("card.take")}</button><button class="gc-plank" data-do="close-card">${t("close")}</button></div>`;
     return `<div class="gc-stage" role="dialog" aria-modal="true" aria-label="${esc(birdName(c))}"><article class="gc-note-card aura-${c.rarity} ${dropping ? "dropping" : ""}">
-      <span class="gc-stamp ${c.rarity}">${c.rarity}</span>
+      <span class="gc-stamp ${c.rarity}" title="${c.rarity}">${STARS[c.rarity]}</span>
       ${giftNotice()}${milestoneNote()}
       ${pic(sticker(c), t("home.stickerAlt", { name: birdName(c) }), 'fetchpriority="high"').replace('class="gc-pic', 'class="gc-card-bird gc-pic')}
       <p class="gc-credit">${art}</p>
-      <b class="gc-name">${esc(birdName(c))}</b><span class="gc-sci">${esc(c.sci)}</span>
+      <b class="gc-name">${esc(birdName(c))}${c.taiwan ? ` <span class="gc-tw ${c.taiwan}">${t(c.taiwan === "endemic" ? "card.twEndemic" : "card.twYes")}</span>` : ""}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
-      <ol class="gc-facts">${facts}${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}</li>` : ""}</ol>
+      <ol class="gc-facts">${facts}${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}<small class="gc-handtip">${t("notes.handTip")}</small></li>` : ""}</ol>
       ${moreLinks(c)}${why}
       ${swap}${view.swapping ? "" : action}
     </article></div>`;
@@ -683,15 +688,21 @@
     const stars = Array.from({ length: r.stars }, (_, i) => `<i style="--i:${i}">★</i>`).join("") + `<span>${"★".repeat(3 - r.stars)}</span>`;
     const words = resultWords(r);
     const pct = Math.round((r.score / r.best) * 100);
+    // 一條進度條標出三顆星的位置，看得出差多少，不必讀百分比
+    const marks = E.STAR_CUTS.map((cut, i) => `<b style="left:${cut * 100}%">${"★".repeat(i + 1)}</b>`).join("");
+    const meter = `<div class="gc-meter" role="img" aria-label="${esc(t("result.meter", { pct }))}"><i style="width:${Math.min(100, pct)}%"></i>${marks}</div>`;
     const report = view.moves ? reportText(r) : "";
     return `<div class="gc-scrap gc-result" style="margin-top:18px">
         <img src="${view.fight.boss.img}" alt="${esc(bossName(view.fight.boss))}">
         <div class="gc-stars" role="img" aria-label="${t("result.stars", { n: r.stars })}">${stars}</div>
         <p class="gc-h">${words}</p>
-        <p class="gc-tip">${t("result.tip", { score: Math.round(r.score), best: Math.round(r.best), pct, a: E.STAR_CUTS[0] * 100, b: E.STAR_CUTS[1] * 100, c: E.STAR_CUTS[2] * 100 })}</p>
+        ${meter}
+        <p class="gc-bossfact"><b>${t("bossfact.title")}</b>${t(`bossfact.${view.fight.boss.id}`)}</p>
+        <details class="gc-why"><summary>${t("result.how")}</summary><p>${t("result.tip", { score: Math.round(r.score), best: Math.round(r.best), pct, a: E.STAR_CUTS[0] * 100, b: E.STAR_CUTS[1] * 100, c: E.STAR_CUTS[2] * 100 })}</p></details>
       </div>
+      <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">${t(S.owned >= S.total ? "result.home" : "result.homeMore", { n: D.bonusAllowed(r.stars) })}</button></div>
       ${report ? `<div class="gc-scrap gc-report tilt-r"><p class="gc-h">${t("report.title")}</p><pre>${esc(report)}</pre><p class="gc-legend">${t("report.legend")}</p><button class="gc-plank" data-do="copy-report">${view.reportCopied ? t("copied") : t(navigator.share ? "report.share" : "report.copy")}</button></div>` : ""}
-      <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">${t(S.owned >= S.total ? "result.home" : "result.homeMore", { n: D.bonusAllowed(r.stars) })}</button></div>`;
+`;
   }
 
   function render() {
