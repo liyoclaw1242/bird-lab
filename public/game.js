@@ -501,6 +501,12 @@
       <p class="gc-why-src">${t("more.note")}</p></details>`;
   }
 
+  // 這一科的招牌本事：每科一句，讓孩子記住「牠是哪一家的、這一家有什麼本事」
+  function familyTrait(c) {
+    const f = window.FamilyTraits?.[c.family || String(c.file || "").split("/")[2]];
+    return f ? `<li><b>${t("notes.family")}</b>${esc(I18n.lang === "en" ? f.en : f.zh)}</li>` : "";
+  }
+
   function cardStage() {
     if (!view.card) return "";
     const c = view.card;
@@ -542,7 +548,7 @@
       <b class="gc-name">${esc(birdName(c))}${c.taiwan ? ` <span class="gc-tw ${c.taiwan}">${c.taiwan === "endemic" ? t("card.twEndemic") : c.twStatus && I18n.lang !== "en" ? t("card.twStatus", { status: c.twStatus }) : t("card.twYes")}</span>` : ""}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
-      <ol class="gc-facts">${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}<small class="gc-handtip">${t("notes.handTip")}</small></li>` : ""}${facts}</ol>
+      <ol class="gc-facts">${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}<small class="gc-handtip">${t("notes.handTip")}</small></li>` : ""}${familyTrait(c)}${facts}</ol>
       ${moreLinks(c)}${why}
       ${swap}${view.swapping ? "" : `<div class="gc-card-actions">${action}</div>`}
     </article></div>`;

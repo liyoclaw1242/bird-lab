@@ -4,7 +4,7 @@ const CACHE = "yi-niao-v4";
 // 換圖時改名，舊版的貼紙快取在 activate 時整批刪掉
 const STICKERS = "yi-niao-stickers-v6";
 const STICKER_ORIGIN = "https://yi-niao-stickers.yi-niao.workers.dev";
-const SHELL = ["/", "/style.css", "/engine.js", "/data.js", "/i18n.js", "/birdnotes.js", "/sound.js", "/scenery.js", "/doodle.js", "/game.js", "/logo.svg"];
+const SHELL = ["/", "/style.css", "/engine.js", "/data.js", "/i18n.js", "/family-traits.js", "/birdnotes.js", "/sound.js", "/scenery.js", "/doodle.js", "/game.js", "/logo.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

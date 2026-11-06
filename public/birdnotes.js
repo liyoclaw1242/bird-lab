@@ -77,7 +77,8 @@
       if (!o || !/^[A-Z][a-z]+idae$/.test(family || "")) return null;
       const name = english ? `${order} (${o[2]})` : `${o[0]}${o[1] ? `（${o[1]}）` : ""}`;
       // 科有中文名（取自 Wikidata）就寫中文，學名放括號；沒有才只寫學名
-      const fam = english ? family : card.familyZh ? `${card.familyZh}（${family}）` : `${family} 科`;
+      const zhName = (typeof window !== "undefined" && window.FamilyTraits?.[family]?.name) || card.familyZh;
+      const fam = english ? family : zhName ? `${zhName}（${family}）` : `${family} 科`;
       return i18n.t("notes.taxon", { order: name, family: fam });
     }
 
