@@ -389,6 +389,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-chip.type-mixed[aria-pressed="true"] { background: #8a6a1e; }
 .gc-chip[aria-pressed="true"] b { color: inherit; opacity: .85; }
 .gc-perched-bird { transition: opacity .3s, filter .3s; }
+.gc-perched-bird.peek img { filter: drop-shadow(0 0 10px rgba(255, 236, 150, .95)) drop-shadow(0 3px 1px rgba(20, 14, 5, .5)); }
 .gc-perched-bird.dim { opacity: .45; filter: grayscale(.85) brightness(.75); }
 .gc-perched-bird.match img { animation: gc-glow 2.6s ease-in-out infinite; }
 @keyframes gc-glow {
@@ -458,7 +459,9 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   .gc-roster { display: grid; }
   .gc-roster button { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 0 8px; width: 100%; padding: 3px 4px; text-align: left; font-size: 15px; line-height: 1.3; border-top: 2px dotted #bda877; border-radius: 6px; }
   .gc-roster button:first-child { border-top: 0; }
-  .gc-roster button:hover { background: rgba(243, 207, 106, .5); }
+  .gc-roster button:hover, .gc-roster button.peek { background: rgba(243, 207, 106, .5); }
+  .gc-roster button.peek { box-shadow: inset 4px 0 0 #b9802a; }
+  .gc-roster button.peek img { scale: 1.08; }
   .gc-roster img { width: 42px; height: 40px; object-fit: contain; }
   .gc-roster small { font-size: 14px; font-weight: 400; color: var(--muted); white-space: nowrap; }
 
@@ -663,7 +666,7 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
   .gc-act:not(:disabled):hover { translate: 0 -3px; box-shadow: 0 7px 0 rgba(30, 20, 8, .5); }
   .gc-tab:hover { translate: 0 2px; }
   .gc-lang:hover { translate: 0 -1px; }
-  .gc-perched-bird:hover img, .gc-slot:hover img, .gc-mini-row:hover img, .gc-roster button:hover img { scale: 1.08; }
+  .gc-perched-bird:hover img, .gc-perched-bird.peek img, .gc-slot:hover img, .gc-mini-row:hover img, .gc-roster button:hover img { scale: 1.08; }
   .gc-mini-row:hover { background: rgba(243, 207, 106, .5); }
 }
 .gc-shake:active:not(:disabled), .gc-act:active:not(:disabled), .gc-sig:active:not(:disabled) { translate: 0 3px; box-shadow: 0 2px 0 rgba(30, 20, 8, .5); }

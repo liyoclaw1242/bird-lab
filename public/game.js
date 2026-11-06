@@ -854,6 +854,18 @@
     return "tap";
   }
 
+  // 百鳥在林：滑鼠指到林子裡的鳥，右邊名單的那一行跟著亮；指到名單，林子裡那隻也亮，方便對照
+  function peek(event, on) {
+    if (event.pointerType !== "mouse") return;
+    const el = event.target.closest(".gc-perched-bird, .gc-roster button");
+    if (!el || (event.relatedTarget && el.contains(event.relatedTarget))) return;
+    for (const twin of app.querySelectorAll(`.gc-perched-bird[data-open="${CSS.escape(el.dataset.open)}"], .gc-roster button[data-open="${CSS.escape(el.dataset.open)}"]`)) {
+      twin.classList.toggle("peek", on);
+    }
+  }
+  app.addEventListener("pointerover", (event) => peek(event, true));
+  app.addEventListener("pointerout", (event) => peek(event, false));
+
   document.addEventListener("click", (event) => {
     if (view.anim && animSteps.length) { nextStep(); return; }
     // 存檔區的 <summary> 也要記下開合，不然任何重畫（戳 BOSS、抽卡）都會把它關回去
