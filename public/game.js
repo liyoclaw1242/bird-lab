@@ -4,7 +4,7 @@
   // 本機開發時由 server/dev.js 從 stickers/dist 供圖（還沒部署的照片也看得到），沒有的檔案會轉回正式的貼紙站
   const STICKER_BASE = location.hostname === "localhost" ? "/_stickers/" : "https://yi-niao-stickers.yi-niao.workers.dev/";
   // 照片站設了一年的不可變快取，換照片（重跑 tools/build-photos.py）時加一，瀏覽器才會抓新圖
-  const STICKER_VERSION = 4;
+  const STICKER_VERSION = 5;
   const TOKEN_KEY = "gacha-token";
   const OFFSET_KEY = "gacha-dev-offset";
   const FIGHT_KEY = "gacha-fight";
@@ -244,6 +244,14 @@
     return `<span class="gc-bubble" role="status">${esc(lines[Math.min(view.pokes, lines.length) - 1])}</span>`;
   }
 
+  // 第一次來的人看不懂每天要做什麼：首頁最上面放三步驟小卡，按「知道了」就不再出現
+  const INTRO_KEY = "gacha-intro-seen";
+  function introCard() {
+    if (store.get(INTRO_KEY)) return "";
+    const steps = ["intro.shake", "intro.team", "intro.boss"].map((k, i) => `<li><b>${i + 1}</b>${t(k)}</li>`).join("");
+    return `<div class="gc-scrap gc-intro"><p class="gc-h">${t("intro.title")}</p><ol>${steps}</ol><p class="gc-sub">${t("intro.note")}</p><button class="gc-plank" data-do="intro-done">${t("intro.ok")}</button></div>`;
+  }
+
   function homeScreen() {
     const { fight, draws, result } = S;
     const complete = S.owned >= S.total;
@@ -269,6 +277,7 @@
       </div>
       <div style="margin-top:12px">${fightBtn}</div>`;
     return `${nav()}
+      ${introCard()}
       <div class="gc-columns"><div class="gc-col-main">
       <section class="gc-clearing">
         <div class="gc-today-boss">
@@ -298,7 +307,7 @@
   // 桌機的側欄多一張「今天帶的三隻」：出發前就看得到誰對今天的 BOSS 有利，不用先跑去手上那頁
   function handCard() {
     const rows = hand.map((c, i) => `<button class="gc-mini-row" data-open-hand="${i}">${pic(sticker(c))}<span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}<small>${t("hand.today", { text: matchup(c, S.fight) })}</small></span></button>`).join("");
-    const body = rows ? `<div class="gc-mini-list">${rows}</div>` : `<div class="gc-empty">${window.Scenery.birdSvg()}<p class="gc-sub">${t("home.handEmpty")}</p></div>`;
+    const body = rows ? `<div class="gc-mini-list">${rows}</div>${teamGap(hand, S.fight)}` : `<div class="gc-empty">${window.Scenery.birdSvg()}<p class="gc-sub">${t("home.handEmpty")}</p></div>`;
     return `<div class="gc-scrap gc-desk-only gc-hand-card"><button type="button" class="gc-scarecrow-btn" data-go="hand" title="${esc(t("home.handEdit"))}" aria-label="${esc(t("home.handEdit"))}">${window.Scenery.SCARECROW_FACE}</button><p class="gc-h">${t("home.handTitle")}</p>${body}<button class="gc-text-btn" data-go="hand">${t("home.handEdit")}</button></div>`;
   }
 
@@ -464,7 +473,7 @@
     if (!p) return "";
     const link = (url, text) => (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
     const text = short ? `© ${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}`
-      : `${t("card.photoBy")}${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}${t("card.photoVia", { site: p.source === "inaturalist" ? "iNaturalist" : "Wikimedia Commons" })}`;
+      : `${t("card.photoBy")}${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}${t("card.photoVia", { site: p.source === "inaturalist" ? "iNaturalist" : "Wikimedia Commons" })}${p.cropped ? t("card.cropped") : ""}`;
     return cls ? `<p class="gc-credit ${cls}">${text}</p>` : text;
   }
 
@@ -499,7 +508,9 @@
       ${diet ? `<p>${t("notes.whyType", { diet: esc(diet), type: typeTag(c.type) })}</p>` : ""}
       <p>${t("notes.whyAtk")}</p><p>${t("notes.whyDef")}</p><p>${t("notes.whyLog")}</p><p>${t("notes.whyRarity")}</p><p class="gc-why-src">${t("notes.whySource")}</p></details>`;
     // 照片要標攝影者和授權；資料庫裡舊的 credit（照片去背貼紙）不再顯示
-    const art = c.photo ? photoCredit(c.photo) : t("card.noPhoto");
+    // 回報連結：認錯物種、不是野外照片、署名錯誤，預填學名和照片頁
+    const report = c.photo ? ` · <a href="mailto:liyoclaw1242@gmail.com?subject=${encodeURIComponent(`${t("card.reportSubject")} ${c.sci}`)}&body=${encodeURIComponent(`${c.sci}\n${c.photo.page || ""}\n`)}">${t("card.report")}</a>` : "";
+    const art = c.photo ? photoCredit(c.photo) + report : t("card.noPhoto");
     const inHand = hand.some((b) => b.id === c.id);
     const swap = view.swapping
       ? `<div class="gc-swap"><p>${t("card.swap")}</p><div class="gc-swap-grid">${hand.map((b) => `<button data-replace="${esc(b.id)}">${pic(sticker(b))}${esc(birdName(b))} ${rarityTag(b.rarity)}</button>`).join("")}</div></div>`
@@ -522,9 +533,9 @@
       <b class="gc-name">${esc(birdName(c))}${c.taiwan ? ` <span class="gc-tw ${c.taiwan}">${t(c.taiwan === "endemic" ? "card.twEndemic" : "card.twYes")}</span>` : ""}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
-      <ol class="gc-facts">${facts}${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}<small class="gc-handtip">${t("notes.handTip")}</small></li>` : ""}</ol>
+      <ol class="gc-facts">${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}<small class="gc-handtip">${t("notes.handTip")}</small></li>` : ""}${facts}</ol>
       ${moreLinks(c)}${why}
-      ${swap}${view.swapping ? "" : action}
+      ${swap}${view.swapping ? "" : `<div class="gc-card-actions">${action}</div>`}
     </article></div>`;
   }
 
@@ -549,7 +560,7 @@
     const birds = f.cards.map((c, i) => {
       const p = scene.perches[i], q = wide.perches[i];
       const pos = `--l:${pct(p.left)};--t:${pct(p.top)};--w:${pct(p.size)};--lw:${pct(q.left)};--tw:${pct(q.top)};--ww:${pct(q.size)}`;
-      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${filterClass(c)}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}">${pic(sticker(c))}</button>`;
+      return `<button class="gc-perched-bird ${c.rarity} ${inHand.has(c.id) ? "in-hand" : ""} ${filterClass(c)}" style="${pos}" data-open="${esc(c.id)}" data-tag="${esc(t("forest.inHand"))}" aria-label="${esc(t("card.view", { name: birdName(c) }))}${inHand.has(c.id) ? `${t("match.sep")}${t("forest.inHand")}` : ""}">${pic(sticker(c))}<span class="gc-perch-name" aria-hidden="true">${esc(birdName(c))}</span></button>`;
     }).join("");
     // 桌機的側欄多一份名單：鳥多了以後，用名字找比在樹上找快
     const roster = f.cards.length ? `<div class="gc-scrap gc-desk-only"><p class="gc-h">${t("forest.list")}</p><div class="gc-roster">${f.cards.map((c) =>
@@ -571,13 +582,19 @@
       </div></div>${cardStage()}`;
   }
 
+  // 和 BOSS 招式下的「派 X」用同一種說法：這隻鳥適合派去對付第幾招
+  const fits = (type, fight) => fight.forms.map((form, i) => (E.TYPES[type].beats === form ? i + 1 : 0)).filter(Boolean);
   function matchup(c, fight) {
-    const forms = [...new Set(fight.forms)];
-    return forms.map((form) => {
-      const mul = E.typeMul(c.type, form);
-      const cls = mul > 1 ? "gc-good" : mul < 1 ? "gc-bad" : "";
-      return t("match.vs", { type: t(`type.${form}`), verdict: `<span class="${cls}">${t(mul > 1 ? "match.good" : mul < 1 ? "match.bad" : "match.even")}</span>` });
-    }).join(t("match.sep"));
+    const list = fits(c.type, fight);
+    return list.length ? `<span class="gc-good">${t("match.fits", { list: list.join("、") })}</span>` : t("match.none");
+  }
+  // 隊伍裡沒有鳥適合的招：出發前提醒要補哪一型
+  function teamGap(team, fight) {
+    const covered = new Set(team.flatMap((c) => fits(c.type, fight)));
+    const missing = fight.forms.map((form, i) => [i + 1, form]).filter(([n]) => !covered.has(n));
+    if (!team.length || !missing.length) return "";
+    const need = [...new Set(missing.map(([, form]) => Object.keys(E.TYPES).find((type) => E.TYPES[type].beats === form)))];
+    return `<p class="gc-gap">${t("match.gap", { list: missing.map(([n]) => n).join("、"), types: need.map(typeTag).join(" ") })}</p>`;
   }
 
   function handScreen() {
@@ -588,7 +605,7 @@
         ? `<button class="gc-slot" style="${style}" data-open-hand="${i}" aria-label="${esc(t("card.view", { name: birdName(c) }))}">${pic(sticker(c))}</button>`
         : `<button class="gc-slot empty" style="${style}" data-go="forest">${t("hand.find")}</button>`;
     }).join("");
-    const rows = hand.map((c) => `<div class="gc-team-row"><span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}</span><span>${t("hand.stats", c)}</span><small style="grid-column:1/3">${t("hand.today", { text: matchup(c, S.fight) })}</small></div>`).join("");
+    const rows = hand.map((c) => `<div class="gc-team-row"><span>${esc(birdName(c))} ${rarityTag(c.rarity)} ${typeTag(c.type)}</span><span>${t("hand.stats", c)}</span><small style="grid-column:1/3">${t("hand.today", { text: matchup(c, S.fight) })}</small></div>`).join("") + teamGap(hand, S.fight);
     const fightBtn = S.result ? `<button class="gc-plank" disabled>${t("hand.fought")}</button>`
       : hand.length === E.TEAM_SIZE ? `<button class="gc-plank hot" data-do="start">${t("hand.go", { name: esc(bossName(S.fight.boss)) })}</button>`
       : `<button class="gc-plank" data-go="forest">${t("hand.short", { n: E.TEAM_SIZE - hand.length })}</button>`;
@@ -682,6 +699,14 @@
       : I18n.list("result.words")[r.stars];
   }
 
+  // 沒拿到兩星時給一句下次能照做的提示：今天哪幾招隊伍裡沒有適合的鳥，就建議帶那一型
+  function nextTip() {
+    const team = view.team || hand;
+    const covered = new Set(team.flatMap((c) => fits(c.type, view.fight)));
+    const need = view.fight.forms.filter((_, i) => !covered.has(i + 1)).map((form) => Object.keys(E.TYPES).find((type) => E.TYPES[type].beats === form));
+    return need.length ? `<p class="gc-sub">${t("result.nextTip", { type: typeTag(need[0]) })}</p>` : "";
+  }
+
   function resultScreen() {
     const r = view.result;
     // 亮的星一顆顆蹦出來，和音效的節奏一致
@@ -696,12 +721,13 @@
         <img src="${view.fight.boss.img}" alt="${esc(bossName(view.fight.boss))}">
         <div class="gc-stars" role="img" aria-label="${t("result.stars", { n: r.stars })}">${stars}</div>
         <p class="gc-h">${words}</p>
+        ${r.stars < 2 ? nextTip() : ""}
         ${meter}
         <p class="gc-bossfact"><b>${t("bossfact.title")}</b>${t(`bossfact.${view.fight.boss.id}`)}</p>
         <details class="gc-why"><summary>${t("result.how")}</summary><p>${t("result.tip", { score: Math.round(r.score), best: Math.round(r.best), pct, a: E.STAR_CUTS[0] * 100, b: E.STAR_CUTS[1] * 100, c: E.STAR_CUTS[2] * 100 })}</p></details>
       </div>
       <div style="margin-top:12px"><button class="gc-plank hot" data-go="home">${t(S.owned >= S.total ? "result.home" : "result.homeMore", { n: D.bonusAllowed(r.stars) })}</button></div>
-      ${report ? `<div class="gc-scrap gc-report tilt-r"><p class="gc-h">${t("report.title")}</p><pre>${esc(report)}</pre><p class="gc-legend">${t("report.legend")}</p><button class="gc-plank" data-do="copy-report">${view.reportCopied ? t("copied") : t(navigator.share ? "report.share" : "report.copy")}</button></div>` : ""}
+      ${report ? `<details class="gc-scrap gc-report tilt-r"><summary class="gc-h">${t("report.title")}</summary><pre>${esc(report)}</pre><p class="gc-legend">${t("report.legend")}</p><button class="gc-plank" data-do="copy-report">${view.reportCopied ? t("copied") : t(navigator.share ? "report.share" : "report.copy")}</button></details>` : ""}
 `;
   }
 
@@ -954,6 +980,7 @@
         set({ codeCopied: true, backup: true });
       },
       "toggle-backup": () => { view.backup = !view.backup; },
+      "intro-done": () => { store.set(INTRO_KEY, "1"); set({}); },
       restore: restorePlayer,
       logout,
       revoke: revokeOthers,

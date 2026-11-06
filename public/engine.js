@@ -16,7 +16,7 @@
 
   const INTENTS = {
     peck: { label: "普通啄", hint: "正常攻防", hit: 1, take: 1 },
-    smash: { label: "全力一擊", hint: "挨打 ×1.8", hit: 1.8, take: 1 },
+    smash: { label: "使出全力", hint: "挨打 ×1.8", hit: 1.8, take: 1 },
     rest: { label: "喘氣", hint: "牠很虛，傷害 ×1.4", hit: 0.3, take: 1.4 },
     armor: { label: "縮起來", hint: "傷害 ×0.5", hit: 0.6, take: 0.5 },
   };

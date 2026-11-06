@@ -27,7 +27,7 @@ HABITAT_ZH = {"Forest": "森林", "Shrubland": "灌叢", "Woodland": "疏林", "
               "Human Modified": "人類活動的環境", "Coastal": "海岸", "Riverine": "河邊", "Desert": "沙漠"}
 MIGRATION_ZH = {"sedentary": "一年到頭大多待在同一區", "partially migratory": "有些族群會遷徙", "migratory": "會長途遷徙"}
 # 無危和資料缺乏也要寫出來：只標受威脅的鳥，孩子會以為沒寫的就沒事，或以為「稀有」才值得注意
-IUCN_ZH = {"LC": "無危", "DD": "資料缺乏", "NT": "接近受脅", "VU": "易危", "EN": "瀕危", "CR": "極危", "EW": "野外滅絕", "EX": "已滅絕"}
+IUCN_ZH = {"LC": "無危", "DD": "資料缺乏", "NE": "未評估", "NT": "接近受脅", "VU": "易危", "EN": "瀕危", "CR": "極危", "EW": "野外滅絕", "EX": "已滅絕"}
 to_hant = OpenCC("s2twp").convert
 
 
@@ -93,6 +93,28 @@ def family_names_zh(families):
     return store
 
 
+WIKIDATA_IUCN = {"Q211005": "LC", "Q719675": "NT", "Q278113": "VU", "Q11394": "EN", "Q219127": "CR", "Q239509": "EW", "Q237350": "EX", "Q3245245": "DD"}
+
+
+def iucn_from_wikidata(names):
+    # AviList 沒有等級或寫「未評估」（多半是分類剛調整，BirdLife 還沒對新的種重新評估）時，改用 Wikidata 的 IUCN 保育狀態（P141）
+    items = photos_tool.wikidata_items(names)
+    store = photos_tool.cached("iucn-wikidata.json", dict)
+    qids = sorted({q for n in names for q in items.get(n, [])} - set(store))
+    import urllib.parse
+    for i in range(0, len(qids), 300):
+        values = " ".join(f"wd:{q}" for q in qids[i:i + 300])
+        query = f"SELECT ?item ?status WHERE {{ VALUES ?item {{ {values} }} OPTIONAL {{ ?item wdt:P141 ?status }} }}"
+        d = json.loads(photos_tool.get("https://query.wikidata.org/sparql?" + urllib.parse.urlencode({"query": query, "format": "json"})))
+        for b in d["results"]["bindings"]:
+            q = b["item"]["value"].rsplit("/", 1)[1]
+            st = WIKIDATA_IUCN.get(b.get("status", {}).get("value", "").rsplit("/", 1)[-1])
+            if st or q not in store:
+                store[q] = st
+    (photos_tool.CACHE / "iucn-wikidata.json").write_text(json.dumps(store, ensure_ascii=False), "utf8")
+    return {n: next((store.get(q) for q in items.get(n, []) if store.get(q)), None) for n in names}
+
+
 def wiki_titles(names):
     # 學名 → Wikidata 物種條目 → 中文、英文維基的條目名稱。查過的存在 stickers/.cache/sitelinks.json
     items = photos_tool.wikidata_items(names)
@@ -140,6 +162,8 @@ def main():
 
     cards = json.loads(gzip.decompress(CARDS.read_bytes()).decode("utf8"))
     wiki = wiki_titles([c["sci"] for c in cards])
+    no_status = [c["sci"] for c in cards if re.match(r"[A-Z]{2}", iucn.get(c["sci"], "") or "") is None or iucn.get(c["sci"], "").startswith("NE")]
+    fallback = iucn_from_wikidata(no_status)
     families_zh = family_names_zh(sorted({ioc[c["sci"]]["Family"] for c in cards}))
     traits = {}
     for c in cards:
@@ -167,7 +191,8 @@ def main():
             m = round(num(a["Mass"]), 1)
             entry["massG"] = m
             rank = heavier_than(m)
-            rank_text = f"比資料庫裡 {rank}% 的鳥重" if rank > 0 else "屬於資料庫裡最輕的 1%"
+            # 排名在後半的改說「比幾成的鳥輕」：「比 8% 的鳥重」孩子會以為很重
+            rank_text = "屬於資料庫裡最輕的 1%" if rank <= 0 else f"比資料庫裡 {rank}% 的鳥重" if rank >= 50 else f"比資料庫裡 {100 - rank}% 的鳥輕"
             numbers = f"平均約 {weight(m)}，{rank_text}。嘴長 {num(a['Beak.Length_Culmen']):.0f} 公釐，腳（跗蹠）長 {num(a['Tarsus.Length']):.0f} 公釐。"
             if str(a.get("Inference")).upper() == "YES":
                 numbers += "部分數值是從近親推估的。"
@@ -185,6 +210,9 @@ def main():
             entry["facts"] = facts
         m = re.match(r"[A-Z]{2}", iucn.get(c["sci"], ""))
         entry["iucn"] = m.group(0) if m else None
+        if entry["iucn"] in (None, "NE") and fallback.get(c["sci"]):
+            entry["iucn"] = fallback[c["sci"]]
+            entry["iucnSource"] = "wikidata"
         if entry["iucn"] in IUCN_ZH:
             entry["facts"].append({"t": "保育狀況", "d": f"IUCN 紅色名錄列為「{IUCN_ZH[entry['iucn']]}」，資料可能落後最新評估。"})
         # BirdLife 只存網址最後的編號，前端再接回 https://datazone.birdlife.org/species/factsheet/

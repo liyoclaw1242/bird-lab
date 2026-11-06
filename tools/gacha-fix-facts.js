@@ -23,14 +23,14 @@ function weight(g) {
   return g < 10 ? `${g.toFixed(1)} 公克` : `${g.toFixed(0)} 公克`;
 }
 
-const NUMBERS = /^平均約 [\d.,]+ (?:公克|公斤)，(?:比資料庫裡 (\d+)% 的鳥重|屬於資料庫裡最輕的 1%)。/;
+const NUMBERS = /^平均約 [\d.,]+ (?:公克|公斤)，(?:比資料庫裡 (\d+)% 的鳥(重|輕)|屬於資料庫裡最輕的 1%)。/;
 
 function fixFact(fact, card) {
   if (fact.t === "牠的數字") {
     const m = NUMBERS.exec(fact.d);
     if (!m) throw new Error(`${card.id}: ${fact.d}`);
     // 0% 讀起來像「誰都比牠重」，其實是最輕的那 1%
-    const rank = m[1] === undefined || m[1] === "0" ? "屬於資料庫裡最輕的 1%" : `比資料庫裡 ${m[1]}% 的鳥重`;
+    const rank = m[1] === undefined || m[1] === "0" ? "屬於資料庫裡最輕的 1%" : `比資料庫裡 ${m[1]}% 的鳥${m[2]}`;
     return { t: fact.t, d: `平均約 ${weight(card.massG)}，${rank}。${fact.d.slice(m[0].length)}` };
   }
   if (fact.t === "牠怎麼過日子") {

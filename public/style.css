@@ -586,6 +586,17 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 .gc-tw.endemic { background: #b0412e; }
 .gc-bossfact { margin: 8px 0 10px; font-size: 15px; line-height: 1.6; text-align: left; }
 .gc-bossfact b { display: block; font-size: 14px; color: var(--muted); }
+/* 手機版沒有右邊的名單，照片下方直接寫鳥名；桌機有名單就不寫，免得林子太擠 */
+.gc-perch-name { position: absolute; left: 50%; top: 100%; translate: -50% 0; max-width: 140%; padding: 0 5px; overflow: hidden; font-size: 11px; line-height: 1.5; white-space: nowrap; text-overflow: ellipsis; color: var(--ink); background: rgba(251, 247, 236, .88); border-radius: 6px; pointer-events: none; }
+@media (min-width: 1024px) { .gc-perch-name { display: none; } }
+/* 鳥卡很長，收下／關閉按鈕黏在卡片底部，不用捲到最下面才找得到 */
+.gc-card-actions { position: sticky; bottom: -16px; z-index: 3; margin: 0 -14px -14px; padding: 8px 14px 12px; background: linear-gradient(rgba(251, 245, 227, 0), var(--paper, #fbf5e3) 30%); }
+.gc-gap { margin: 8px 0 0; padding: 6px 8px; font-size: 14px; line-height: 1.5; background: rgba(230, 184, 74, .25); border-radius: 8px; }
+.gc-intro { margin: 12px 0; }
+.gc-intro ol { margin: 6px 0 8px; padding: 0; list-style: none; }
+.gc-intro li { display: flex; gap: 8px; align-items: baseline; margin: 6px 0; font-size: 16px; line-height: 1.5; }
+.gc-intro li b { flex: none; display: grid; place-items: center; width: 26px; height: 26px; color: #fff; background: #3f7a3a; border-radius: 50%; font-size: 15px; }
+@media (min-width: 1024px) { .gc-intro { max-width: 1230px; margin: 12px auto; } }
 .gc-handtip { display: block; margin-top: 2px; font-size: 13px; color: var(--muted); }
 .gc-why summary { cursor: pointer; min-height: 28px; font-weight: 700; font-size: 15px; }
 .gc-why p { margin: 6px 0 0; }

@@ -6,9 +6,9 @@ import gzip, json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FIELDS = ("file", "artist", "license", "licenseUrl", "page", "source")
+FIELDS = ("file", "artist", "license", "licenseUrl", "page", "source", "cropped")
 cards = json.loads(gzip.decompress((ROOT / "server/data/cards.json.gz").read_bytes()).decode("utf8"))
-photos = {c["id"]: {k: c["photo"].get(k) for k in FIELDS} for c in cards if c.get("photo")}
+photos = {c["id"]: {k: c["photo"].get(k) for k in FIELDS if c["photo"].get(k) is not None and c["photo"].get(k) is not False} for c in cards if c.get("photo")}
 frozen = sorted(c["id"] for c in cards if not c.get("photo"))
 out = ROOT / "server/data/photos.json"
 out.write_text(json.dumps({"photos": photos, "frozen": frozen}, ensure_ascii=False, separators=(",", ":")), "utf8")

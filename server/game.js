@@ -62,6 +62,10 @@ const FROZEN_SQL = FROZEN.length
   ? ` AND c.id NOT IN (${FROZEN.map((id) => { if (!/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error(`bad card id ${id}`); return `'${id}'`; }).join(",")})`
   : "";
 const toCard = (row) => withPhoto(row.data);
+// 臺灣看得到的鳥（依 AviList 分布描述）：抽到哪個稀有度後，有四分之一的機會優先從這些鳥裡挑，讓孩子比較常遇到出門看得到的鳥。
+// 稀有度的機率不變，只影響同一個稀有度裡挑哪一隻
+const TAIWAN_IDS = TEXT ? Object.entries(TEXT.cards).filter(([, v]) => v.taiwan).map(([id]) => id).filter((id) => /^[A-Za-z0-9_.-]+$/.test(id)) : [];
+const TAIWAN_SQL = TAIWAN_IDS.length ? ` AND c.id IN (${TAIWAN_IDS.map((id) => `'${id}'`).join(",")})` : "";
 
 // sessionDays：綁了 Google 的帳號，登入憑證幾天後失效（從建立那天算）。預設不失效，要由站長設 GACHA_SESSION_DAYS 才開。
 // 匿名玩家永遠不失效：存檔碼就是他們唯一的鑰匙，過期等於把鳥丟掉
@@ -353,13 +357,13 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
       if (odds[name] > 0 && at < odds[name]) { tier = name; break; }
       at -= odds[name];
     }
-    const { rows } = await q.query(
+    const pickFrom = async (extra) => (await q.query(
       `SELECT c.id, c.data FROM cards c
-       WHERE c.rarity = $2 AND NOT EXISTS (SELECT 1 FROM owned o WHERE o.player_id = $1 AND o.card_id = c.id)${only}
+       WHERE c.rarity = $2 AND NOT EXISTS (SELECT 1 FROM owned o WHERE o.player_id = $1 AND o.card_id = c.id)${only}${extra}
        ORDER BY random() LIMIT 1`,
       [playerId, tier],
-    );
-    return rows[0];
+    )).rows[0];
+    return (TAIWAN_SQL && random() < 0.25 && await pickFrom(TAIWAN_SQL)) || pickFrom("");
   }
 
   // 同一天同一種抽重送，回傳原本那張牌，連點或斷線重試都不會多抽

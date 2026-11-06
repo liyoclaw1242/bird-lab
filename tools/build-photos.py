@@ -35,7 +35,9 @@ NOT_PHOTO = re.compile(
     # 雛鳥、幼鳥、死鳥不當物種代表圖：辨識特徵和成鳥不同，巢邊照也有生態倫理疑慮
     r"|\b(?:chicks?|nestlings?|fledglings?|juveniles?|juv|immatures?|dead|carcass|roadkill|road kill|killed)\b"
     # 第二輪審查抓到的漏網：寵物、主題樂園和野生動物園、博物館與專著
-    r"|\bpets?\b|loro.?parque|xcaret|wildlife park|jurong|mus[eé]um|monograph|histoire naturelle|\bbeitrag", re.I)
+    r"|\bpets?\b|loro.?parque|xcaret|wildlife park|jurong|mus[eé]um|monograph|histoire naturelle|\bbeitrag"
+    # 第三輪：上色照、水彩、圖鑑系列名；野化或引入的族群（不在原生分布區）
+    r"|iconographie|watercolou?r|hand.?colou?red|colori[sz]ed|\bpainted\b|\bferal\b|\bintroduced\b|\bescaped\b", re.I)
 # 作者欄是古典鳥類畫家或博物館的，即使檔名看不出來也是畫或標本
 # Smit、Hart、Kramer、Huet 也是常見姓氏，只比對畫家的全名
 NOT_PHOTOGRAPHER = re.compile(r"keulemans|\bgould\b|william (?:matthew )?hart|hart, william|joseph smit|smit, joseph|sharpe|bevalet|nicolas huet|huet, nicolas|hartlaub|augustin kr[aä]mer|kr[aä]mer, augustin|\bwolf\b, joseph|joseph wolf|edward lear|"
@@ -43,10 +45,17 @@ NOT_PHOTOGRAPHER = re.compile(r"keulemans|\bgould\b|william (?:matthew )?hart|ha
 
 
 def clean_artist(name):
-    name = re.sub(r"^\(c\)\s*(.+?),\s*(?:some|no|all) rights reserved.*$", r"\1", name.strip(), flags=re.I)
-    m = re.search(r"Original text:\s*([^)]+)\)", name)
+    m = re.match(r"\s*(.+?)\s*\(photographer\)", name)
     if m:
-        return m.group(1).strip()
+        return clean_artist(m.group(1))
+    m = re.search(r"\(\s*Image:\s*([^)]+)\)", name)
+    if m:
+        name = m.group(1)
+    name = re.sub(r"^\s*Photo(?:grapher)?\s*:\s*", "", name, flags=re.I)
+    name = re.sub(r"^\(c\)\s*(.+?),\s*(?:some|no|all) rights reserved.*$", r"\1", name.strip(), flags=re.I)
+    m = re.search(r"Original text:\s*(.+?)\s*\)\s*$", name)
+    if m:
+        return clean_artist(m.group(1))
     m = re.match(r"\s*Original:\s*([^;]+);", name)
     if m:
         return m.group(1).strip()
@@ -66,7 +75,28 @@ def clean_artist(name):
     name = re.sub(r"^This (?:photo|image) was taken by\s+", "", name, flags=re.I)
     name = re.split(r"\s*\.\s*Feel free|\s+Originally uploaded by|\s+The original uploader", name, flags=re.I)[0]
     name = re.sub(r"\s+at [A-Za-z ]*Wikipedia.*$", "", name)
-    name = re.sub(r"^(?:User:|iNaturalist user:?\s*)", "", name, flags=re.I)
+    m = re.match(r"\s*Original by\s+(.+?)\s*,\s*edit", name, re.I)
+    if m:
+        name = m.group(1)
+    name = re.sub(r"\s*,?\s*(?:crop(?:ped)?|edit(?:ed)?)\s+by\s+.*$", "", name, flags=re.I)
+    # 括號裡是帳號、維基或 email 的補充說明就拿掉
+    name = re.sub(r"\s*\((?:[^()]|\([^()]*\))*(?:user:|wikipedia|@|flickr)(?:[^()]|\([^()]*\))*\)", "", name, flags=re.I)
+    name = re.sub(r"^(?:\w{2}:)?(?:User:|iNat\w*list user:?\s*)", "", name, flags=re.I)
+    name = re.sub(r",?\s*Flickr user:?\s*\S+$", "", name, flags=re.I)
+    name = re.sub(r",?\s*cropped by .*$", "", name, flags=re.I)
+    name = re.sub(r",\s*(?:\w{2}:)?User:\S+", "", name)
+    name = re.sub(r"\s*=\s*", " = ", name)
+    if " = " in name:
+        name = name.split(" = ")[-1]
+    name = re.split(r"\s+aka\s+|,\s*www\.|\s*/\s*[\w.-]+\.(?:de|com|net|org)\b|,\s*(?=[A-Z][a-z]+$)", name)[0]
+    name = re.sub(r"\s*\(\s*[^()]*\)\s*$", lambda m: "" if re.fullmatch(r"\(\s*[\w.-]+\s*\)", m.group(0).strip()) else m.group(0), name)
+    name = re.sub(r"\s*,\s*[A-Z][a-z]+$", "", name.strip()) if re.search(r"\s,\s*[A-Z][a-z]+$", name) else name
+    paren = re.match(r"(.+?)\s*\(\s*([^()]+?)\s*\)$", name)
+    if paren and (paren.group(2) == paren.group(1).strip() or " " not in paren.group(2)):
+        name = paren.group(1)
+    name = re.sub(r"\s*\(\s*talk\b.*$", "", name)
+    name = re.sub(r"\s*\bwww\.\S+", "", name).strip()
+    name = name.lstrip("@").rstrip(" /")
     name = re.sub(r"\(\s*\w*:?User:[^)]*\)", "", name)
     m = re.search(r"Original uploader:\s*(.+)$", name)
     if m:
@@ -194,9 +224,20 @@ def judge(title, entry, sci):
     if flickr:
         artist = f"{flickr.group(1)} (Flickr)"
     # 找不到攝影者的不收：CC BY 要署名，攝影者也該被看見
-    if not artist or artist.lower() in ("unknown", "unknown author", "anonymous"):
+    # 檔名寫明「Photo - 某人」時，攝影者以檔名為準（作者欄有時是上傳帳號）
+    named = re.search(r"Photo\s*[-:–]\s*([A-Z][\w.'-]+(?: [A-Z][\w.'-]+)+)", title)
+    if named:
+        artist = named.group(1)
+    # 作者欄或檔名帶 1500–1959 年份的多半是古典版畫或老照片
+    if re.search(r"\b1[5-8]\d\d\b|\b19[0-5]\d\b", artist) or re.search(r"_(?:1[5-8]\d\d|19[0-5]\d)\.(?:jpe?g|png|tiff?)$", title, re.I):
+        return None, "not_live_photo"
+    taken = re.match(r"(\d{4})", plain(meta.get("DateTimeOriginal", {}).get("value")))
+    if taken and int(taken.group(1)) < 1960:
+        return None, "not_live_photo"
+    if not artist or re.match(r"(?:unknown|anon(?:ymous)?)\b", artist, re.I):
         return None, "no_author"
-    if NOT_PHOTOGRAPHER.search(artist) or NOT_PHOTOGRAPHER.search(plain(meta.get("Credit", {}).get("value"))):
+    raw_artist = plain(meta.get("Artist", {}).get("value")) + " " + plain(meta.get("Credit", {}).get("value"))
+    if NOT_PHOTOGRAPHER.search(raw_artist) or NOT_PHOTO.search(raw_artist):
         return None, "not_live_photo"
     # 分類或檔名裡有這隻鳥的學名，代表 Commons 上有人把照片歸到這個物種，比較可信
     genus_species = sci.lower()
@@ -204,7 +245,9 @@ def judge(title, entry, sci):
     # 沒歸到這個物種的照片可能是棲地風景或別種鳥（試跑時看到兩張只有風景），不收，改找 iNaturalist
     if not matched:
         return None, "taxon_unverified"
-    return {"title": title, "url": info.get("thumburl") or info["url"], "page": info.get("descriptionurl"),
+    # Commons 上由別人裁切過的衍生檔：署名時要說明
+    cropped = bool(re.search(r"crop", title, re.I))
+    return {"title": title, "url": info.get("thumburl") or info["url"], "page": info.get("descriptionurl"), "cropped": cropped,
             "artist": artist[:120], "license": license, "licenseUrl": plain(meta.get("LicenseUrl", {}).get("value")) or None,
             "taxonMatch": matched}, "ok"
 
@@ -304,10 +347,13 @@ def save_photo(card_id, url):
         sources[card_id] = url
         log.write_text(json.dumps(sources, ensure_ascii=False), "utf8")
         time.sleep(0.2)
+    out = OUT / f"{card_id}.webp"
     with Image.open(raw) as img:
         size = img.size
-        OUT.mkdir(parents=True, exist_ok=True)
-        framed(img).save(OUT / f"{card_id}.webp", "WEBP", quality=80, method=6)
+        # 原圖沒換、加框的成品也比原圖新，就不必重新編碼（重跑整個卡池從約 40 分鐘降到幾分鐘）
+        if not (out.exists() and out.stat().st_mtime >= raw.stat().st_mtime):
+            OUT.mkdir(parents=True, exist_ok=True)
+            framed(img).save(out, "WEBP", quality=80, method=6)
     return size
 
 
@@ -359,7 +405,8 @@ def main():
             continue
         w, h = save_photo(c["id"], chosen["url"])
         by_id[c["id"]]["photo"] = {"file": f"photos/{c['id']}.webp", "w": w, "h": h, "artist": chosen["artist"], "license": chosen["license"],
-                                   "licenseUrl": chosen["licenseUrl"], "page": chosen["page"], "taxonMatch": chosen["taxonMatch"], "source": chosen["source"]}
+                                   "licenseUrl": chosen["licenseUrl"], "page": chosen["page"], "taxonMatch": chosen["taxonMatch"], "source": chosen["source"],
+                                   "cropped": chosen.get("cropped", False)}
         stats["ok"] = stats.get("ok", 0) + 1
         stats[chosen["source"]] = stats.get(chosen["source"], 0) + 1
         stats["taxonMatch"] = stats.get("taxonMatch", 0) + chosen["taxonMatch"]

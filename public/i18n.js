@@ -13,7 +13,7 @@
       "footer.license": `鳥的照片來自 Wikimedia Commons 和 iNaturalist，攝影者和授權標在每張牌上。其他素材的作者、授權和更動說明請見資料來源與授權。`,
       "sound.mute": "關閉音效", "sound.unmute": "開啟音效", "bgm.off": "關閉背景音", "bgm.on": "開啟背景音",
       "type.meat": "吃肉", "type.mixed": "吃蟲雜食", "type.plant": "吃植物", "forest.filter": "依主食篩選", "forest.filterAll": "全部", "forest.noPhoto": "還在找照片",
-      "intent.peck": "普通啄", "intent.smash": "全力一擊", "intent.rest": "歇一下", "intent.armor": "縮起來",
+      "intent.peck": "普通啄", "intent.smash": "使出全力", "intent.rest": "隨便啄啄", "intent.armor": "縮起來",
       "line.peck": "隨便啄一下", "line.smash": "牠認真了", "line.rest": "喘……喘一下", "line.armor": "縮起來裝死",
       "move.meat": ["一口生吞", "俯衝亂啄", "用眼神殺死你"],
       "move.mixed": ["亂翻亂啄", "順手牽羊", "邊跑邊吵"],
@@ -21,7 +21,7 @@
       "move.super": ["畫風崩壞！", "線稿暴走！", "不管了！"],
       "banner.SR": "銀葉飄下", "banner.SSR": "金葉落下！", "banner.UR": "七彩落葉！",
       "boss.passer": "麻雀", "boss.urocissa": "臺灣藍鵲", "boss.platalea": "黑面琵鷺", "boss.syrmaticus": "帝雉", "boss.balaeniceps": "鯨頭鸛",
-      "boss.self": "{name}本鳥",
+      "boss.self": "{name}",
       "nav.label": "分頁", "nav.home": "今日林間", "nav.forest": "百鳥在林", "nav.hand": "一鳥在手",
       "chain": "箭頭前面的打得贏後面的：派打得贏的上場，傷害多一半；派錯了，只剩三分之二。", "move.send": "派",
       "retry": "再試一次", "loading": "走進林子裡…", "copied": "複製好了", "copy": "複製", "close": "關閉", "gotIt": "知道了",
@@ -29,7 +29,7 @@
       "err.restore": "這段存檔碼不對，或暫時連不上林子。你目前的林子沒有變動。",
       "history": "落葉記錄兩週的星數，連勝 {n} 天",
       "home.foughtStars": "今天打過了，得到 {n} 星，明天再來", "home.allDone": "今天的事都辦完了", "home.allDoneWin": "樹搖過了，BOSS 也打了，拿到 {n} 星。明天見。", "home.allDoneLose": "樹搖過了，這次沒比贏 BOSS。明天再來試試。", "home.challenge": "帶手上的 3 隻去挑戰", "home.needThree": "手上要有 3 隻才能打",
-      "home.bossToday": "今天林子裡來了", "home.stickerAlt": "{name}的貼紙", "home.fiveMoves": "牠今天的五招",
+      "home.bossToday": "今天的大 BOSS", "home.stickerAlt": "{name}的照片", "home.fiveMoves": "牠今天的五招",
       "home.handTitle": "今天帶上的三隻", "home.handEdit": "去換鳥", "home.handEmpty": "手上還空著，先去林子裡挑三隻。",
       "draw.complete": "整座林子都收集完了", "draw.done": "今天的樹搖過了", "draw.free": "搖一棵樹", "draw.freeNote": "每天一次，會掉下一隻你還沒遇過的鳥",
       "draw.bonusDone": "獎勵的樹都搖完了", "draw.bonusLeft": "獎勵的樹，還能搖 {n} 棵", "draw.bonusNoteWin": "打了 {stars} 星，今天獎勵 {n} 棵", "draw.bonusNoteLose": "沒比贏也有 1 棵安慰樹",
@@ -52,20 +52,20 @@
       "odds.pity": "保底：連續 {ssr} 次沒遇到 ★★★★ 以上、或 {ur} 次沒遇到 ★★★★★，機率開始上升。朋友分的鳥不算進保底。",
       "odds.catchUp": "補運：林子裡的鳥比平均普通時，★★★ 以上的機率最多提高到 {max} 倍，要搖滿 {min} 次才開始，也不會低於基礎機率。目前 {boost} 倍。",
       "odds.average": "含保底的長期平均約為 ★★★★★ 2.2%、★★★★ 6.9%（模擬值）。遇到的鳥不會重複。星星是遊戲裡的稀有度，不代表這種鳥在野外常不常見。",
-      "more.title": "想多認識牠？", "more.where": "住在哪裡、會不會遷徙", "more.voice": "叫聲", "more.photos": "更多照片", "more.life": "吃什麼、怎麼築巢下蛋", "more.ebirdMap": "eBird 分布地圖", "more.birdlife": "BirdLife 物種頁", "more.xenocanto": "xeno-canto 錄音", "more.ebirdAudio": "eBird 聲音庫", "more.ebirdPhotos": "eBird 相片庫", "more.inat": "iNaturalist 觀察紀錄", "more.wikiZh": "維基百科（中文）", "more.wikiEn": "維基百科（英文）", "more.note": "這些是外部網站，內容和授權以各網站為準。英文頁面可以用瀏覽器的翻譯功能看。", "bossfact.title": "認識今天的對手", "bossfact.passer": "樹麻雀是臺灣城市和農村最常見的鳥之一，常在屋簷、牆縫裡築巢，喜歡成群在地上撿種子吃。", "bossfact.urocissa": "臺灣藍鵲是臺灣特有種，常一家子成群活動，繁殖時會一起照顧雛鳥，巢附近的大人會勇敢趕走靠近的人。", "bossfact.platalea": "黑面琵鷺全世界只有幾千隻，每年冬天有一半以上來臺灣過冬，臺南曾文溪口是牠們最重要的度冬地。", "bossfact.syrmaticus": "帝雉是臺灣特有種，住在中高海拔的森林裡，清晨常在林道邊安靜覓食。千元鈔票背面就有牠。", "bossfact.balaeniceps": "鯨頭鸛住在非洲中東部的大沼澤，常常站著好久一動也不動，等肺魚游近再一口咬住。牠被列為易危。", "card.twEndemic": "臺灣特有種", "card.twYes": "臺灣看得到", "card.photoBy": "照片：", "card.photoVia": "，取自 {site}，加上紙框", "card.noPhoto": "還沒找到這種鳥合用的真實照片，暫時先收起來，抽不到。找到照片後會換上。", 
+      "more.title": "想多認識牠？", "more.where": "住在哪裡、會不會遷徙", "more.voice": "叫聲", "more.photos": "更多照片", "more.life": "吃什麼、怎麼築巢下蛋", "more.ebirdMap": "eBird 分布地圖", "more.birdlife": "BirdLife 物種頁", "more.xenocanto": "xeno-canto 錄音", "more.ebirdAudio": "eBird 聲音庫", "more.ebirdPhotos": "eBird 相片庫", "more.inat": "iNaturalist 觀察紀錄", "more.wikiZh": "維基百科（中文）", "more.wikiEn": "維基百科（英文）", "more.note": "這些是外部網站，小朋友請找大人陪你一起看。內容和授權以各網站為準，英文頁面可以用瀏覽器的翻譯功能看。", "intro.title": "歡迎來到林子！每天只要三步：", "intro.shake": "搖一棵樹，會掉下一隻你還沒遇過的真實鳥兒。", "intro.team": "挑 3 隻站上稻草人，當今天的隊伍。", "intro.boss": "帶牠們找今天來的大鳥比一比，不管輸贏都有獎勵樹可以搖。", "intro.note": "每隻鳥都是真的照片，點開可以看牠吃什麼、住哪裡、有多重。", "intro.ok": "知道了", "bossfact.title": "認識今天的對手", "bossfact.passer": "樹麻雀是臺灣城市和農村最常見的鳥之一，常在屋簷、牆縫裡築巢，喜歡成群在地上撿種子吃。", "bossfact.urocissa": "臺灣藍鵲是臺灣特有種，常一家子成群活動，繁殖時會一起照顧雛鳥，巢附近的大人會勇敢趕走靠近的人，所以看到牠們的巢要安靜走開。", "bossfact.platalea": "黑面琵鷺全世界只有幾千隻，每年冬天有一半以上來臺灣過冬。臺南曾文溪口、七股一帶是牠們的傳統大本營，近年嘉義、雲林的也越來越多。", "bossfact.syrmaticus": "帝雉是臺灣特有種，住在中高海拔的森林裡，清晨常在林道邊安靜覓食。千元鈔票背面就有牠。", "bossfact.balaeniceps": "鯨頭鸛住在非洲中東部的大沼澤，常常站著好久一動也不動，等肺魚游近再一口咬住。牠被列為易危。", "card.twEndemic": "臺灣特有種", "card.twYes": "臺灣看得到", "card.photoBy": "照片：", "card.cropped": "（原圖已由 Commons 上的其他人裁切）", "card.report": "回報照片問題", "card.reportSubject": "照片回報", "card.photoVia": "，取自 {site}，加上紙框", "card.noPhoto": "還沒找到這種鳥合用的真實照片，暫時先收起來，抽不到。找到照片後會換上。", 
       "card.swap": "手上滿了，要放走哪一隻？", "card.shareTo": "送給朋友（最多 {n} 位，你的還在）", "card.fly": "收進我的林子", "card.release": "放回林子", "card.take": "放到手上", "card.stats": "攻 {atk} ／ 防 {def}", "card.view": "看{name}",
       "forest.note": "這片林子有 {here} 隻。你總共遇過 {owned} 隻，世界上還有 {left} 隻沒遇到。點一隻看看牠。",
       "forest.inHand": "在手上", "forest.back": "走回去", "forest.next": "再往裡走", "forest.page": "第 {page} / {pages} 片", "forest.list": "這一片有誰",
-      "match.vs": "對{type} {verdict}", "match.good": "有利", "match.bad": "吃虧", "match.even": "普通", "match.sep": "，",
+      "match.vs": "對{type} {verdict}", "match.good": "有利", "match.bad": "吃虧", "match.even": "普通", "match.sep": "，", "match.fits": "適合派去對付第 {list} 招", "match.none": "沒有特別適合的招", "match.gap": "第 {list} 招還沒有適合的鳥，要派 {types} 的。可以去林子換一隻。",
       "hand.find": "去林子找", "hand.stats": "攻{atk} 防{def}", "hand.today": "今天{text}", "hand.fought": "今天比過了，明天再來", "hand.go": "帶牠們去找{name}比一比", "hand.short": "還少 {n} 隻，去林子找",
       "hand.note": "百鳥在林，不如一鳥在手。挑 {n} 隻站上稻草人，牠們就是今天的隊伍！", "hand.empty": "稻草人身上空空的，有點寂寞",
       "fight.signatureOf": " 的招牌動作", "fight.damage": "{n} 傷害", "fight.counter": "回敬 {n}", "fight.down": "累了，先回樹上休息", "fight.tired": "喘口氣，下回合才能上",
-      "fight.deal": "打 {n}", "fight.take": "挨 {n}", "fight.sep": "／", "fight.fatal": "撐不住", "fight.hp": "血量 {n}%", "fight.team": "你的三隻", "fight.teamHp": "隊伍血量 {n}%", "fight.bossHp": "BOSS 體力 {n}%",
+      "fight.deal": "出力 {n}", "fight.take": "承受 {n}", "fight.sep": "／", "fight.fatal": "會累得回去休息", "fight.hp": "血量 {n}%", "fight.team": "你的三隻", "fight.teamHp": "隊伍血量 {n}%", "fight.bossHp": "BOSS 體力 {n}%",
       "sig.used": "招牌動作用掉了", "sig.ready": "準備好了，下一隻傷害 ×2（再按取消）", "sig.use": "用招牌動作（整場一次，傷害 ×2）",
       "fight.resume": "剛才打到這裡，接著打。", "fight.start": "看好牠下一招，再決定誰上。", "fight.logHit": "{name}用「{word}」打了 {n}。",
       "fight.logBoss": "{boss}{intent}，回敬 {n}。", "fight.logBossDown": "{boss}{intent}，回敬 {n}，{name}累得飛回樹上。",
       "result.words": ["這次沒贏，但你的鳥都很努力，明天再來", "打贏了，但牠還能走", "打得不錯，牠開始懷疑鳥生", "完美！牠當機了"],
-      "result.stars": "{n} 星", "result.how": "星星怎麼算？", "result.meter": "這次打到今天最好成績的 {pct}%",
+      "result.stars": "{n} 星", "result.how": "星星怎麼算？", "result.nextTip": "小提示：明天的 BOSS 招式不一樣，但下次可以試著帶一隻 {type} 的鳥，今天有幾招牠最拿手。", "result.meter": "這次打到今天最好成績的 {pct}%",
       "result.tip": "傷害 {score}，你現有的鳥今天最多能打 {best}（{pct}%）。1 星要 {a}%，2 星 {b}%，3 星 {c}%。",
       "result.home": "回林間", "result.homeMore": "回林間，還有 {n} 棵獎勵樹可以搖",
       "notes.taxon": "{order}・{family}",
@@ -80,7 +80,7 @@
       "notes.whySource": "量測來自 AVONET 資料庫，攻防是遊戲換算出來的，不是原始資料。",
       // 明天的對手只給糊掉的影子，台詞只講影子看得出來的事
       "tomorrow.title": "明天來的是……",
-      "tease.passer": "這個影子你一定認得。對，就是牠。", "tease.urocissa": "尾巴比本鳥先到的那位。", "tease.platalea": "嘴像飯匙的那位，明天換牠吃飯。",
+      "tease.passer": "這個影子你一定認得。對，就是牠。", "tease.urocissa": "尾巴比身體先到的那位。", "tease.platalea": "嘴像飯匙的那位，明天換牠吃飯。",
       "tease.syrmaticus": "走路很有架勢的那位，牠自己也知道。", "tease.balaeniceps": "那個嘴。你知道是誰。",
       "streak.1": "是個開始。", "streak.few": "林子裡開始有鳥注意到你了。", "streak.some": "BOSS 們開了群組在討論你。",
       "streak.week": "整整一週沒輸，鳥界開始流傳你的事蹟。", "streak.long": "鳥界已經把你歸類為天氣現象。",
@@ -91,7 +91,7 @@
       "fight.logHitDis": "{name}用「{word}」打了 {n}，但被剋了，牠不太痛。", "fight.logHitBig": "{name}用「{word}」狠狠打了 {n}。",
       "fight.logBossLow": "{boss}{intent}，回敬 {n}。牠的眼神開始飄了。",
       "result.flawless": "完美！三隻毫髮無傷，牠當機了", "result.wipeout": "三隻都累了，牠還很有精神。明天換個隊伍再來", "result.comeback": "最後一隻撐住了，牠開始懷疑鳥生",
-      "report.title": "今日戰報", "report.copy": "複製戰報", "report.share": "分享戰報",
+      "report.title": "給大人：今日戰報", "report.copy": "複製戰報", "report.share": "分享戰報",
       "report.text": "一鳥在手 {day}\n對上{boss}　{stars}\n{rounds}\n{streak}{week}\n{url}", "report.streak": "連勝 {n} 天 ",
       "report.legend": "<span>🐦 普通</span> <span>🔥 剋到</span> <span>💧 被剋</span> <span>💥 招牌</span> <span>💤 休息</span><br><span>🍁 三星</span> <span>🍂 兩星</span> <span>🍃 一星</span> <span>🌑 沒贏</span>",
       "milestone.title": "第 {n} 隻！",
@@ -109,7 +109,7 @@
       "footer.license": `Bird photos come from Wikimedia Commons and iNaturalist; each card names the photographer and license. See Sources and licenses for other credits, licenses and changes.`,
       "sound.mute": "Mute sound", "sound.unmute": "Unmute sound", "bgm.off": "Turn off ambience", "bgm.on": "Turn on ambience",
       "type.meat": "Meat", "type.mixed": "Bugs & mixed", "type.plant": "Plants", "forest.filter": "Filter by main food", "forest.filterAll": "All", "forest.noPhoto": "photo coming",
-      "intent.peck": "Peck", "intent.smash": "Smash", "intent.rest": "Rest", "intent.armor": "Tuck",
+      "intent.peck": "Peck", "intent.smash": "All out", "intent.rest": "Lazy peck", "intent.armor": "Tuck",
       "line.peck": "A lazy little peck", "line.smash": "It's serious now", "line.rest": "Huff… puff…", "line.armor": "Playing dead",
       "move.meat": ["Swallow Whole", "Dive Peck", "Death Stare"],
       "move.mixed": ["Rummage Peck", "Sticky Beak", "Run and Squawk"],
@@ -117,7 +117,7 @@
       "move.super": ["Art Style Meltdown!", "Line Art Rampage!", "Whatever, Go!"],
       "banner.SR": "Silver leaves fall", "banner.SSR": "Golden leaves!", "banner.UR": "Rainbow leaves!",
       "boss.passer": "Sparrow", "boss.urocissa": "Taiwan Blue Magpie", "boss.platalea": "Black-faced Spoonbill", "boss.syrmaticus": "Mikado Pheasant", "boss.balaeniceps": "Shoebill",
-      "boss.self": "{name}, In the Flesh",
+      "boss.self": "{name}",
       "nav.label": "Sections", "nav.home": "Today", "nav.forest": "The Bush", "nav.hand": "In Hand",
       "chain": "Each type beats the one its arrow points to. Send the one that wins and you deal half again as much damage; send the wrong one and you deal only two thirds.", "move.send": "Send",
       "retry": "Try again", "loading": "Walking into the woods…", "copied": "Copied", "copy": "Copy", "close": "Close", "gotIt": "Got it",
@@ -132,7 +132,7 @@
       "err.slow_down": "That's a lot of requests. Take a minute and try again.", "err.too_big": "That request was too large.", "err.bad_request": "That request wasn't formatted correctly.",
       "history": "Falling leaves track two weeks of stars. Win streak: {n}",
       "home.foughtStars": "Already fought today: {n} ★. Come back tomorrow", "home.allDone": "All done for today", "home.allDoneWin": "Tree shaken, BOSS beaten for {n} ★. See you tomorrow.", "home.allDoneLose": "Tree shaken, but the BOSS won this time. Come back tomorrow for revenge.", "home.challenge": "Take your 3 birds to fight", "home.needThree": "You need 3 birds in hand to fight",
-      "home.bossToday": "In the woods today", "home.stickerAlt": "{name} sticker", "home.fiveMoves": "Its five moves today",
+      "home.bossToday": "Today's big boss", "home.stickerAlt": "Photo of {name}", "home.fiveMoves": "Its five moves today",
       "home.handTitle": "Your three for today", "home.handEdit": "Change birds", "home.handEmpty": "Your hand is empty. Pick three in the woods first.",
       "draw.complete": "You've collected the whole woods", "draw.done": "Today's tree has been shaken", "draw.free": "Shake a tree", "draw.freeNote": "Once a day. A bird you haven't met will fall out",
       "draw.bonusDone": "All bonus trees shaken", "draw.bonusLeft": "Bonus trees: {n} left to shake", "draw.bonusNoteWin": "{stars} ★ today, so {n} bonus trees", "draw.bonusNoteLose": "No win, but here's a consolation tree",
@@ -155,20 +155,20 @@
       "odds.pity": "Pity: odds start rising after {ssr} shakes without ★★★★ or better, or {ur} without ★★★★★. Birds from friends don't count.",
       "odds.catchUp": "Catch-up: when your birds are more common than average, odds for ★★★ and above rise up to ×{max}. It starts after {min} draws and never falls below base odds. Currently ×{boost}.",
       "odds.average": "Long-term averages with pity are about ★★★★★ 2.2% and ★★★★ 6.9% (simulated). You never meet the same bird twice. Stars are the game's rarity, not how common the bird is in the wild.",
-      "more.title": "Want to know this bird better?", "more.where": "Where it lives, whether it migrates", "more.voice": "Calls and songs", "more.photos": "More photos", "more.life": "What it eats, nests and eggs", "more.ebirdMap": "eBird range map", "more.birdlife": "BirdLife species page", "more.xenocanto": "xeno-canto recordings", "more.ebirdAudio": "eBird audio library", "more.ebirdPhotos": "eBird photo library", "more.inat": "iNaturalist observations", "more.wikiZh": "Wikipedia (Chinese)", "more.wikiEn": "Wikipedia (English)", "more.note": "These are outside websites; their content and licenses are their own.", "bossfact.title": "Meet today's visitor", "bossfact.passer": "The Eurasian Tree Sparrow is one of the most common birds in Taiwan's towns and farms. It nests under eaves and in wall cracks and feeds on seeds on the ground in flocks.", "bossfact.urocissa": "The Taiwan Blue Magpie is found only in Taiwan. Family groups move around together, help raise each other's chicks, and boldly chase people away from their nest.", "bossfact.platalea": "There are only a few thousand Black-faced Spoonbills in the world, and more than half of them spend the winter in Taiwan, mostly at the Zengwen River mouth in Tainan.", "bossfact.syrmaticus": "The Mikado Pheasant lives only in Taiwan, in mid- to high-elevation forests, and often feeds quietly along forest trails at dawn. It appears on the NT$1,000 banknote.", "bossfact.balaeniceps": "The Shoebill lives in the great swamps of east-central Africa. It can stand still for a long time, waiting for a lungfish to swim close. It is listed as Vulnerable.", "card.twEndemic": "Endemic to Taiwan", "card.twYes": "Found in Taiwan", "card.photoBy": "Photo: ", "card.photoVia": ", via {site}, paper frame added", "card.noPhoto": "We have not found a usable real photo of this bird yet, so it is set aside and cannot be drawn for now. It will come back once we find one.", 
+      "more.title": "Want to know this bird better?", "more.where": "Where it lives, whether it migrates", "more.voice": "Calls and songs", "more.photos": "More photos", "more.life": "What it eats, nests and eggs", "more.ebirdMap": "eBird range map", "more.birdlife": "BirdLife species page", "more.xenocanto": "xeno-canto recordings", "more.ebirdAudio": "eBird audio library", "more.ebirdPhotos": "eBird photo library", "more.inat": "iNaturalist observations", "more.wikiZh": "Wikipedia (Chinese)", "more.wikiEn": "Wikipedia (English)", "more.note": "These are outside websites; their content and licenses are their own.", "intro.title": "Welcome to the woods! Three steps a day:", "intro.shake": "Shake a tree and a real bird you haven't met yet drops out.", "intro.team": "Pick 3 to perch on the scarecrow: that's today's team.", "intro.boss": "Take them to challenge today's big bird. Win or lose, you get bonus trees.", "intro.note": "Every bird is a real photo. Open one to see what it eats, where it lives and how heavy it is.", "intro.ok": "Got it", "bossfact.title": "Meet today's visitor", "bossfact.passer": "The Eurasian Tree Sparrow is one of the most common birds in Taiwan's towns and farms. It nests under eaves and in wall cracks and feeds on seeds on the ground in flocks.", "bossfact.urocissa": "The Taiwan Blue Magpie is found only in Taiwan. Family groups move around together, help raise each other's chicks, and boldly chase people away from their nest, so if you spot one, quietly walk away.", "bossfact.platalea": "There are only a few thousand Black-faced Spoonbills in the world, and more than half of them spend the winter in Taiwan, with the Zengwen River estuary in Tainan as a key site and growing numbers in Chiayi and Yunlin.", "bossfact.syrmaticus": "The Mikado Pheasant lives only in Taiwan, in mid- to high-elevation forests, and often feeds quietly along forest trails at dawn. It appears on the NT$1,000 banknote.", "bossfact.balaeniceps": "The Shoebill lives in the great swamps of east-central Africa. It can stand still for a long time, waiting for a lungfish to swim close. It is listed as Vulnerable.", "card.twEndemic": "Endemic to Taiwan", "card.twYes": "Found in Taiwan", "card.photoBy": "Photo: ", "card.cropped": " (cropped by another Commons editor)", "card.report": "Report a photo problem", "card.reportSubject": "Photo report", "card.photoVia": ", via {site}, paper frame added", "card.noPhoto": "We have not found a usable real photo of this bird yet, so it is set aside and cannot be drawn for now. It will come back once we find one.", 
       "card.swap": "Your hand is full. Which bird goes?", "card.shareTo": "Give to friends (up to {n}, you keep yours)", "card.fly": "Keep it in my woods", "card.release": "Back to the woods", "card.take": "Take in hand", "card.stats": "ATK {atk} / DEF {def}", "card.view": "View {name}",
       "forest.note": "{here} birds in this patch. You've met {owned} in all, with {left} still out there. Tap one to take a look.",
       "forest.inHand": "In hand", "forest.back": "Go back", "forest.next": "Go deeper", "forest.page": "Patch {page} / {pages}", "forest.list": "Who's in this patch",
-      "match.vs": "vs {type}: {verdict}", "match.good": "strong", "match.bad": "weak", "match.even": "even", "match.sep": ", ",
+      "match.vs": "vs {type}: {verdict}", "match.good": "strong", "match.bad": "weak", "match.even": "even", "match.sep": ", ", "match.fits": "good against move {list}", "match.none": "no move it's especially good against today", "match.gap": "Nobody on your team is good against move {list}: it needs {types}. You can swap one in from the woods.",
       "hand.find": "Find in woods", "hand.stats": "ATK {atk} DEF {def}", "hand.today": "Today: {text}", "hand.fought": "Already fought today. Come back tomorrow", "hand.go": "Take them to challenge {name}", "hand.short": "{n} more needed. Go find them",
       "hand.note": "A bird in the hand is worth two in the bush. Pick {n} to perch on the scarecrow: they're today's team!", "hand.empty": "Nobody's on the scarecrow. It's a little lonely",
       "fight.signatureOf": "'s signature move", "fight.damage": "{n} damage", "fight.counter": "Counter {n}", "fight.down": "Tired, back to the tree", "fight.tired": "Catching its breath. Back next round",
-      "fight.deal": "Deal {n}", "fight.take": "Take {n}", "fight.sep": " ", "fight.fatal": "Too much", "fight.hp": "HP {n}%", "fight.team": "Your three", "fight.teamHp": "Team HP {n}%", "fight.bossHp": "BOSS stamina {n}%",
+      "fight.deal": "Give {n}", "fight.take": "Take {n}", "fight.sep": " ", "fight.fatal": "Would tire out", "fight.hp": "HP {n}%", "fight.team": "Your three", "fight.teamHp": "Team HP {n}%", "fight.bossHp": "BOSS stamina {n}%",
       "sig.used": "Signature move used", "sig.ready": "Ready! Next bird deals ×2 (tap to cancel)", "sig.use": "Use signature move (once per fight, ×2 damage)",
       "fight.resume": "Picking up where you left off.", "fight.start": "Watch its next move, then choose who goes.", "fight.logHit": "{name} used {word} for {n}.",
       "fight.logBoss": "{boss} used {intent} and countered for {n}.", "fight.logBossDown": "{boss} used {intent} and countered for {n}. {name} flew back to the tree to rest.",
       "result.words": ["Not a win this time, but your birds tried hard. Come back tomorrow", "You won, but it can still walk", "Nice fight. It's questioning its life as a bird", "Perfect! It has crashed"],
-      "result.stars": "{n} of 3 stars", "result.how": "How are stars counted?", "result.meter": "This fight reached {pct}% of today's best possible",
+      "result.stars": "{n} of 3 stars", "result.how": "How are stars counted?", "result.nextTip": "Tip: tomorrow's boss has different moves, but next time try bringing a {type} bird; it would have been best against some of today's moves.", "result.meter": "This fight reached {pct}% of today's best possible",
       "result.tip": "Damage {score}. Your current birds could deal at most {best} today ({pct}%). 1 star takes {a}%, 2 stars {b}%, 3 stars {c}%.",
       "result.home": "Back to the woods", "result.homeMore": "Back to the woods: bonus trees waiting ({n})",
       "notes.taxon": "Order {order}, family {family}",
@@ -193,7 +193,7 @@
       "fight.logHitDis": "{name} used {word} for {n}. Wrong matchup; it barely noticed.", "fight.logHitBig": "{name} used {word} for a whopping {n}.",
       "fight.logBossLow": "{boss} used {intent} and countered for {n}. Its eyes are starting to wander.",
       "result.flawless": "Perfect. Not a feather out of place. It has crashed", "result.wipeout": "All three are tired and it is still going strong. Try a different team tomorrow", "result.comeback": "Last bird standing held on. It's questioning its life as a bird",
-      "report.title": "Today's report", "report.copy": "Copy the report", "report.share": "Share the report",
+      "report.title": "For grown-ups: today's report", "report.copy": "Copy the report", "report.share": "Share the report",
       "report.text": "A Bird in the Hand {day}\nvs {boss}  {stars}\n{rounds}\n{streak}{week}\n{url}", "report.streak": "{n}-day streak ",
       "report.legend": "<span>🐦 hit</span> <span>🔥 strong</span> <span>💧 weak</span> <span>💥 signature</span> <span>💤 resting</span><br><span>🍁 3 stars</span> <span>🍂 2 stars</span> <span>🍃 1 star</span> <span>🌑 lost</span>",
       "milestone.title": "Bird number {n}!",
@@ -219,16 +219,16 @@
     獵捕其他脊椎動物: "hunts other vertebrates", 吃陸上的植物: "eats plants on land", 吃水生植物: "eats water plants", 吃腐肉: "eats carrion",
   };
   const MOVES = { 一年到頭大多待在同一區: "Stays in the same area most of the year.", 會長途遷徙: "Migrates long distances.", 有些族群會遷徙: "Some populations migrate." };
-  const IUCN = { 無危: "Least Concern", 資料缺乏: "Data Deficient", 接近受脅: "Near Threatened", 易危: "Vulnerable", 瀕危: "Endangered", 極危: "Critically Endangered", 野外滅絕: "Extinct in the Wild", 已滅絕: "Extinct" };
-  const NUMBERS = /^平均約 ([\d.,]+) (公克|公斤)，(?:比資料庫裡 (\d+)% 的鳥重|屬於資料庫裡最輕的 1%)。嘴長 ([\d.,]+) 公釐，腳（跗蹠）長 ([\d.,]+) 公釐。(部分數值是從近親推估的。)?$/;
+  const IUCN = { 無危: "Least Concern", 資料缺乏: "Data Deficient", 未評估: "Not Evaluated", 接近受脅: "Near Threatened", 易危: "Vulnerable", 瀕危: "Endangered", 極危: "Critically Endangered", 野外滅絕: "Extinct in the Wild", 已滅絕: "Extinct" };
+  const NUMBERS = /^平均約 ([\d.,]+) (公克|公斤)，(?:比資料庫裡 (\d+)% 的鳥(重|輕)|屬於資料庫裡最輕的 1%)。嘴長 ([\d.,]+) 公釐，腳（跗蹠）長 ([\d.,]+) 公釐。(部分數值是從近親推估的。)?$/;
 
   function translateFact({ t, d }) {
     if (t === "牠的數字") {
       const m = NUMBERS.exec(d);
       if (!m) return null;
       const unit = m[2] === "公斤" ? "kg" : "g";
-      const rank = m[3] && m[3] !== "0" ? `heavier than ${m[3]}% of birds in the database` : "among the lightest 1% of birds in the database";
-      return { t: FACT_TITLES[t], d: `Averages about ${m[1]} ${unit}, ${rank}. Bill ${m[4]} mm, leg (tarsus) ${m[5]} mm.${m[6] ? " Some values are estimated from close relatives." : ""}` };
+      const rank = !m[3] || m[3] === "0" ? "among the lightest 1% of birds in the database" : `${m[4] === "輕" ? "lighter" : "heavier"} than ${m[3]}% of birds in the database`;
+      return { t: FACT_TITLES[t], d: `Averages about ${m[1]} ${unit}, ${rank}. Bill ${m[5]} mm, leg (tarsus) ${m[6]} mm.${m[7] ? " Some values are estimated from close relatives." : ""}` };
     }
     if (t === "牠怎麼過日子") {
       const parts = d.replace(/。$/, "").split("，");
