@@ -7,7 +7,9 @@
 #   保育等級、eBird 物種代碼、BirdLife 物種頁：AviList v2025（CRAN 套件 avilistr 內附，CC BY 4.0）
 #   維基百科條目（中文、英文）：Wikidata 的 sitelinks（CC0），先用學名找到物種條目，只連有條目的語言
 #   科的中文名：Wikidata 科級條目的中文標籤（CC0），優先臺灣正體，沒有再由簡體轉換
-#   臺灣看得到：GBIF 在臺灣的鳥類觀察紀錄（含 eBird、iNaturalist 等公開資料），一種鳥有 100 筆以上就算；臺灣特有種仍依 AviList 分布描述
+#   臺灣的鳥：臺灣物種名錄 TaiCOL（Shao & Chung 2024，CC BY 4.0）的中文名、特有種與鳥類紀錄委員會的出現狀態（留鳥、冬候鳥…普遍、稀有）；
+#             TaiCOL 對不到學名的，退回 GBIF 在臺灣的觀察紀錄（100 筆以上算看得到）
+#   其他鳥的中文名：IOC 繁中名，套上和臺灣名錄一致的用字（鶥→眉、鷈→鷉、鵖→䳭、鹮→䴉、蓑→簑）和類群俗名（麥鷍→金剛鸚鵡、鵎鵼→巨嘴鳥）
 # 卡的 id、稀有度、攻防、食性屬性不動（那是遊戲數值）；只換名字、目科和模板解說。
 # 輸出：更新 server/data/cards.json.gz，並寫 server/data/cardtext.json 給伺服器在回傳牌時覆蓋資料庫裡的舊文字，不必改正式資料庫。
 # 原始資料裡對不到 AVONET 的鳥沒有可靠的數字，列進 unsourced，由伺服器凍結。
@@ -66,6 +68,52 @@ def num(v):
         return float(v)
     except (TypeError, ValueError):
         return None
+
+
+# 由 TaiCOL 臺灣名和 IOC 繁中名對照出來、在臺灣名錄裡沒有例外的用字差異，加上臺灣慣用的類群俗名
+TW_CHARS = str.maketrans({"鶥": "眉", "鷈": "鷉", "鵖": "䳭", "鹮": "䴉", "蓑": "簑"})
+TW_GROUPS = [("麥鷍", "金剛鸚鵡"), ("鵎鵼", "巨嘴鳥")]
+
+
+def taiwan_usage(name):
+    for old, new in TW_GROUPS:
+        name = name.replace(old, new)
+    return name.translate(TW_CHARS)
+
+
+TW_STAY = {"留": "留鳥", "冬": "冬候鳥", "夏": "夏候鳥", "過": "過境鳥", "海": "海鳥"}
+TW_ABUND = {"普": "普遍", "不普": "不普遍", "稀": "稀有"}
+
+
+def taicol_birds():
+    # 臺灣有紀錄的鳥種（TaiCOL API），學名和同物異名都對照。存在 stickers/.cache/taicol-aves.json
+    def build():
+        out, off = [], 0
+        while True:
+            d = json.loads(photos_tool.get(f"https://api.taicol.tw/v2/taxon?taxon_group=Aves&rank=Species&is_in_taiwan=true&limit=300&offset={off}"))
+            out += d["data"]; off += 300
+            if off >= d["info"]["total"]:
+                return out
+    by_name = {}
+    for x in photos_tool.cached("taicol-aves.json", build):
+        if x.get("taxon_status") != "accepted":
+            continue
+        for n in [x["simple_name"], *[s.strip() for s in (x.get("synonyms") or "").split(",") if s.strip()]]:
+            by_name.setdefault(n, x)
+    return by_name
+
+
+def taiwan_status(x):
+    # 「臺灣: 留、普」→「普遍留鳥」；只有迷鳥或本島沒有（只在金門、馬祖）的不算看得到
+    m = re.search(r"臺灣: ([^,|]*)", x.get("alien_status_note") or "")
+    if not m or x.get("alien_type") not in (None, "native"):
+        return None
+    first = m.group(1).split("/")[0]
+    parts = first.split("、")
+    if not parts or parts[0] in ("迷", "無", "") or (len(parts) > 1 and parts[1] == "迷"):
+        return None
+    stay, abund = TW_STAY.get(parts[0]), TW_ABUND.get(parts[1]) if len(parts) > 1 else None
+    return f"{abund or ''}{stay or ''}" or None
 
 
 def gbif_taiwan():
@@ -170,14 +218,18 @@ def main():
     # 分布描述常只寫「東亞」，所以只標「看得到」，沒標的不代表臺灣沒有
     ranges = {r.Scientific_name: r.Range for r in species_rows if isinstance(r.Range, str)}
     tw_records = gbif_taiwan()
+    taicol = taicol_birds()
     def taiwan(sci):
+        x = taicol.get(sci)
+        if x:
+            if x.get("is_endemic"):
+                return "endemic"
+            return "yes" if taiwan_status(x) else None
         rng = ranges.get(sci, "")
         if re.search(r"\bTaiwan\b", rng) and not set(re.findall(r"\b[A-Z][a-zA-Z]+", rng)) - {"Taiwan"}:
             return "endemic"
-        # 100 筆以上的紀錄才算看得到，少數幾筆多半是迷鳥
-        if tw_records.get(sci, 0) >= 100 or re.search(r"\bTaiwan\b", rng):
-            return "yes"
-        return None
+        # TaiCOL 對不到的才看 GBIF：100 筆以上的紀錄才算看得到，少數幾筆多半是迷鳥
+        return "yes" if tw_records.get(sci, 0) >= 100 else None
 
     cards = json.loads(gzip.decompress(CARDS.read_bytes()).decode("utf8"))
     wiki = wiki_titles([c["sci"] for c in cards])
@@ -200,7 +252,10 @@ def main():
         r = ioc[c["sci"]]
         zh_t, zh_s = (r.get("Chinese (Traditional)") or "").strip(), (r.get("Chinese") or "").strip()
         zh = fix_zh(zh_t.split("〔")[0]) if zh_t else fix_zh(to_hant(zh_s)) if zh_s else r["English"]
-        entry = {"zh": zh, "en": r["English"], "order": r["Order"].capitalize(), "family": r["Family"], "familyZh": families_zh.get(r["Family"])}
+        tc = taicol.get(c["sci"])
+        zh = tc["common_name_c"] if tc and tc.get("common_name_c") else taiwan_usage(zh)
+        fam_zh = families_zh.get(r["Family"])
+        entry = {"zh": zh, "en": r["English"], "order": r["Order"].capitalize(), "family": r["Family"], "familyZh": taiwan_usage(fam_zh) if fam_zh else None}
         a = traits.get(c["id"])
         if not a:
             unsourced.append(c["id"])
@@ -239,6 +294,7 @@ def main():
         links = {"ebird": ebird.get(c["sci"]), "birdlife": bl.group(1) if bl else None, "wiki": wiki.get(c["sci"]) or None}
         entry["links"] = {k: v for k, v in links.items() if v}
         entry["taiwan"] = taiwan(c["sci"])
+        entry["twStatus"] = taiwan_status(tc) if tc and entry["taiwan"] else None
         text[c["id"]] = entry
         c.update(entry)
     with gzip.open(CARDS, "wt", encoding="utf8") as f:

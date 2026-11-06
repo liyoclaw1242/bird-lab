@@ -194,6 +194,14 @@ img { display: block; }
 @keyframes gc-lunge-left { 40% { transform: translateX(-34%); } }
 .gc-float { position: absolute; top: 12%; z-index: 3; font-size: 38px; color: #fff; -webkit-text-stroke: 1.5px var(--hit); animation: gc-float .9s ease-out both; }
 .gc-float.right { right: 15%; }
+/* 剋到或大絕招：BOSS 晃得更久、數字更大，再跳一行大字 */
+.gc-fighter.struck.hard { animation: gc-struck-hard .7s; }
+@keyframes gc-struck-hard { 10% { transform: translateX(-18px) rotate(-7deg); filter: brightness(2); } 25% { transform: translateX(16px) rotate(6deg); } 40% { transform: translateX(-12px) rotate(-4deg); filter: brightness(1.4); } 60% { transform: translateX(8px); } 80% { transform: translateX(-4px); } }
+.gc-float.big { font-size: 52px; }
+.gc-shout { position: absolute; top: 2%; right: 8%; z-index: 4; font-size: 28px; font-weight: 700; color: #ffe27a; -webkit-text-stroke: 1.5px #7a4f08; text-shadow: 0 2px 0 rgba(0, 0, 0, .35); animation: gc-shout .9s ease-out both; pointer-events: none; }
+@keyframes gc-shout { 0% { opacity: 0; scale: .6; } 25% { opacity: 1; scale: 1.15; } 70% { opacity: 1; scale: 1; } 100% { opacity: 0; translate: 0 -12px; } }
+@media (min-width: 1024px) { .gc-shout { font-size: 38px; } .gc-float.big { font-size: 70px; } }
+@media (prefers-reduced-motion: reduce) { .gc-fighter.struck.hard { animation: none; } .gc-shout { animation: gc-fade .9s both; } }
 .gc-float.left { left: 15%; }
 @keyframes gc-float { from { transform: translateY(14px) scale(.5); opacity: 0; } 25% { transform: translateY(0) scale(1.2); opacity: 1; } to { transform: translateY(-30px) scale(1); opacity: .9; } }
 .gc-log { min-height: 42px; margin: 8px 0; padding: 6px 10px; font-size: 15px; font-weight: 400; line-height: 1.35; }

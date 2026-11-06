@@ -539,7 +539,7 @@
         return c.photo ? `<a class="gc-zoom" href="${esc(sticker(c))}" target="_blank" rel="noopener" title="${esc(t("card.zoom"))}">${img}</a>` : img;
       })()}
       <p class="gc-credit">${art}</p>
-      <b class="gc-name">${esc(birdName(c))}${c.taiwan ? ` <span class="gc-tw ${c.taiwan}">${t(c.taiwan === "endemic" ? "card.twEndemic" : "card.twYes")}</span>` : ""}</b><span class="gc-sci">${esc(c.sci)}</span>
+      <b class="gc-name">${esc(birdName(c))}${c.taiwan ? ` <span class="gc-tw ${c.taiwan}">${c.taiwan === "endemic" ? t("card.twEndemic") : c.twStatus && I18n.lang !== "en" ? t("card.twStatus", { status: c.twStatus }) : t("card.twYes")}</span>` : ""}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
       <ol class="gc-facts">${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}<small class="gc-handtip">${t("notes.handTip")}</small></li>` : ""}${facts}</ol>
@@ -669,8 +669,10 @@
     const myFlip = view.doodles[shown.id] && !view.doodles[shown.id].faceRight ? "flip" : "";
     const bossFlip = view.bossFaceRight ? "flip" : "";
     const mine = anim?.phase === "hit" ? "lunge" : anim?.phase === "bossHit" ? "struck" : "";
-    const theirs = anim?.phase === "hit" ? "struck" : anim?.phase === "bossHit" ? "lunge" : "";
-    const float = anim?.phase === "hit" ? `<div class="gc-float right rar-${shown.rarity}">-${Math.round(anim.dealt)}</div>` : anim?.phase === "bossHit" ? `<div class="gc-float left">-${Math.round(anim.taken)}</div>` : "";
+    const theirs = anim?.phase === "hit" ? (anim.adv || anim.big ? "struck hard" : "struck") : anim?.phase === "bossHit" ? "lunge" : "";
+    // 打中時 BOSS 照片上跳出傷害數字；剋到或大絕招再多一行大字，孩子一眼看得出這下打得好
+    const shout = anim?.phase === "hit" && (anim.adv || anim.big) ? `<div class="gc-shout">${t(anim.adv ? "fight.shoutAdv" : "fight.shoutBig")}</div>` : "";
+    const float = anim?.phase === "hit" ? `<div class="gc-float right rar-${shown.rarity} ${anim.big ? "big" : ""}">-${Math.round(anim.dealt)}</div>${shout}` : anim?.phase === "bossHit" ? `<div class="gc-float left">-${Math.round(anim.taken)}</div>` : "";
     const cards = team.map((c, i) => {
       const legal = !locked && E.legalSlots(state).includes(i);
       const down = state.hp[i] <= 0;
@@ -901,7 +903,7 @@
     const midway = { ...next, hp: before.hp };
     runSteps([
       { ms: signature ? HOLD.super : HOLD.player, run: () => { Sound.play(signature ? "super" : "attack"); set({ active: slot, moves, signature: false, anim: { phase: "player", card, signature, word, dealt } }); } },
-      { ms: HOLD.hit, run: () => { Sound.play(HIT_SOUND[card.rarity] || "hit"); set({ state: midway, anim: { phase: "hit", dealt }, log: t(hitKey, { name: birdName(card), word, n: Math.round(dealt) }) }); } },
+      { ms: HOLD.hit, run: () => { Sound.play(HIT_SOUND[card.rarity] || "hit"); set({ state: midway, anim: { phase: "hit", dealt, adv: ev.adv, big: ev.big || signature }, log: t(hitKey, { name: birdName(card), word, n: Math.round(dealt) }) }); } },
       { ms: HOLD.boss, run: () => { Sound.play("boss"); set({ anim: { phase: "boss", intent, taken, react } }); } },
       { ms: HOLD.bossHit, run: () => { Sound.play(fainted ? "faint" : "bossHit"); set({ state: next, anim: { phase: "bossHit", taken }, log: t(bossKey, { boss: bossName(fight.boss), intent: t(`intent.${intent}`), n: Math.round(taken), name: birdName(card) }) }); } },
       { run: () => { set({ anim: null }); if (E.isOver(next)) submit(); } },
