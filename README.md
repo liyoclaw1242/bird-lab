@@ -83,7 +83,7 @@ tools/restore-backup.sh backup.dump 'postgresql://...'
 
 ## 授權與素材
 
-鳥照片、鳥類資料和背景音各有不同授權，完整標示見 [public/credits.html](public/credits.html)。
+程式碼以 MIT 授權釋出，見 [LICENSE](LICENSE)。鳥照片、鳥類資料和背景音不在 MIT 範圍內，各有自己的授權，完整標示見 [public/credits.html](public/credits.html)。
 
 - 鳥的圖片是真實照片（`tools/build-photos.py`）：先用 Wikidata 代表圖（Wikimedia Commons），沒有合用的再用 iNaturalist 研究級觀察裡 CC BY／CC0 的照片。照片只縮圖、加紙框，不裁切不翻轉。找不到照片的鳥凍結：抽不到、不算收集總數，已有的顯示剪影。
 - 照片放在照片站 `stickers/dist/photos/`；換照片後部署照片站，並把 `public/game.js` 的 `STICKER_VERSION` 加一。再跑 `tools/gacha-photo-json.py` 更新 `server/data/photos.json`：伺服器靠這個檔決定誰有照片、誰凍結，不必改正式資料庫。
