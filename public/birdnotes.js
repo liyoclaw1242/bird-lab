@@ -54,7 +54,10 @@
   const SPARROW = { id: "Passer_domesticus", g: 26.5 };
 
   const taxonomy = (card) => {
-    const [, order, family] = String(card.file || "").split("/");
+    // 新資料直接帶 order、family（取自 IOC）；舊牌從檔案路徑「stickers/目/科/學名」拆
+    const [, pathOrder, pathFamily] = String(card.file || "").split("/");
+    const order = card.order || pathOrder;
+    const family = card.family || pathFamily;
     return { order, family };
   };
 

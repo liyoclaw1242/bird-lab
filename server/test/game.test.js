@@ -54,7 +54,9 @@ test("卡池是完整資料庫，而且匯入可重跑", async () => {
   const { rows } = await db.query("SELECT count(*)::int AS n FROM cards");
   assert.strictEqual(rows[0].n, all.length);
   assert.strictEqual(new Set(all.map((c) => c.id)).size, all.length);
-  assert.ok(all.every((c) => c.atk > 0 && c.def > 0 && c.file && c.zh && c.facts.length >= 2));
+  // 原始資料對不到量測的少數鳥沒有解說，伺服器會凍結牠們
+  const { unsourced } = require("../data/cardtext.json");
+  assert.ok(all.every((c) => c.atk > 0 && c.def > 0 && c.file && c.zh && (c.facts.length >= 2 || unsourced.includes(c.id))));
 });
 
 test("新玩家有每種食性各一隻，隊伍可直接打", async () => {

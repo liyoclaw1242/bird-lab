@@ -11,7 +11,9 @@ const en = BirdNotes.create(I18n.create("en"));
 const zh = BirdNotes.create(I18n.create("zh-Hant"));
 
 test("每張牌都有中英文的分類、手感和主食", () => {
-  for (const card of cards) {
+  // 原始資料對不到量測的少數鳥沒有體重和食性，伺服器會凍結牠們
+  const { unsourced } = require("../data/cardtext.json");
+  for (const card of cards.filter((c) => !unsourced.includes(c.id))) {
     for (const notes of [en, zh]) {
       assert.ok(notes.taxon(card), card.id);
       assert.ok(notes.hand(card), card.id);
