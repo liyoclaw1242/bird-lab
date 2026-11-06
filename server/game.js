@@ -44,6 +44,8 @@ const BUNDLED = process.env.GACHA_BUNDLED_PHOTOS === "off" ? null : require("./d
 // 名字、目科和解說從原始資料（IOC、AVONET、AviList）重建，由 tools/gacha-primary-text.py 產生；
 // 和照片一樣跟著程式部署，回傳前覆蓋資料庫裡的舊文字。原始資料對不到量測的鳥一起凍結
 const TEXT = process.env.GACHA_BUNDLED_PHOTOS === "off" ? null : require("./data/cardtext.json");
+// 每種鳥一段 xeno-canto 叫聲（tools/build-calls.py 產生）：只存錄音編號、錄音者和授權，播放時直接連 xeno-canto
+const CALLS = process.env.GACHA_BUNDLED_PHOTOS === "off" ? null : require("./data/calls.json");
 // 第一印象、你可能不知道是外部作者寫的文字，已經不用；資料庫裡的舊牌還帶著，回給前端前拿掉
 const NOTES = new Set(["第一印象", "你可能不知道"]);
 const withPhoto = (data) => {
@@ -52,6 +54,7 @@ const withPhoto = (data) => {
   const { source, credit, qualityOk, ...card } = data;
   card.facts = (data.facts || []).filter((f) => !NOTES.has(f.t));
   if (TEXT?.cards[data.id]) Object.assign(card, TEXT.cards[data.id]);
+  if (CALLS?.[data.id]) card.call = CALLS[data.id];
   if (TEXT?.unsourced.includes(data.id)) delete card.photo;
   else if (!card.photo && BUNDLED?.photos[data.id]) card.photo = BUNDLED.photos[data.id];
   return card;

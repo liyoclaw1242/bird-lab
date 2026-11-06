@@ -501,6 +501,18 @@
       <p class="gc-why-src">${t("more.note")}</p></details>`;
   }
 
+  // 聽牠叫：連到挑好的那段 xeno-canto 錄音頁。xeno-canto 有防機器人保護，不能在別的網站直接播放，所以開新分頁聽
+  const licenseName = (url) => {
+    const m = /licenses\/([a-z-]+)\/([\d.]+)/.exec(url || "");
+    return m ? `CC ${m[1].toUpperCase()} ${m[2]}` : "CC";
+  };
+  function callBox(c) {
+    const x = c.call;
+    if (!x) return "";
+    return `<div class="gc-call"><a class="gc-plank" href="https://xeno-canto.org/${esc(x.xc)}" target="_blank" rel="noopener">${t("call.play")}</a>
+      <small>${t("call.credit")}${esc(x.rec || "xeno-canto")} · <a href="${esc(x.lic || "")}" target="_blank" rel="noopener">${licenseName(x.lic)}</a> · XC${esc(x.xc)}${x.cnt ? `（${esc(x.cnt)}）` : ""}</small></div>`;
+  }
+
   // 這一科的招牌本事：每科一句，讓孩子記住「牠是哪一家的、這一家有什麼本事」
   function familyTrait(c) {
     const f = window.FamilyTraits?.[c.family || String(c.file || "").split("/")[2]];
@@ -548,6 +560,7 @@
       <b class="gc-name">${esc(birdName(c))}${c.taiwan ? ` <span class="gc-tw ${c.taiwan}">${c.taiwan === "endemic" ? t("card.twEndemic") : c.twStatus && I18n.lang !== "en" ? t("card.twStatus", { status: c.twStatus }) : t("card.twYes")}</span>` : ""}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>
+      ${callBox(c)}
       <ol class="gc-facts">${weigh ? `<li><b>${t("notes.hand")}</b>${esc(weigh)}<small class="gc-handtip">${t("notes.handTip")}</small></li>` : ""}${familyTrait(c)}${facts}</ol>
       ${moreLinks(c)}${why}
       ${swap}${view.swapping ? "" : `<div class="gc-card-actions">${action}</div>`}
