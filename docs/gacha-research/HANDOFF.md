@@ -61,7 +61,7 @@
 1. 使用者建 Supabase 專案（東京區，對應 `vercel.json` 的 `hnd1`）；`DATABASE_URL` 用連線池字串，`DATABASE_CA` 放 Supabase 的 CA 憑證。`DATABASE_URL=... DATABASE_CA=... npm run seed`。**還沒連過 Supabase**，併發測試跑在本機 Postgres 18。
 2. 照片站：跑 `tools/build-photos.py`，到 `stickers/` 執行 `npx wrangler deploy`（已完成）。
 3. 使用者在 Google Cloud 建 OAuth 網頁用戶端 ID，把預覽和正式網址加進「已授權的 JavaScript 來源」，設 Vercel 的 `GOOGLE_CLIENT_ID`。設其他 Vercel 環境變數，開**預覽部署**跑完整流程。`vercel.json` 和 `.vercelignore` 還沒在 Vercel 上實際部署過。
-4. 不備份資料庫（2026-11-06 使用者決定）；GitHub Actions 只留每日健康檢查（`.github/workflows/health.yml`，Secret：`SITE_URL`）。
+4. 不備份資料庫（2026-11-06 使用者決定）；GitHub Actions 只留每日健康檢查（`.github/workflows/health.yml`，不需要 Secret）。
 5. 確定正式網址後，更新 `public/index.html` 的 `og:url`、`og:image`（現在寫 `bird-lab-three.vercel.app`）。
 6. 朋友內測約兩週，看留存和用量。問過使用者才能 push 到 `main`。
 
