@@ -27,7 +27,7 @@ test("畫面用到的每個固定字串鍵都存在", () => {
   const keys = [...source.matchAll(/\b(?:t|I18n\.t|I18n\.list)\("([\w.]+)"/g)].map((m) => m[1]);
   assert.ok(keys.length > 80);
   for (const key of keys) assert.ok(key in I18n.DICT["zh-Hant"], key);
-  assert.ok(!CJK.test(source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\s\/\/ .*$/gm, "").replace(/\["第一印象", "你可能不知道"\]/, "").replace(/"輪廓太小"/, "")), "畫面程式還留有中文");
+  assert.ok(!CJK.test(source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\s\/\/ .*$/gm, "").replace(/"輪廓太小"/, "")), "畫面程式還留有中文");
 });
 
 test("每張牌的模板解說都能翻成英文，人工趣聞不顯示", () => {

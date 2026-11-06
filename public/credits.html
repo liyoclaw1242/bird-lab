@@ -1,38 +1,111 @@
 <!doctype html>
 <html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>資料來源與授權｜一鳥在手</title>
 <link rel="alternate" hreflang="zh-Hant" href="https://bird-lab-three.vercel.app/credits.html"><link rel="alternate" hreflang="en" href="https://bird-lab-three.vercel.app/credits-en.html">
-<style>body{max-width:680px;margin:0 auto;padding:24px 16px 48px;font:16px/1.7 "PingFang TC","Noto Sans TC",system-ui,sans-serif;color:#2b2316;background:#f4ecd6}h1{font-size:26px;margin-bottom:.4em}h2{font-size:19px;margin:1.6em 0 .3em}a{color:#2a6f8f;overflow-wrap:anywhere}pre{white-space:pre-wrap;font-size:13px;line-height:1.5;padding:12px;background:#fbf5e3;border-radius:8px}li{margin:.15em 0}ul{padding-left:1.3em}small{color:#5a4c32}</style></head>
-<body><h1>資料來源與授權</h1>
-<p>這個遊戲站在很多人的成果上。下面列出每一項素材的來源、授權，以及我們做了哪些更動。</p>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap">
+<style>
+/* 和隱私說明同一套紙條與小鳥，兩頁一起改 */
+:root { --paper: #fbf5e3; --ink: #2b2316; --line: #3a2d18; --muted: #5a4c32; --link: #2a6f8f; --body: #e9dcb8; --beak: #e0902f; --feather: #c98f4e; --sky: #8fb6c4; --leaf: #7f9a4c; --rose: #d98b7b; --cream: #f4e6c4; }
+* { box-sizing: border-box; }
+body { max-width: 640px; margin: 0 auto; padding: 24px 16px 40px; font: 17px/1.7 "LXGW WenKai TC", "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: var(--ink); background: #efe3c2; }
+a { color: var(--link); overflow-wrap: anywhere; }
+header { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 18px; }
+h1 { flex: 1; margin: 0; font-size: 30px; line-height: 1.2; }
+header p { margin: 4px 0 0; font-size: 16px; color: var(--muted); }
+header svg { flex: none; width: 104px; height: 88px; }
+.note { position: relative; display: flex; align-items: flex-start; gap: 12px; margin: 0 0 14px; padding: 14px 16px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px 18px 13px 20px; box-shadow: 2px 3px 0 rgba(58, 45, 24, .22); }
+.note:nth-of-type(even) { flex-direction: row-reverse; border-radius: 18px 13px 20px 14px; }
+.note > svg { flex: none; width: 84px; height: 84px; }
+.note:nth-of-type(odd) > svg { transform: rotate(-3deg); }
+.note:nth-of-type(even) > svg { transform: rotate(3deg) scaleX(-1); }
+.note > div { min-width: 0; }
+.note h2 { margin: 0 0 2px; font-size: 18px; }
+.note p { margin: 0 0 6px; }
+.note p:last-child { margin-bottom: 0; }
+.note ul { margin: 4px 0 0; padding-left: 1.2em; }
+.note li { margin: .1em 0; }
+small { color: var(--muted); }
+details { margin: 4px 0 0; }
+summary { cursor: pointer; color: var(--muted); }
+pre { white-space: pre-wrap; font-size: 12px; line-height: 1.45; padding: 10px; background: var(--cream); border-radius: 8px; }
+.bye { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; font-weight: 700; text-align: center; }
+.bye svg { flex: none; width: 58px; height: 58px; }
+.links { margin-top: 8px; text-align: center; font-size: 15px; }
+.links a { white-space: nowrap; }
+.b { fill: var(--body); stroke: var(--line); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.l { fill: none; stroke: var(--line); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.w { fill: var(--feather); stroke: var(--line); stroke-width: 2.4; stroke-linejoin: round; }
+.k { fill: var(--beak); stroke: var(--line); stroke-width: 2; stroke-linejoin: round; }
+.e { fill: var(--line); }
+.c { fill: var(--rose); opacity: .65; }
+@media (max-width: 420px) { .note > svg { width: 64px; height: 64px; } header svg { width: 84px; height: 72px; } }
+</style></head>
+<body>
+<!-- 小鳥是本站自己畫的，和隱私說明共用；手繪感來自濾鏡讓線條微微抖動 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="hand" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+  <g id="bird"><path class="l" d="M40 80 L38 90 M38 90 L32 92 M38 90 L43 93 M56 80 L58 90 M58 90 L52 93 M58 90 L64 92"/><path class="b" d="M14 58 C10 34 28 16 50 17 C72 18 86 36 82 56 C79 74 62 83 46 82 C30 81 17 73 14 58 Z"/><path class="w" d="M26 54 C34 46 49 49 53 58 C49 69 34 72 25 65 C22 62 23 57 26 54 Z"/><circle class="e" cx="58" cy="37" r="3.6"/><circle cx="59.3" cy="35.7" r="1.1" fill="#fff"/><circle class="c" cx="67" cy="47" r="4.6"/><path class="k" d="M74 37 L89 42 L74 48 Z"/></g>
+</defs></svg>
 
-<h2>鳥的照片</h2>
-<p>每種鳥用一張真實照片。優先取 <a href="https://www.wikidata.org/">Wikidata</a> 物種條目的代表圖（存放在 <a href="https://commons.wikimedia.org/">Wikimedia Commons</a>）；沒有合用的，改用 <a href="https://www.inaturalist.org/">iNaturalist</a> 研究級觀察（社群鑑定一致）裡的照片。只收 CC BY、CC BY-SA、CC0 和公有領域的照片，手繪圖鑑、標本、蛋、地圖都不收。</p>
-<p>每張照片的攝影者、授權和原始頁面標在牌上，點名字會開到原始頁面。更動：縮小尺寸、轉成 WebP、外面加一圈紙框；沒有裁切、去背或翻轉。依 CC BY-SA 授權的照片，加框後的版本同樣以原授權提供。</p>
-<p>還沒找到合用照片的鳥暫時收起來、抽不到，畫面上顯示我們自己畫的灰色剪影。「明天來的是」的影子是 BOSS 照片轉成灰階再模糊。</p>
-<p>BOSS 的照片：</p>
-<ul>
+<header>
+  <div style="flex:1"><h1>資料來源與授權</h1><p>這片林子是很多人一起種的。小鳥把每一份的來處都記下來了。</p></div>
+  <svg viewBox="0 0 110 96" role="img" aria-label="一隻捧著帳本的鳥"><g filter="url(#hand)"><use href="#bird"/><path d="M60 62 L84 56 L104 62 L80 70 Z" fill="#fff" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path d="M60 62 L80 70 L80 82 L60 74 Z M80 70 L104 62 L104 74 L80 82 Z" fill="#f4e6c4" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path class="l" d="M86 63 L96 60.5" stroke-width="1.6"/></g></svg>
+</header>
+
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><rect x="58" y="54" width="32" height="24" rx="4" fill="#6f6a60" stroke="#3a2d18" stroke-width="2.4"/><circle cx="74" cy="66" r="7" fill="#8fb6c4" stroke="#3a2d18" stroke-width="2.2"/><rect x="62" y="50" width="9" height="5" rx="1.5" fill="#6f6a60" stroke="#3a2d18" stroke-width="2"/><path class="l" d="M84 12 l4 -4 M90 18 l5 -2 M80 8 l1 -5" stroke-width="1.8"/></g></svg>
+  <div><h2>鳥的照片</h2>
+  <p>每種鳥用一張真實照片。優先取 <a href="https://www.wikidata.org/">Wikidata</a> 物種條目的代表圖（存放在 <a href="https://commons.wikimedia.org/">Wikimedia Commons</a>），而且要歸在這種鳥的學名底下；沒有的話，改用 <a href="https://www.inaturalist.org/">iNaturalist</a> 研究級觀察（社群鑑定一致）裡的照片。只收 CC BY、CC BY-SA、CC0 和公有領域的照片，手繪圖鑑、標本、蛋、巢和地圖都不收。</p>
+  <p>攝影者、授權和原始頁面標在每張牌上，點名字會開到原始頁面。更動：縮小、轉成 WebP、外面加一圈紙框；沒有裁切、去背或翻轉。CC BY-SA 的照片，加框後的版本同樣以原授權提供。</p>
+  <p>還沒找到合用照片的鳥先收起來、抽不到，畫面上是我們自己畫的灰色剪影。</p></div>
+</section>
+
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path d="M30 18 L36 6 L44 16 L50 4 L56 16 L64 6 L68 18 Z" fill="#e6b84a" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/></g></svg>
+  <div><h2>BOSS 的照片</h2>
+  <ul>
 <li>麻雀：<a href="https://commons.wikimedia.org/wiki/File:Tree-Sparrow-2009-16-02.jpg">Andreas Trepte</a>，<a href="https://creativecommons.org/licenses/by-sa/2.5">CC BY-SA 2.5</a></li>
 <li>臺灣藍鵲：<a href="https://commons.wikimedia.org/wiki/File:Taiwan_blue_magpie_(Urocissa_caerulea)_Xindian.jpg">Charles J. Sharp</a>，<a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a></li>
 <li>黑面琵鷺：<a href="https://commons.wikimedia.org/wiki/File:Platalea_minor_okinawa.jpg">spaceaero2</a>，<a href="https://creativecommons.org/licenses/by/3.0">CC BY 3.0</a></li>
 <li>帝雉：<a href="https://commons.wikimedia.org/wiki/File:Mikado_Pheasant_398.jpg">Snowyowls (photographer) / Jako (uploader)</a>，<a href="http://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a></li>
 <li>鯨頭鸛：<a href="https://commons.wikimedia.org/wiki/File:Entebbe_Shoe_Bill_Stork.jpg">zeroexposure (Flickr)</a>，<a href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a></li>
-</ul>
+  </ul>
+  <p><small>「明天來的是」的影子是 BOSS 照片轉成灰階再模糊。</small></p></div>
+</section>
 
-<h2>鳥名與分類</h2>
-<p><a href="https://worldbirdnames.org/">IOC World Bird List v15.2</a>，Frank Gill、David Donsker、Pamela Rasmussen 編，<a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>。少數英文名改用 <a href="https://doi.org/10.2173/avilist.v2026">AviList v2026</a>（AviList Core Team，2026，<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>）的新名稱。更動：沒有繁體名稱的鳥，由簡體名機器轉換；簡體名裡用「(共鳥)」代替的字改回「䳍」，並拿掉名字後面的註記。牌上的「目」和「科」取自 IOC 分類，目的中文名和中英文白話說明是我們依通行譯名補上的。</p>
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path d="M52 62 L72 56 L92 62 L72 70 Z" fill="#fff" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path d="M52 62 L72 70 L72 84 L52 76 Z M72 70 L92 62 L92 76 L72 84 Z" fill="#cfe0b8" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path class="l" d="M56 68 L67 72 M77 72 L88 68" stroke-width="1.6"/></g></svg>
+  <div><h2>鳥名與分類</h2>
+  <p><a href="https://worldbirdnames.org/">IOC World Bird List v15.2</a>，Frank Gill、David Donsker、Pamela Rasmussen 編，<a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>。少數英文名改用 <a href="https://doi.org/10.2173/avilist.v2026">AviList v2026</a>（AviList Core Team，2026，<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>）的新名稱。</p>
+  <p>更動：沒有繁體名稱的鳥，由簡體名機器轉換；簡體名裡用「(共鳥)」代替的字改回「䳍」，並拿掉名字後面的註記。牌上的「目」和「科」取自 IOC 分類，目的中文名和白話說明是我們依通行譯名補上的。</p></div>
+</section>
 
-<h2>體型與生態量測</h2>
-<p>AVONET：Tobias et al. 2022，<i>Ecology Letters</i>，<a href="https://doi.org/10.1111/ele.13898">doi:10.1111/ele.13898</a>，<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>。更動：攻擊、防禦、屬性和稀有度由量測值換算而來，是遊戲數值，不是原資料。牌上「放在手上」用家麻雀（同一份資料，約 26.5 公克）當單位換算體重。「牠怎麼過日子」把 AVONET 的食性分類改寫成白話，例如 Omnivore（沒有單一食物超過六成）寫成「食性很雜」。</p>
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path class="l" d="M6 92 H90"/><path d="M54 70 H90 V78 H54 Z" fill="#d8e3e5" stroke="#3a2d18" stroke-width="2.2"/><path class="l" d="M60 70 V66 M66 70 V67 M72 70 V65 M78 70 V67 M84 70 V66" stroke-width="1.6"/></g></svg>
+  <div><h2>體型與生態量測</h2>
+  <p>AVONET：Tobias et al. 2022，<i>Ecology Letters</i>，<a href="https://doi.org/10.1111/ele.13898">doi:10.1111/ele.13898</a>，<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>。</p>
+  <p>更動：攻擊、防禦、屬性和稀有度由量測值換算而來，是遊戲數值，不是原資料。「放在手上」用家麻雀（約 26.5 公克）當單位換算體重。「牠怎麼過日子」把 AVONET 的食性分類改寫成白話，例如 Omnivore（沒有單一食物超過六成）寫成「食性很雜」。</p></div>
+</section>
 
-<h2>牌上的趣聞</h2>
-<p>「第一印象」和「你可能不知道」由 [removed]（[removed]）依中文維基百科等資料改寫，<a href="[removed]">原文</a>依 <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> 提供。更動：機器轉為繁體。繁體版同樣以 CC BY-SA 4.0 提供。牌上的「來源」連結會開到主要參考的維基條目。</p>
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path d="M70 50 C70 50 86 46 92 56 C88 70 74 74 66 66 C64 60 66 54 70 50 Z" fill="#7f9a4c" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path class="l" d="M68 64 C74 60 82 56 90 56" stroke-width="1.6"/></g></svg>
+  <div><h2>保育狀況</h2>
+  <p>牌上的等級取自 <a href="https://doi.org/10.2173/avilist.v2026">AviList v2026</a>（BirdLife v10，<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>），AviList 沒有列等級的沿用 <a href="https://www.wikidata.org/">Wikidata</a>（CC0）。原始評估來自 <a href="https://www.iucnredlist.org/">IUCN 紅色名錄</a>，可能落後最新評估，請以 IUCN 網站為準。</p>
+  <p>等級也是稀有度的計算因素之一。稀有度在建立卡池時就定下，之後等級更新不會改變牌的稀有度。</p></div>
+</section>
 
-<h2>保育狀況</h2>
-<p>牌上的等級取自 <a href="https://doi.org/10.2173/avilist.v2026">AviList v2026</a>（BirdLife v10，<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>），AviList 沒有列等級的沿用 <a href="https://www.wikidata.org/">Wikidata</a>（CC0）。原始評估來自 <a href="https://www.iucnredlist.org/">IUCN 紅色名錄</a>，可能落後最新評估，請以 IUCN 網站為準。等級也是稀有度的計算因素之一，稀有度在建立卡池時就定下，之後等級更新不會改變牌的稀有度。</p>
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path class="l" d="M84 22 V8 L94 6 V20" stroke-width="2"/><circle cx="81" cy="22" r="3.2" fill="#3a2d18"/><circle cx="91" cy="20" r="3.2" fill="#3a2d18"/><path class="l" d="M88 40 q4 4 0 8 M93 37 q6 7 0 14" stroke-width="1.8"/></g></svg>
+  <div><h2>聲音與字型</h2>
+  <p>背景音：<a href="https://bigsoundbank.com/campagne-s0097.html">Countryside ambience</a>，Joseph Sardin，BigSoundBank，CC0。更動：頭尾交叉淡化做成循環。按鈕和戰鬥音效，以及桌布的雨聲和爐火聲，由本遊戲以程式即時合成。</p>
+  <p>字型：<a href="https://fonts.google.com/specimen/LXGW+WenKai+TC">霞鶩文楷 TC</a>，透過 Google Fonts 載入，SIL Open Font License 1.1。</p></div>
+</section>
 
-<h2>資料整理</h2>
-<p>鳥名、量測和保育狀況的彙整資料依下列授權使用：</p>
-<pre>MIT License
+<section class="note">
+  <svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path d="M58 58 L90 52 L92 82 L60 86 Z" fill="#fff" stroke="#3a2d18" stroke-width="2.2" stroke-linejoin="round"/><path class="l" d="M64 64 L86 60 M65 70 L87 66 M66 76 L80 74" stroke-width="1.6"/></g></svg>
+  <div><h2>資料整理</h2>
+  <p>鳥名、量測和保育狀況最初整理自一份 MIT 授權的彙整資料，我們正改從上面列的原始資料重新整理。</p>
+  <details><summary>授權全文</summary><pre>MIT License
 
 Copyright (c) 2026 [removed] ([removed])
 
@@ -52,20 +125,10 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-</pre>
+SOFTWARE.</pre></details></div>
+</section>
 
-<h2>背景音</h2>
-<p><a href="https://bigsoundbank.com/campagne-s0097.html">Countryside ambience</a>，Joseph Sardin，BigSoundBank，CC0。更動：頭尾交叉淡化做成循環。</p>
-
-<h2>音效</h2>
-<p>按鈕和戰鬥音效，以及桌布的雨聲和爐火聲，由本遊戲以程式即時合成。</p>
-
-<h2>字型</h2>
-<p><a href="https://fonts.google.com/specimen/LXGW+WenKai+TC">霞鶩文楷 TC</a>，透過 Google Fonts 載入，SIL Open Font License 1.1。</p>
-
-<h2>聯絡我們</h2>
-<p>如果你是照片或素材的作者，不希望作品出現在這裡，或發現標示有誤，請寫信到 <a href="mailto:liyoclaw1242@gmail.com">liyoclaw1242@gmail.com</a>，我們會盡快處理。</p>
-
-<p><a href="privacy.html">隱私說明</a> · <a href="/">回到林子</a> · <a href="credits-en.html" hreflang="en" lang="en">English</a></p>
+<p class="bye"><svg viewBox="0 0 96 96" aria-hidden="true"><g filter="url(#hand)"><use href="#bird"/><path d="M70 14 C64 4 52 10 58 20 L70 30 L82 20 C88 10 76 4 70 14 Z" fill="#d98b7b" stroke="#3a2d18" stroke-width="2" stroke-linejoin="round"/></g></svg>謝謝每一位拍照、整理、分享的人。</p>
+<p class="links">如果你是照片或素材的作者，不希望作品出現在這裡，或發現標示有誤，請寫信到 <a href="mailto:liyoclaw1242@gmail.com">liyoclaw1242@gmail.com</a>，我們會盡快處理。</p>
+<p class="links"><a href="privacy.html">隱私說明</a> · <a href="/">回到林子</a> · <a href="credits-en.html" hreflang="en" lang="en">English</a></p>
 </body></html>

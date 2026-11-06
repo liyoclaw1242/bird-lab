@@ -453,21 +453,12 @@
       <p>${t("odds.average")}</p></details>`;
   }
 
-  const STORY_FACTS = ["第一印象", "你可能不知道"];
-  function licenseUrl(name) {
-    const m = /^CC (BY(?:-SA)?) ([\d.]+)$/.exec(name);
-    return m ? `https://creativecommons.org/licenses/${m[1].toLowerCase()}/${m[2]}/` : null;
-  }
   // 照片的攝影者和授權，牌面和 BOSS 都要標
   function photoCredit(p, cls = "") {
     if (!p) return "";
     const link = (url, text) => (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
     const text = `${t("card.photoBy")}${link(p.page, p.artist)} · ${link(p.licenseUrl, p.license)}${t("card.photoVia", { site: p.source === "inaturalist" ? "iNaturalist" : "Wikimedia Commons" })}`;
     return cls ? `<p class="gc-credit ${cls}">${text}</p>` : text;
-  }
-  function licenseLink(name) {
-    const url = licenseUrl(name);
-    return url ? `<a href="${url}" target="_blank" rel="noopener">${esc(name)}</a>` : esc(name);
   }
 
   function cardStage() {
@@ -483,11 +474,6 @@
       <p>${t("notes.whyAtk")}</p><p>${t("notes.whyDef")}</p><p>${t("notes.whyLog")}</p><p>${t("notes.whyRarity")}</p><p class="gc-why-src">${t("notes.whySource")}</p></details>`;
     // 照片要標攝影者和授權；資料庫裡舊的 credit（照片去背貼紙）不再顯示
     const art = c.photo ? photoCredit(c.photo) : t("card.noPhoto");
-    // 趣聞是 CC BY-SA 的文字，牌上標授權和維基來源，改寫者的署名在資料來源與授權頁
-    const hasStory = I18n.facts(c).some((n) => STORY_FACTS.includes(n.t));
-    const text = hasStory
-      ? `${t("card.storyLabel")}${c.source ? `<a href="${esc(c.source)}" target="_blank" rel="noopener">${t("card.wikiSource")}</a> · ` : ""}${licenseLink("CC BY-SA 4.0")}${t("card.storyConverted")}`
-      : "";
     const inHand = hand.some((b) => b.id === c.id);
     const swap = view.swapping
       ? `<div class="gc-swap"><p>${t("card.swap")}</p><div class="gc-swap-grid">${hand.map((b) => `<button data-replace="${esc(b.id)}">${pic(sticker(b))}${esc(birdName(b))} ${rarityTag(b.rarity)}</button>`).join("")}</div></div>`
@@ -506,7 +492,7 @@
       <span class="gc-stamp ${c.rarity}">${c.rarity}</span>
       ${giftNotice()}${milestoneNote()}
       ${pic(sticker(c), t("home.stickerAlt", { name: birdName(c) }), 'fetchpriority="high"').replace('class="gc-pic', 'class="gc-card-bird gc-pic')}
-      <p class="gc-credit">${art}${text}</p>
+      <p class="gc-credit">${art}</p>
       <b class="gc-name">${esc(birdName(c))}</b><span class="gc-sci">${esc(c.sci)}</span>
       ${taxon ? `<p class="gc-taxon">${esc(taxon)}</p>` : ""}
       <div class="gc-statline"><span>${t("card.stats", c)}</span>${typeTag(c.type)}</div>

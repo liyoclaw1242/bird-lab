@@ -41,7 +41,15 @@ function ipKey(ip) {
 // 照片資料跟著程式部署（server/data/photos.json，由 tools/gacha-photo-json.py 產生），不必寫進資料庫：
 // 回給前端的牌都補上照片；沒照片的牌凍結。測試設 GACHA_BUNDLED_PHOTOS=off，改看資料庫裡的 photo 欄位
 const BUNDLED = process.env.GACHA_BUNDLED_PHOTOS === "off" ? null : require("./data/photos.json");
-const withPhoto = (data) => (data && !data.photo && BUNDLED?.photos[data.id] ? { ...data, photo: BUNDLED.photos[data.id] } : data);
+// 第一印象、你可能不知道是外部作者寫的文字，已經不用；資料庫裡的舊牌還帶著，回給前端前拿掉
+const NOTES = new Set(["第一印象", "你可能不知道"]);
+const withPhoto = (data) => {
+  if (!data) return data;
+  const { source, ...card } = data;
+  card.facts = (data.facts || []).filter((f) => !NOTES.has(f.t));
+  if (!card.photo && BUNDLED?.photos[data.id]) card.photo = BUNDLED.photos[data.id];
+  return card;
+};
 // 牌號只有英數和底線，檢查過才直接寫進 SQL
 const FROZEN_SQL = BUNDLED?.frozen.length
   ? ` AND c.id NOT IN (${BUNDLED.frozen.map((id) => { if (!/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error(`bad card id ${id}`); return `'${id}'`; }).join(",")})`
