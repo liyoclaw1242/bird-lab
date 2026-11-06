@@ -7,6 +7,7 @@
 #   保育等級、eBird 物種代碼、BirdLife 物種頁：AviList v2025（CRAN 套件 avilistr 內附，CC BY 4.0）
 #   維基百科條目（中文、英文）：Wikidata 的 sitelinks（CC0），先用學名找到物種條目，只連有條目的語言
 #   科的中文名：Wikidata 科級條目的中文標籤（CC0），優先臺灣正體，沒有再由簡體轉換
+#   臺灣看得到：GBIF 在臺灣的鳥類觀察紀錄（含 eBird、iNaturalist 等公開資料），一種鳥有 100 筆以上就算；臺灣特有種仍依 AviList 分布描述
 # 卡的 id、稀有度、攻防、食性屬性不動（那是遊戲數值）；只換名字、目科和模板解說。
 # 輸出：更新 server/data/cards.json.gz，並寫 server/data/cardtext.json 給伺服器在回傳牌時覆蓋資料庫裡的舊文字，不必改正式資料庫。
 # 原始資料裡對不到 AVONET 的鳥沒有可靠的數字，列進 unsourced，由伺服器凍結。
@@ -65,6 +66,20 @@ def num(v):
         return float(v)
     except (TypeError, ValueError):
         return None
+
+
+def gbif_taiwan():
+    # GBIF 一次查出臺灣所有鳥種和紀錄數（facet），再把物種編號換成學名。存在 stickers/.cache/gbif-tw.json
+    def build():
+        d = json.loads(photos_tool.get("https://api.gbif.org/v1/occurrence/search?country=TW&classKey=212&limit=0&facet=speciesKey&facetLimit=3000"))
+        out = {}
+        for x in d["facets"][0]["counts"]:
+            if x["count"] < 20:
+                continue
+            sp = json.loads(photos_tool.get(f"https://api.gbif.org/v1/species/{x['name']}"))
+            out[sp.get("canonicalName") or sp.get("scientificName")] = x["count"]
+        return out
+    return photos_tool.cached("gbif-tw.json", build)
 
 
 def family_names_zh(families):
@@ -154,11 +169,15 @@ def main():
     # 臺灣：AviList 的分布描述有寫到 Taiwan 就算看得到；除了 Taiwan 沒有其他地名的算特有種（結果 31 種，和臺灣特有種數量一致）
     # 分布描述常只寫「東亞」，所以只標「看得到」，沒標的不代表臺灣沒有
     ranges = {r.Scientific_name: r.Range for r in species_rows if isinstance(r.Range, str)}
+    tw_records = gbif_taiwan()
     def taiwan(sci):
         rng = ranges.get(sci, "")
-        if not re.search(r"\bTaiwan\b", rng):
-            return None
-        return "endemic" if not set(re.findall(r"\b[A-Z][a-zA-Z]+", rng)) - {"Taiwan"} else "yes"
+        if re.search(r"\bTaiwan\b", rng) and not set(re.findall(r"\b[A-Z][a-zA-Z]+", rng)) - {"Taiwan"}:
+            return "endemic"
+        # 100 筆以上的紀錄才算看得到，少數幾筆多半是迷鳥
+        if tw_records.get(sci, 0) >= 100 or re.search(r"\bTaiwan\b", rng):
+            return "yes"
+        return None
 
     cards = json.loads(gzip.decompress(CARDS.read_bytes()).decode("utf8"))
     wiki = wiki_titles([c["sci"] for c in cards])

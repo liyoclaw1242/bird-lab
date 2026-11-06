@@ -197,7 +197,7 @@ img { display: block; }
 .gc-float.left { left: 15%; }
 @keyframes gc-float { from { transform: translateY(14px) scale(.5); opacity: 0; } 25% { transform: translateY(0) scale(1.2); opacity: 1; } to { transform: translateY(-30px) scale(1); opacity: .9; } }
 .gc-log { min-height: 42px; margin: 8px 0; padding: 6px 10px; font-size: 15px; font-weight: 400; line-height: 1.35; }
-.gc-sig { width: 100%; min-height: 46px; padding: 6px 10px; font-size: 16px; background: var(--paper); border: 3px solid var(--ink); border-radius: var(--wiggle-2); box-shadow: 0 3px 0 rgba(30, 20, 8, .5); }
+.gc-sig { width: 100%; min-height: 46px; padding: 6px 10px; font-size: 16px; font-weight: 700; background: linear-gradient(#f3cf6a, #e6b84a); border: 3px solid var(--ink); border-radius: var(--wiggle-2); box-shadow: 0 3px 0 rgba(30, 20, 8, .5); }
 .gc-sig[aria-pressed="true"] { background: #f3cf6a; }
 .gc-sig:disabled { opacity: .5; box-shadow: none; }
 .gc-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 9px; }
@@ -591,6 +591,10 @@ body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100
 @media (min-width: 1024px) { .gc-perch-name { display: none; } }
 /* 鳥卡很長，收下／關閉按鈕黏在卡片底部，不用捲到最下面才找得到 */
 .gc-card-actions { position: sticky; bottom: -16px; z-index: 3; margin: 0 -14px -14px; padding: 8px 14px 12px; background: linear-gradient(rgba(251, 245, 227, 0), var(--paper, #fbf5e3) 30%); }
+.gc-zoom { display: block; cursor: zoom-in; }
+.gc-sig:disabled { background: var(--paper); font-weight: 400; }
+.gc-suggest { margin-top: 8px; }
+.gc-suggest .gc-sub { margin: 0 0 6px; }
 .gc-gap { margin: 8px 0 0; padding: 6px 8px; font-size: 14px; line-height: 1.5; background: rgba(230, 184, 74, .25); border-radius: 8px; }
 .gc-intro { margin: 12px 0; }
 .gc-intro ol { margin: 6px 0 8px; padding: 0; list-style: none; }

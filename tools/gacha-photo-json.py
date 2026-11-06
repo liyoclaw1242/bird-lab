@@ -8,6 +8,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FIELDS = ("file", "artist", "license", "licenseUrl", "page", "source", "cropped")
 cards = json.loads(gzip.decompress((ROOT / "server/data/cards.json.gz").read_bytes()).decode("utf8"))
+# 野外已滅絕（EW）的鳥，照片必然是圈養個體：凍結，不拿籠中鳥當野鳥展示
+text = json.loads((ROOT / "server/data/cardtext.json").read_text("utf8"))["cards"]
+for c in cards:
+    if text.get(c["id"], {}).get("iucn") == "EW":
+        c.pop("photo", None)
 photos = {c["id"]: {k: c["photo"].get(k) for k in FIELDS if c["photo"].get(k) is not None and c["photo"].get(k) is not False} for c in cards if c.get("photo")}
 frozen = sorted(c["id"] for c in cards if not c.get("photo"))
 out = ROOT / "server/data/photos.json"

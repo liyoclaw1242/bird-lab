@@ -247,12 +247,15 @@ function createGame(db, { now = () => new Date(), random = crypto.randomInt ? ()
     let cursor = today?.stars > 0 ? day : E.addDays(day, -1);
     const stars = Object.fromEntries(fights.map((f) => [f.day, f.stars]));
     while (stars[cursor] > 0) { streak += 1; cursor = E.addDays(cursor, -1); }
+    const top = today ? null : E.bestTeam(fight, candidates);
     return {
       day,
       google: !!player.google_sub,
+      // 今天最好的三隻（只給還沒比過的那天）：隊伍頁的「幫我挑」按鈕用
+      suggest: top ? top.team : [],
       odds,
       fight,
-      best: today ? today.best : E.bestScore(fight, candidates),
+      best: today ? today.best : top.score,
       result: today && { stars: today.stars, score: today.score, best: today.best },
       draws: { free: draws.some((d) => d.kind === "free"), bonus: draws.filter((d) => d.kind !== "free").length, bonusAllowed: today ? bonusAllowed(today.stars) : 0 },
       drawn: draws.map((d) => ({ kind: d.kind, card: toCard(d), share: d.code ? { code: d.code, cap: d.cap, claimed: d.claimed } : null })),

@@ -37,7 +37,12 @@ NOT_PHOTO = re.compile(
     # 第二輪審查抓到的漏網：寵物、主題樂園和野生動物園、博物館與專著
     r"|\bpets?\b|loro.?parque|xcaret|wildlife park|jurong|mus[eé]um|monograph|histoire naturelle|\bbeitrag"
     # 第三輪：上色照、水彩、圖鑑系列名；野化或引入的族群（不在原生分布區）
-    r"|iconographie|watercolou?r|hand.?colou?red|colori[sz]ed|\bpainted\b|\bferal\b|\bintroduced\b|\bescaped\b", re.I)
+    r"|iconographie|watercolou?r|hand.?colou?red|colori[sz]ed|\bpainted\b|\bferal\b|\bintroduced\b|\bescaped\b"
+    # 第四輪：繫放時拿在手上、霧網
+    r"|\bin[ -]hand\b|\bbanding\b|\bringing\b|mist ?net|\bbander\b", re.I)
+# 這些照片不排除，但只當備胎：iNaturalist 有研究級照片就優先用。政府圖庫常是繫放或研究時拍的，
+# 個人宣告公有領域的權利歸屬常說不清，自動相機畫質撐不起物種代表圖
+SECOND_CHOICE = re.compile(r"\bnbii\b|\busgs\b|\busfws\b|\bfws\b|reconyx|camera trap|trail cam|_email", re.I)
 # 作者欄是古典鳥類畫家或博物館的，即使檔名看不出來也是畫或標本
 # Smit、Hart、Kramer、Huet 也是常見姓氏，只比對畫家的全名
 NOT_PHOTOGRAPHER = re.compile(r"keulemans|\bgould\b|william (?:matthew )?hart|hart, william|joseph smit|smit, joseph|sharpe|bevalet|nicolas huet|huet, nicolas|hartlaub|augustin kr[aä]mer|kr[aä]mer, augustin|\bwolf\b, joseph|joseph wolf|edward lear|"
@@ -247,7 +252,8 @@ def judge(title, entry, sci):
         return None, "taxon_unverified"
     # Commons 上由別人裁切過的衍生檔：署名時要說明
     cropped = bool(re.search(r"crop", title, re.I))
-    return {"title": title, "url": info.get("thumburl") or info["url"], "page": info.get("descriptionurl"), "cropped": cropped,
+    second = bool(SECOND_CHOICE.search(title + " " + raw_artist) or re.match(r"public domain", license, re.I))
+    return {"title": title, "url": info.get("thumburl") or info["url"], "page": info.get("descriptionurl"), "cropped": cropped, "second": second,
             "artist": artist[:120], "license": license, "licenseUrl": plain(meta.get("LicenseUrl", {}).get("value")) or None,
             "taxonMatch": matched}, "ok"
 
@@ -384,15 +390,17 @@ def main():
             if pick:
                 picks[c["id"]] = {**pick, "source": "commons"}
                 break
-    by_name = inat_taxa([c["sci"] for c in targets if c["id"] not in picks])
+    by_name = inat_taxa([c["sci"] for c in targets if c["id"] not in picks or picks[c["id"]].get("second")])
     taxon_of = {c["id"]: by_name.get(c["sci"]) for c in targets}
-    inat = inat_candidates([taxon_of[c["id"]] for c in targets if c["id"] not in picks and taxon_of[c["id"]]])
+    inat = inat_candidates([taxon_of[c["id"]] for c in targets if (c["id"] not in picks or picks[c["id"]].get("second")) and taxon_of[c["id"]]])
     users = inat_users([o["obs"] for obs in inat.values() for o in obs if any(ph.get("license") == "cc0" for ph in o["photos"])])
 
     stats, rejects = {}, []
     by_id = {c["id"]: c for c in cards}
     for c in targets:
         chosen, reasons = picks.get(c["id"]), []
+        if chosen and chosen.get("second") and taxon_of[c["id"]]:
+            chosen = judge_inat(inat.get(str(taxon_of[c["id"]]), []), taxon_of[c["id"]], users) or chosen
         if not chosen:
             reasons = [judge(t, info.get(t, {"cats": []}), c["sci"])[1] for t in titles[c["id"]]]
             taxon = taxon_of[c["id"]]

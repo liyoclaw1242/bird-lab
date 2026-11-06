@@ -10,7 +10,7 @@
 
   const TYPES = {
     meat: { label: "吃肉", beats: "mixed" },
-    mixed: { label: "吃蟲雜食", beats: "plant" },
+    mixed: { label: "吃蟲或雜食", beats: "plant" },
     plant: { label: "吃植物", beats: "meat" },
   };
 
@@ -131,22 +131,28 @@
       owned.filter((c) => c.type === type).sort((a, b) => power(b) - power(a)).slice(0, CANDIDATES_PER_TYPE));
   }
 
-  function bestScore(fight, owned) {
+  // 今天能打出最高分的隊伍：給「幫我挑今天最好的三隻」用，分數也是星星的分母
+  function bestTeam(fight, owned) {
     const pool = candidates(owned);
-    let best = 0;
+    let best = { score: 0, team: [] };
     for (let a = 0; a < pool.length; a++)
       for (let b = a + 1; b < pool.length; b++)
-        for (let c = b + 1; c < pool.length; c++)
-          best = Math.max(best, bestPlay(fight, [pool[a], pool[b], pool[c]]));
+        for (let c = b + 1; c < pool.length; c++) {
+          const team = [pool[a], pool[b], pool[c]];
+          const score = bestPlay(fight, team);
+          if (score > best.score) best = { score, team };
+        }
     return best;
   }
+
+  const bestScore = (fight, owned) => bestTeam(fight, owned).score;
 
   const starsFor = (score, best) => STAR_CUTS.filter((cut) => score / best >= cut).length;
 
   const api = {
     TEAM_SIZE, ROUNDS, SIGNATURE_MUL, HP_PER_DEF, STAR_CUTS, TYPES, INTENTS, NICHE_TYPE,
     typeMul, rng, shuffle, taipeiDate, addDays, bossOfDay, scriptOfDay, formsOfDay, power,
-    makeFight, startState, isOver, legalSlots, preview, step, bestPlay, bestScore, starsFor,
+    makeFight, startState, isOver, legalSlots, preview, step, bestPlay, bestScore, bestTeam, starsFor,
   };
   if (typeof module !== "undefined") module.exports = api;
   else root.GachaEngine = api;
