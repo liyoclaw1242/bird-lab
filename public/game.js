@@ -125,7 +125,7 @@
 
   // 無障礙：畫面每次整個重畫，焦點會掉回 body。記住最後聚焦的按鈕，重畫後找回同一顆；
   // 彈窗打開時把焦點移進去、背景設成 inert，關掉後回到打開它的那顆按鈕
-  const FOCUS_KEYS = ["do", "go", "draw", "play", "open", "openHand", "share", "take", "release", "replace", "page", "filter"];
+  const FOCUS_KEYS = ["do", "go", "draw", "play", "open", "openHand", "openDrawn", "share", "take", "release", "replace", "page", "filter"];
   const keyOf = (el) => {
     if (!app.contains(el) || el === app) return null;
     if (el.id) return `#${CSS.escape(el.id)}`;
@@ -316,7 +316,7 @@
 
   function todayDraws() {
     if (!S.drawn.length) return "";
-    const rows = S.drawn.map((d) => `<div class="gc-gift-row">${pic(sticker(d.card))}<span>${esc(birdName(d.card))} ${rarityTag(d.card.rarity)}<small>${d.share ? t("share.claimed", d.share) : t("share.max", { n: SHARE_CAPS[d.card.rarity] })}</small></span><button class="gc-plank" data-share="${d.kind}">${t("share.button")}</button></div>`).join("");
+    const rows = S.drawn.map((d, i) => `<div class="gc-gift-row"><button type="button" class="gc-gift-open" data-open-drawn="${i}" aria-label="${esc(t("card.view", { name: birdName(d.card) }))}">${pic(sticker(d.card), "", credit(d.card))}<span>${esc(birdName(d.card))} ${rarityTag(d.card.rarity)}<small>${d.share ? t("share.claimed", d.share) : t("share.max", { n: SHARE_CAPS[d.card.rarity] })}</small></span></button><button class="gc-plank" data-share="${d.kind}">${t("share.button")}</button></div>`).join("");
     return `<div class="gc-scrap"><p class="gc-h">${t("share.today")}</p>${rows}${view.card ? "" : shareBox()}</div>`;
   }
 
@@ -945,7 +945,7 @@
     if (d.take || d.replace) return hand.length >= E.TEAM_SIZE && !d.replace ? "tap" : "take";
     if (d.do === "toggle-sig") return view.signature ? "tap" : "charge";
     if (d.do === "copy-link" || d.do === "copy-code") return "ding";
-    if (d.open || d.openHand !== undefined || d.do === "poke") return "chirp";
+    if (d.open || d.openHand !== undefined || d.openDrawn !== undefined || d.do === "poke") return "chirp";
     return "tap";
   }
 
@@ -963,6 +963,10 @@
 
   document.addEventListener("click", (event) => {
     if (view.anim && animSteps.length) { nextStep(); return; }
+    // 點牌外面的暗處等於關閉，跟按 Esc 一樣（換鳥選單開著時只收起選單）
+    if (view.card && !view.busy && event.target.classList?.contains("gc-stage")) {
+      return set(view.swapping ? { swapping: false } : { card: null, drew: false, drawKind: null, swapping: false, gift: null, shareLink: null, milestone: null });
+    }
     // 存檔區的 <summary> 也要記下開合，不然任何重畫（戳 BOSS、抽卡）都會把它關回去
     const el = event.target.closest("button, summary[data-do]");
     if (!el || el.disabled) return;
@@ -980,6 +984,7 @@
     if (d.filter !== undefined) { typeFilter = typeFilter === d.filter ? "" : d.filter; return render(); }
     if (d.open) return set({ card: view.collection.cards.find((c) => c.id === d.open), drew: false, swapping: false });
     if (d.openHand !== undefined) return set({ card: hand[+d.openHand], drew: false, swapping: false });
+    if (d.openDrawn !== undefined) return set({ card: S.drawn[+d.openDrawn]?.card, drew: false, swapping: false });
     if (d.play !== undefined) return play(+d.play);
     if (d.release) {
       set({ card: null });
